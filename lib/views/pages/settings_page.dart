@@ -40,9 +40,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveUsername() async {
+    // unfocus text field
+    FocusScope.of(context).unfocus();
+
     final db = await DatabaseHelper().database;
     if (userId != null) {
-      db.update(
+      await db.update(
         'user_info',
         {'username': _usernameController.text},
         where: 'id = ?',
@@ -53,36 +56,87 @@ class _SettingsPageState extends State<SettingsPage> {
         'username': _usernameController.text,
       });
     }
+    if (!mounted) return;
 
     setState(() {
       currentUsername = _usernameController.text;
     });
+
+    Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Username saved!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Settings")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Current Username: $currentUsername",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: "Change Username",
-                border: OutlineInputBorder(),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Settings",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+          ),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                alignment: Alignment.center,
+                child: const Text(
+                  "Change Your Username",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _saveUsername, child: const Text("Save")),
-          ],
+              const SizedBox(height: 30),
+              TextField(
+                controller: _usernameController,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  hintText: "New Username",
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(
+                    Icons.abc_outlined,
+                    size: 28,
+                    color: Colors.grey,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: kToolbarHeight,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: _saveUsername,
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
