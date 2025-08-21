@@ -200,6 +200,8 @@ class _AddPageState extends State<AddPage> {
                         const SnackBar(content: Text('Expense saved!')),
                       );
 
+                      Navigator.pop(context);
+
                       // Clear fields
                       setState(() {
                         selectedCategory = null;

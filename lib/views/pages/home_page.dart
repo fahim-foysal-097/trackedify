@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const Stack(
+          Stack(
             children: [CurvedboxWidget(), OverviewWidget(), WelcomeWidget()],
           ),
           Padding(
