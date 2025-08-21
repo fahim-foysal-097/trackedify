@@ -28,7 +28,7 @@ class StatsPage extends StatelessWidget {
               const SizedBox(height: 50),
               Container(
                 padding: const EdgeInsets.all(4),
-                // child: const ExpensePieChart(),
+                child: const ExpensePieChart(),
               ),
             ],
           ),
