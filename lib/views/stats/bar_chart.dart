@@ -14,6 +14,9 @@ class _MyBarChartState extends State<MyBarChart> {
   // Holds last 7 days of expenses totals
   List<double> dailyTotals = List.filled(7, 0);
 
+  // Holds last 7 actual DateTime objects
+  List<DateTime> last7Days = [];
+
   @override
   void initState() {
     super.initState();
@@ -24,14 +27,14 @@ class _MyBarChartState extends State<MyBarChart> {
     final db = await DatabaseHelper().database;
     final data = await db.query('expenses', orderBy: 'date ASC');
 
-    // Prepare last 7 days keys
     final now = DateTime.now();
+
+    // store last 7 days
+    last7Days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
+
     Map<String, double> totals = {};
-    for (int i = 0; i < 7; i++) {
-      final day = DateFormat(
-        'yyyy-MM-dd',
-      ).format(now.subtract(Duration(days: 6 - i)));
-      totals[day] = 0;
+    for (var day in last7Days) {
+      totals[DateFormat('yyyy-MM-dd').format(day)] = 0;
     }
 
     for (var row in data) {
@@ -80,13 +83,12 @@ class _MyBarChartState extends State<MyBarChart> {
                 },
           ),
         ),
-
         titlesData: FlTitlesData(
           show: true,
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 30,
+              reservedSize: 36,
               getTitlesWidget: getTitles,
             ),
           ),
@@ -110,7 +112,15 @@ class _MyBarChartState extends State<MyBarChart> {
           return BarChartGroupData(
             x: i,
             barRods: [
-              BarChartRodData(toY: dailyTotals[i], gradient: _barsGradient),
+              BarChartRodData(
+                toY: dailyTotals[i],
+                gradient: _barsGradient,
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: (dailyTotals.reduce((a, b) => a > b ? a : b) * 1),
+                  color: Colors.grey.shade200,
+                ),
+              ),
             ],
             showingTooltipIndicators: [0],
           );
@@ -123,37 +133,21 @@ class _MyBarChartState extends State<MyBarChart> {
     final style = TextStyle(
       color: Colors.blue[800],
       fontWeight: FontWeight.bold,
-      fontSize: 14,
+      fontSize: 12,
     );
-    String text;
-    switch (value.toInt()) {
-      case 0:
-        text = 'Mn';
-        break;
-      case 1:
-        text = 'Te';
-        break;
-      case 2:
-        text = 'Wd';
-        break;
-      case 3:
-        text = 'Tu';
-        break;
-      case 4:
-        text = 'Fr';
-        break;
-      case 5:
-        text = 'St';
-        break;
-      case 6:
-        text = 'Sn';
-        break;
-      default:
-        text = '';
+
+    // Ensure index is valid
+    if (value.toInt() < 0 || value.toInt() >= last7Days.length) {
+      return const SizedBox.shrink();
     }
+
+    // Format date (e.g. "Aug 20")
+    final date = last7Days[value.toInt()];
+    final text = DateFormat('MM/dd').format(date);
+
     return SideTitleWidget(
       meta: meta,
-      space: 4,
+      space: 6,
       child: Text(text, style: style),
     );
   }
