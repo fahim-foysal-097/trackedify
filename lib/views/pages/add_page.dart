@@ -128,9 +128,9 @@ class _AddPageState extends State<AddPage> {
                       context: context,
                       initialDate: selectedDate,
                       firstDate: DateTime.now().subtract(
-                        const Duration(days: 30),
+                        const Duration(days: 365),
                       ),
-                      lastDate: DateTime.now().add(const Duration(days: 30)),
+                      lastDate: DateTime.now().add(const Duration(days: 10)),
                     );
 
                     if (setDate != null) {
