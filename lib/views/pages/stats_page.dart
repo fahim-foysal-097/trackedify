@@ -5,10 +5,6 @@ class StatsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(
-      children: [
-        Text("Stats")
-      ],
-    );
+    return const Stack(children: [Center(child: Text("Stats Coming Soon"))]);
   }
 }

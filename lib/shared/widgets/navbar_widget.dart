@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spendle/data/notifiers.dart';
 
 class NavBarWidget extends StatefulWidget {
@@ -20,12 +21,18 @@ class _NavBarState extends State<NavBarWidget> {
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           height: 60,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_rounded),
+              icon: Icon(FontAwesomeIcons.house),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(FontAwesomeIcons.chartColumn),
               label: 'Stats',
             ),
-            NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+            NavigationDestination(
+              icon: Icon(FontAwesomeIcons.userGear),
+              label: 'Functions',
+            ),
           ],
           onDestinationSelected: (int value) {
             selectedPageNotifier.value = value;

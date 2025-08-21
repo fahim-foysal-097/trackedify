@@ -56,25 +56,7 @@ class DatabaseHelper {
     );
   }
 
-  // Get user info
-  Future<Map<String, dynamic>?> getUser() async {
-    final db = await database;
-    final res = await db.query('user_info', limit: 1);
-    return res.isNotEmpty ? res.first : null;
-  }
-
-  // Update user info
-  Future<void> updateUser(Map<String, dynamic> user) async {
-    final db = await database;
-    await db.update(
-      'user_info',
-      user,
-      where: 'id = ?',
-      whereArgs: [1], // Assuming single row with id=1
-    );
-  }
-
-  // Wipe all tables
+  // Wipe all data
   Future<void> wipeAllData() async {
     final db = await database;
     await db.delete('expenses');
