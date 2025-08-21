@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/database/models/category.dart';
 
-class ExpensePieChart extends StatefulWidget {
-  const ExpensePieChart({super.key});
+class MyPieChart extends StatefulWidget {
+  const MyPieChart({super.key});
 
   @override
-  State<ExpensePieChart> createState() => _ExpensePieChartState();
+  State<MyPieChart> createState() => _MyPieChartState();
 }
 
-class _ExpensePieChartState extends State<ExpensePieChart> {
+class _MyPieChartState extends State<MyPieChart> {
   Map<String, double> categoryTotals = {};
   int? touchedIndex;
 

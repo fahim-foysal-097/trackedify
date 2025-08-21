@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spendle/views/stats/chart.dart';
+import 'package:spendle/views/stats/bar_chart.dart';
 import 'package:spendle/views/stats/pie_chart.dart';
 
 class StatsPage extends StatelessWidget {
@@ -23,12 +23,12 @@ class StatsPage extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.width,
-                child: const ABarChart(),
+                child: const MyBarChart(),
               ),
               const SizedBox(height: 50),
               Container(
                 padding: const EdgeInsets.all(4),
-                child: const ExpensePieChart(),
+                child: const MyPieChart(),
               ),
             ],
           ),

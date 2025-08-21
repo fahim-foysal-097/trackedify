@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:intl/intl.dart';
 
-class ABarChart extends StatefulWidget {
-  const ABarChart({super.key});
+class MyBarChart extends StatefulWidget {
+  const MyBarChart({super.key});
 
   @override
-  State<ABarChart> createState() => _ABarChartState();
+  State<MyBarChart> createState() => _MyBarChartState();
 }
 
-class _ABarChartState extends State<ABarChart> {
+class _MyBarChartState extends State<MyBarChart> {
   // Holds last 7 days of expenses totals
   List<double> dailyTotals = List.filled(7, 0);
 
