@@ -5,6 +5,7 @@ import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/avatar_widget.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
+import 'package:spendle/views/pages/settings_page.dart';
 
 class UserPage extends StatelessWidget {
   const UserPage({super.key});
@@ -25,20 +26,20 @@ class UserPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // IconTextButton(
-                //   Icons.settings,
-                //   "Settings",
-                //   onPressed: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) {
-                //           return const SettingsPage();
-                //         },
-                //       ),
-                //     );
-                //   },
-                // ),
+                IconTextButton(
+                  Icons.settings,
+                  "Settings",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const SettingsPage();
+                        },
+                      ),
+                    );
+                  },
+                ),
                 const Divider(),
                 IconTextButton(
                   Icons.delete_forever,
