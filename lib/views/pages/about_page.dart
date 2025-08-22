@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    const githubUrl = "https://github.com/fahim-foysal-097";
+
     return Scaffold(
       appBar: AppBar(title: const Text("About"), centerTitle: true),
       body: Column(
@@ -35,10 +45,8 @@ Spendle is built for simplicity. Add, view, and manage your expenses quickly so 
             padding: const EdgeInsets.fromLTRB(10, 30, 10, 5),
             child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Colors.black),
-              onPressed: () {},
-              child: const Text(
-                "My GitHub : https://github.com/fahim-foysal-097",
-              ),
+              onPressed: () => _launchURL(githubUrl),
+              child: const Text("My GitHub"),
             ),
           ),
         ],
