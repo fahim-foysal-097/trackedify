@@ -39,9 +39,7 @@ class _WidgetTreeState extends State<WidgetTree> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!hasUser) {
@@ -49,10 +47,20 @@ class _WidgetTreeState extends State<WidgetTree> {
     }
 
     return Scaffold(
-      body: ValueListenableBuilder(
+      body: ValueListenableBuilder<int>(
         valueListenable: selectedPageNotifier,
         builder: (context, selectedPage, child) {
-          return pages.elementAt(selectedPage);
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300), // fade duration
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: KeyedSubtree(
+              // ensures proper widget identity for animation
+              key: ValueKey<int>(selectedPage),
+              child: pages[selectedPage],
+            ),
+          );
         },
       ),
       bottomNavigationBar: const NavBarWidget(),
