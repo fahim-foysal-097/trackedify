@@ -22,7 +22,7 @@ final List<Category> categories = [
   ),
   Category(
     name: 'Shopping',
-    color: Colors.purpleAccent,
+    color: Colors.deepPurpleAccent,
     icon: Icons.shopping_cart_outlined,
   ),
   Category(
@@ -59,7 +59,6 @@ final List<Category> categories = [
   Category(name: 'Pets', color: Colors.lime, icon: Icons.pets),
   Category(name: 'Taxes', color: Colors.grey, icon: Icons.account_balance),
   Category(name: 'Rent', color: Colors.blueGrey, icon: Icons.home_outlined),
-  Category(name: 'Salary', color: Colors.greenAccent, icon: Icons.attach_money),
   Category(
     name: 'Investment',
     color: Colors.deepPurple,

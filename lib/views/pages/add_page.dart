@@ -52,6 +52,8 @@ class _AddPageState extends State<AddPage> {
                 ),
                 const SizedBox(height: 50),
                 DropdownButtonFormField<Category>(
+                  menuMaxHeight: 400,
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                   decoration: InputDecoration(
                     hintText: "Category",
                     filled: true,
