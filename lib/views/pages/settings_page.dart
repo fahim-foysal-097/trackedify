@@ -40,7 +40,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveUsername() async {
-    // unfocus text field
     FocusScope.of(context).unfocus();
 
     final db = await DatabaseHelper().database;

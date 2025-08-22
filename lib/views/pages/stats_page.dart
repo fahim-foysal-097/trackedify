@@ -7,31 +7,38 @@ class StatsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsetsGeometry.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Charts",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 5),
-              Container(
-                padding: const EdgeInsets.all(4),
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width,
-                child: const MyBarChart(),
-              ),
-              const SizedBox(height: 50),
-              Container(
-                padding: const EdgeInsets.all(4),
-                child: const MyPieChart(),
-              ),
+    return DefaultTabController(
+      length: 2, // Two tabs
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            "Statistics",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+          ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "All Time Expenses"),
+              Tab(text: "Last 7 Days"),
             ],
           ),
+        ),
+        body: const TabBarView(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 20),
+                  Expanded(child: MyPieChart()),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(children: [Expanded(child: MyBarChart())]),
+            ),
+          ],
         ),
       ),
     );

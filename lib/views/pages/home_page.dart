@@ -74,7 +74,11 @@ class _HomePageState extends State<HomePage> {
         padding: EdgeInsets.zero,
         children: [
           Stack(
-            children: [CurvedboxWidget(), OverviewWidget(), WelcomeWidget()],
+            children: [
+              const CurvedboxWidget(),
+              OverviewWidget(),
+              WelcomeWidget(),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),

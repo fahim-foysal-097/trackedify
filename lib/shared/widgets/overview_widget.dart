@@ -125,7 +125,7 @@ class OverviewWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Average Daily',
+                      'Daily Average',
                       style: KTextstyle.smallHeaderText,
                     ),
                     const SizedBox(height: 0),
