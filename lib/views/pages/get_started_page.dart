@@ -41,6 +41,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
     });
 
     // Navigate to main app
+    if (!mounted) return;
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const WidgetTree()));
@@ -68,12 +69,13 @@ class _GetStartedPageState extends State<GetStartedPage> {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  hintText: 'Your Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  hintText: "Your Name",
                   filled: true,
-                  fillColor: Colors.grey.shade200,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
