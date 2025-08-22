@@ -50,7 +50,7 @@ class DatabaseHelper {
           ''');
 
           // Insert default user row with username
-          await db.insert('user_info', {'id': 1, 'username': 'User Name'});
+          // await db.insert('user_info', {'id': 1, 'username': 'User Name'});
         });
       },
     );
@@ -60,6 +60,6 @@ class DatabaseHelper {
   Future<void> wipeAllData() async {
     final db = await database;
     await db.delete('expenses');
-    // await db.delete('user_info');
+    await db.delete('user_info');
   }
 }
