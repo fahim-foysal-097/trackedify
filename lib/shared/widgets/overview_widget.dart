@@ -95,7 +95,7 @@ class OverviewWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 0),
                     Text(
-                      '\$${totalExpenses.toStringAsFixed(2)}',
+                      '\$ ${totalExpenses.toStringAsFixed(2)}',
                       style: KTextstyle.headerText,
                     ),
                   ],
@@ -130,7 +130,7 @@ class OverviewWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 0),
                     Text(
-                      '\$${averageDaily.toStringAsFixed(2)}',
+                      '\$ ${averageDaily.toStringAsFixed(2)}',
                       style: KTextstyle.moneySmallText,
                     ),
                   ],

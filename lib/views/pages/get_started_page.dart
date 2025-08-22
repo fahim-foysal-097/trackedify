@@ -62,7 +62,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Lottie.asset(
-                      'assets/lotties/wave_lottie.json',
+                      'assets/lotties/finance_lottie.json',
                       height: 360,
                     ),
 
@@ -73,11 +73,11 @@ class _GetStartedPageState extends State<GetStartedPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Please enter your name to get started',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    const SizedBox(height: 6),
+                    // const Text(
+                    //   'Please enter your name to get started',
+                    //   style: TextStyle(fontSize: 16),
+                    // ),
                     const SizedBox(height: 40),
                     TextField(
                       controller: nameController,
@@ -108,7 +108,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                                 color: Colors.white,
                               )
                             : const Text(
-                                "Save",
+                                "Get Started",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
