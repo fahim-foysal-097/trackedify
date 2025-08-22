@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:spendle/database/Logic/add_expense.dart';
 import 'package:spendle/database/models/category.dart';
 
@@ -44,6 +45,7 @@ class _AddPageState extends State<AddPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Lottie.asset('assets/lotties/wallet_lottie.json', height: 300),
                 const Text(
                   "Add Expenses",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
