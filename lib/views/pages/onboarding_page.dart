@@ -45,7 +45,7 @@ class _OnBoardingPageState extends State<OnboardingPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      // Finished tutorial → go to GetStartedPage
+      // Finished tutorial - go to GetStartedPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const GetStartedPage()),
