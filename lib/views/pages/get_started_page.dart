@@ -61,13 +61,9 @@ class _GetStartedPageState extends State<GetStartedPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Lottie.asset(
-                      'assets/lotties/finance_lottie.json',
-                      height: 360,
-                    ),
-
+                    Lottie.asset('assets/lotties/finance.json', height: 360),
                     const Text(
-                      'Welcome!',
+                      "Almost there",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,

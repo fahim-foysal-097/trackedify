@@ -45,3 +45,23 @@ class CurvedboxWidget2 extends StatelessWidget {
     );
   }
 }
+
+class CurvedboxWidget3 extends StatelessWidget {
+  const CurvedboxWidget3({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomRight: Radius.elliptical(300, 30), // round top-left
+        bottomLeft: Radius.elliptical(300, 30),
+      ),
+      child: Container(
+        height: 250,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.tertiary,
+        ),
+      ),
+    );
+  }
+}

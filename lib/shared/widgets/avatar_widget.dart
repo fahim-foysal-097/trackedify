@@ -6,7 +6,7 @@ class AvatarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 260, 0, 0),
+      padding: const EdgeInsets.fromLTRB(0, 150, 0, 0),
       child: Container(
         alignment: Alignment.center,
         height: 170,
@@ -28,8 +28,8 @@ class AvatarWidget extends StatelessWidget {
           // color: Colors.red,
         ),
         child: const CircleAvatar(
-          radius: 80,
-          backgroundImage: AssetImage('assets/img/pfp.png'),
+          radius: 120,
+          backgroundImage: AssetImage('assets/img/pfp.jpg'),
         ),
       ),
     );

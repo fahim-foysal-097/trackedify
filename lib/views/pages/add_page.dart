@@ -45,7 +45,7 @@ class _AddPageState extends State<AddPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Lottie.asset('assets/lotties/wallet_lottie.json', height: 300),
+                Lottie.asset('assets/lotties/wallet.json', height: 300),
                 const Text(
                   "Add Expenses",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),

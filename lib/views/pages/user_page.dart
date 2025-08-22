@@ -17,7 +17,7 @@ class UserPage extends StatelessWidget {
         key: const PageStorageKey("UserScroll"),
         child: Column(
           children: [
-            const Stack(children: [CurvedboxWidget(), AvatarWidget()]),
+            const Stack(children: [CurvedboxWidget3(), AvatarWidget()]),
             Container(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
               alignment: Alignment.center,

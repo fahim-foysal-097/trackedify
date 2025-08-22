@@ -4,7 +4,7 @@ import 'package:spendle/shared/widgets/navbar_widget.dart';
 import 'package:spendle/views/pages/home_page.dart';
 import 'package:spendle/views/pages/stats_page.dart';
 import 'package:spendle/views/pages/user_page.dart';
-import 'package:spendle/views/pages/get_started_page.dart';
+import 'package:spendle/views/pages/onboarding_page.dart';
 import 'package:spendle/database/database_helper.dart';
 
 List<Widget> pages = [const HomePage(), const StatsPage(), const UserPage()];
@@ -42,25 +42,17 @@ class _WidgetTreeState extends State<WidgetTree> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // No user → show tutorial first
     if (!hasUser) {
-      return const GetStartedPage();
+      return const OnboardingPage();
     }
 
+    // User exists → main app
     return Scaffold(
-      body: ValueListenableBuilder<int>(
+      body: ValueListenableBuilder(
         valueListenable: selectedPageNotifier,
         builder: (context, selectedPage, child) {
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300), // fade duration
-            transitionBuilder: (child, animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: KeyedSubtree(
-              // ensures proper widget identity for animation
-              key: ValueKey<int>(selectedPage),
-              child: pages[selectedPage],
-            ),
-          );
+          return pages.elementAt(selectedPage);
         },
       ),
       bottomNavigationBar: const NavBarWidget(),

@@ -18,11 +18,11 @@ flutter_launcher_icons:
   # desaturate_tinted_to_grayscale_ios: true
   # background_color_ios: "#ffffff"
 
-  web:
-    generate: true
-    image_path: "assets/icons/icon_blue.png"
-    background_color: "2196F3"
-    theme_color: "64B5F6"
+  # web:
+  #   generate: true
+  #   image_path: "assets/icons/icon_blue.png"
+  #   background_color: "2196F3"
+  #   theme_color: "64B5F6"
 
   # windows:
   #   generate: true

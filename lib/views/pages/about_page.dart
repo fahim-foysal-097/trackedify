@@ -36,7 +36,7 @@ class AboutPage extends StatelessWidget {
 
 🎨 Clean, minimal, and distraction-free design
 
-🔒 Your data is stored locally on your device – no internet required, no accounts, no hidden tracking.
+🔒 Your data is stored locally on your device - no internet required, no accounts, no hidden tracking.
 
 Spendle is built for simplicity. Add, view, and manage your expenses quickly so you can focus on what matters: understanding where your money goes.""",
             ),
