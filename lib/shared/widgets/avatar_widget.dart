@@ -29,7 +29,7 @@ class AvatarWidget extends StatelessWidget {
         ),
         child: const CircleAvatar(
           radius: 80,
-          backgroundImage: AssetImage('assets/img/a.png'),
+          backgroundImage: AssetImage('assets/img/pfp.png'),
         ),
       ),
     );
