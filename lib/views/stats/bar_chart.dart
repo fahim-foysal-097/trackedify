@@ -11,11 +11,9 @@ class MyBarChart extends StatefulWidget {
 }
 
 class _MyBarChartState extends State<MyBarChart> {
-  // Holds last 7 days of expenses totals
   List<double> dailyTotals = List.filled(7, 0);
-
-  // Holds last 7 actual DateTime objects
   List<DateTime> last7Days = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -28,8 +26,6 @@ class _MyBarChartState extends State<MyBarChart> {
     final data = await db.query('expenses', orderBy: 'date ASC');
 
     final now = DateTime.now();
-
-    // store last 7 days
     last7Days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
 
     Map<String, double> totals = {};
@@ -47,6 +43,7 @@ class _MyBarChartState extends State<MyBarChart> {
 
     setState(() {
       dailyTotals = totals.values.toList();
+      isLoading = false;
     });
   }
 
@@ -58,6 +55,17 @@ class _MyBarChartState extends State<MyBarChart> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Check if all values are 0
+    final hasData = dailyTotals.any((e) => e > 0);
+
+    if (!hasData) {
+      return const Center(child: Text("No data to show"));
+    }
+
     return BarChart(
       BarChartData(
         barTouchData: BarTouchData(
@@ -105,9 +113,7 @@ class _MyBarChartState extends State<MyBarChart> {
         borderData: FlBorderData(show: false),
         gridData: const FlGridData(show: false),
         alignment: BarChartAlignment.spaceAround,
-        maxY: dailyTotals.isEmpty
-            ? 20
-            : (dailyTotals.reduce((a, b) => a > b ? a : b) * 1.2),
+        maxY: dailyTotals.reduce((a, b) => a > b ? a : b) * 1.2,
         barGroups: List.generate(7, (i) {
           return BarChartGroupData(
             x: i,
@@ -117,7 +123,7 @@ class _MyBarChartState extends State<MyBarChart> {
                 gradient: _barsGradient,
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
-                  toY: (dailyTotals.reduce((a, b) => a > b ? a : b) * 1),
+                  toY: dailyTotals.reduce((a, b) => a > b ? a : b),
                   color: Colors.grey.shade200,
                 ),
               ),
@@ -136,12 +142,10 @@ class _MyBarChartState extends State<MyBarChart> {
       fontSize: 12,
     );
 
-    // Ensure index is valid
     if (value.toInt() < 0 || value.toInt() >= last7Days.length) {
       return const SizedBox.shrink();
     }
 
-    // Format date (e.g. "Aug 20")
     final date = last7Days[value.toInt()];
     final text = DateFormat('MM/dd').format(date);
 
