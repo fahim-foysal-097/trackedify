@@ -27,11 +27,24 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   Category getCategory(String name) {
-    // find the category by name, default to Food if not found
     return categories.firstWhere(
       (cat) => cat.name == name,
       orElse: () => categories[0],
     );
+  }
+
+  Future<void> deleteExpense(int id) async {
+    final db = await DatabaseHelper().database;
+    await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
+    await loadExpenses();
+
+    setState(() {});
+
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Expense deleted')));
+    }
   }
 
   @override
@@ -44,73 +57,95 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(5, 20, 5, 20),
-        children: [
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            itemCount: expenses.length,
-            itemBuilder: (context, index) {
-              final expense = expenses[index];
-              final cat = getCategory(expense['category']);
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 5, 16, 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: cat.color,
-                              child: Icon(cat.icon, color: Colors.white),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              cat.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+      body: expenses.isEmpty
+          ? const Center(
+              child: Text(
+                'No expenses to show',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+              itemCount: expenses.length,
+              itemBuilder: (context, index) {
+                final expense = expenses[index];
+                final cat = getCategory(expense['category']);
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: cat.color,
+                        child: Icon(cat.icon, color: Colors.white),
+                      ),
+                      title: Text(
+                        cat.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              "-\$${expense['amount'].toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                      ),
+                      subtitle: Text(
+                        expense['date'],
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "-\$${expense['amount'].toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
                             ),
-                            Text(
-                              expense['date'],
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: () {
+                              // Confirm deletion
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Expense?'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this expense?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        deleteExpense(expense['id']);
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.delete_forever,
+                              color: Colors.red,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+                );
+              },
+            ),
     );
   }
 }

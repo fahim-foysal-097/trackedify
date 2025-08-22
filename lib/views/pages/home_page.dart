@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                           return const ExpenseHistoryPage();
                         },
                       ),
-                    );
+                    ).then((_) => loadExpenses());
                   },
                   child: const Text(
                     'Show all',
