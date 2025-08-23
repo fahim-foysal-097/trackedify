@@ -2,6 +2,13 @@
 
 Spendle is a lightweight personal expense tracker designed to help you take control of your finances with ease.
 
+- Track & categorize your expenses
+- Analyze your spending patterns with detailed insights
+- Interactive charts & visualizations
+- Simple, clean, and intuitive UI
+- Works fully offline (your data stays on your device)
+- Delete expenses anytime
+
 ## Screenshots
 
 <p float="center">
@@ -28,3 +35,37 @@ first run :
 Then install compatible apk from build forlder.
 
 [Learn More](https://docs.flutter.dev/deployment/android)
+
+
+#### Structure
+```
+Project Root
+├── analysis_options.yaml
+├── android
+├── assets
+│   ├── icons
+│   ├── img
+│   └── lotties
+├── flutter_launcher_icons.yaml
+├── ios
+├── lib
+│   ├── data
+│   │   └── notifiers.dart
+│   ├── database
+│   │   ├── database_helper.dart
+│   │   ├── Logic
+│   │   └── models
+│   ├── main.dart
+│   ├── shared
+│   │   ├── constants
+│   │   └── widgets
+│   └── views
+│       ├── pages
+│       ├── stats
+│       └── widget_tree.dart
+├── LICENSE
+├── pubspec.lock
+├── pubspec.yaml
+├── readme_assets
+├── README.md
+```
