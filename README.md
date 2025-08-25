@@ -24,13 +24,17 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 
 ### Test in debug mode
 
-`flutter run`
+```bash
+flutter run
+```
 
 ### Build
 
 first run :
 
-`flutter build apk --split-per-abi`
+```bash
+flutter build apk --split-per-abi
+```
 
 Then install compatible apk from build forlder.
 
