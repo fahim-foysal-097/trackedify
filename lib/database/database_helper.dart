@@ -7,9 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _db;
 
-  factory DatabaseHelper() {
-    return _instance;
-  }
+  factory DatabaseHelper() => _instance;
 
   DatabaseHelper._internal();
 
@@ -25,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Incremented version
+      version: 2, // Incremented version for upgrade
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -49,15 +47,88 @@ class DatabaseHelper {
               tips_shown INTEGER DEFAULT 0
             )
           ''');
+
+          // --- Table: Categories ---
+          await txn.execute('''
+            CREATE TABLE categories (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              color INTEGER NOT NULL,
+              icon_code INTEGER NOT NULL
+            )
+          ''');
+
+          // Insert default categories
+          final defaultCategories = [
+            ['Food', 0xFFFFA500, 0xf736],
+            ['Transport', 0xFF2196F3, 0xe1d5],
+            ['Shopping', 0xFF673AB7, 0xf37f],
+            ['Entertainment', 0xFF4CAF50, 0xf1f5],
+            ['Game', 0xFFE91E63, 0xe6aa],
+            ['Bills', 0xFFFFC107, 0xe37c],
+            ['Health', 0xFFF44336, 0xe305],
+            ['Education', 0xFF009688, 0xf33c],
+            ['Groceries', 0xFFA52A2A, 0xe395],
+            ['Travel', 0xFF00BCD4, 0xe299],
+            ['Fuel', 0xFFFF5722, 0xe394],
+            ['Subscriptions', 0xFF3F51B5, 0xe618],
+            ['Pets', 0xFFCDDC39, 0xe4a1],
+            ['Rent', 0xFF607D8B, 0xf107],
+            ['Investment', 0xFF673AB7, 0xe67f],
+          ];
+
+          for (var cat in defaultCategories) {
+            await txn.insert('categories', {
+              'name': cat[0],
+              'color': cat[1],
+              'icon_code': cat[2],
+            });
+          }
         });
       },
-
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          // Add the new column for existing databases
+          // Add tips_shown column if upgrading
+          await db.execute(
+            'ALTER TABLE user_info ADD COLUMN tips_shown INTEGER DEFAULT 0',
+          );
+
+          // Create categories table if it does not exist
           await db.execute('''
-            ALTER TABLE user_info ADD COLUMN tips_shown INTEGER DEFAULT 0
+            CREATE TABLE IF NOT EXISTS categories (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              color INTEGER NOT NULL,
+              icon_code INTEGER NOT NULL
+            )
           ''');
+
+          // Insert default categories
+          final defaultCategories = [
+            ['Food', 0xFFFFA500, 0xf736],
+            ['Transport', 0xFF2196F3, 0xe1d5],
+            ['Shopping', 0xFF673AB7, 0xf37f],
+            ['Entertainment', 0xFF4CAF50, 0xf1f5],
+            ['Game', 0xFFE91E63, 0xe6aa],
+            ['Bills', 0xFFFFC107, 0xe37c],
+            ['Health', 0xFFF44336, 0xe305],
+            ['Education', 0xFF009688, 0xf33c],
+            ['Groceries', 0xFFA52A2A, 0xe395],
+            ['Travel', 0xFF00BCD4, 0xe299],
+            ['Fuel', 0xFFFF5722, 0xe394],
+            ['Subscriptions', 0xFF3F51B5, 0xe618],
+            ['Pets', 0xFFCDDC39, 0xe4a1],
+            ['Rent', 0xFF607D8B, 0xf107],
+            ['Investment', 0xFF673AB7, 0xe67f],
+          ];
+
+          for (var cat in defaultCategories) {
+            await db.insert('categories', {
+              'name': cat[0],
+              'color': cat[1],
+              'icon_code': cat[2],
+            });
+          }
         }
       },
     );
@@ -68,5 +139,22 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('expenses');
     await db.delete('user_info');
+    await db.delete('categories');
+  }
+
+  // Helper to fetch all categories
+  Future<List<Map<String, dynamic>>> getCategories() async {
+    final db = await database;
+    return db.query('categories', orderBy: 'id ASC');
+  }
+
+  // Helper to add a new category
+  Future<int> addCategory(String name, int color, int iconCode) async {
+    final db = await database;
+    return db.insert('categories', {
+      'name': name,
+      'color': color,
+      'icon_code': iconCode,
+    });
   }
 }

@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:spendle/database/Logic/add_expense.dart';
-import 'package:spendle/database/models/category.dart';
+import 'package:spendle/database/database_helper.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -17,12 +18,201 @@ class _AddPageState extends State<AddPage> {
   TextEditingController expenseController = TextEditingController();
   TextEditingController dateController = TextEditingController();
   DateTime selectedDate = DateTime.now();
-  Category? selectedCategory;
+
+  String? selectedCategoryName;
+  List<Map<String, dynamic>> categories = [];
+
+  final List<IconData> iconOptions = [
+    Icons.fastfood,
+    Icons.directions_bus,
+    Icons.shopping_cart,
+    Icons.movie_outlined,
+    Icons.videogame_asset,
+    Icons.lightbulb_outline,
+    Icons.health_and_safety,
+    Icons.school_outlined,
+    Icons.local_grocery_store,
+    Icons.flight_takeoff,
+    Icons.local_gas_station,
+    Icons.subscriptions,
+    Icons.card_giftcard,
+    Icons.sports_soccer,
+    Icons.pets,
+    Icons.account_balance,
+    Icons.home_outlined,
+    Icons.trending_up,
+    Icons.power,
+    Icons.security,
+    Icons.local_cafe,
+    Icons.local_bar,
+    Icons.local_pharmacy,
+    Icons.sports_basketball,
+    Icons.book,
+    Icons.music_note,
+    Icons.camera_alt,
+    Icons.phone_android,
+    Icons.computer,
+    Icons.more_horiz,
+  ];
 
   @override
   void initState() {
-    dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
     super.initState();
+    dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    loadCategories();
+  }
+
+  Future<void> loadCategories() async {
+    final dbCategories = await DatabaseHelper().getCategories();
+    setState(() {
+      categories = dbCategories.map((cat) {
+        return {
+          'name': cat['name'],
+          'color': Color(cat['color']),
+          'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
+        };
+      }).toList();
+
+      if (selectedCategoryName != null &&
+          !categories.any((c) => c['name'] == selectedCategoryName)) {
+        selectedCategoryName = null;
+      }
+    });
+  }
+
+  Future<void> addCustomCategory() async {
+    String name = '';
+    Color selectedColor = Colors.blue;
+    IconData selectedIcon = Icons.more_horiz;
+    TextEditingController nameController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('New Category'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    hintText: "Category Name",
+                    filled: true,
+                    fillColor: Colors.white,
+
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text("Pick Icon"),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: iconOptions.map((icon) {
+                    return GestureDetector(
+                      onTap: () {
+                        setStateDialog(() {
+                          selectedIcon = icon;
+                        });
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: selectedIcon == icon
+                            ? Colors.blue
+                            : Colors.grey[300],
+                        child: Icon(icon, color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                const Text("Pick Color"),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Color pickedColor = selectedColor;
+                    await showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Select Color'),
+                        content: SingleChildScrollView(
+                          child: ColorPicker(
+                            pickerColor: selectedColor,
+                            onColorChanged: (color) => pickedColor = color,
+                            enableAlpha: false,
+                            displayThumbColor: true,
+                            pickerAreaHeightPercent: 0.8,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setStateDialog(() {
+                                selectedColor = pickedColor;
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Select'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: selectedColor,
+                    radius: 24,
+                    child: const Icon(Icons.edit, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                name = nameController.text.trim();
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (name.isNotEmpty) {
+      await DatabaseHelper().addCategory(
+        name,
+        selectedColor.toARGB32(),
+        selectedIcon.codePoint,
+      );
+      await loadCategories();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Category "$name" added!')));
+    }
+  }
+
+  Map<String, dynamic>? getSelectedCategory() {
+    if (selectedCategoryName == null) return null;
+    try {
+      return categories.firstWhere((c) => c['name'] == selectedCategoryName);
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -51,52 +241,92 @@ class _AddPageState extends State<AddPage> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 50),
-                DropdownButtonFormField<Category>(
-                  menuMaxHeight: 400,
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  decoration: InputDecoration(
-                    hintText: "Category",
-                    filled: true,
-                    fillColor: Colors.white,
-                    prefixIcon: const Icon(
-                      FontAwesomeIcons.list,
-                      size: 18,
-                      color: Colors.grey,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  initialValue: selectedCategory,
-                  items: categories.map((cat) {
-                    return DropdownMenuItem<Category>(
-                      value: cat,
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: cat.color,
-                            radius: 14,
-                            child: Icon(
-                              cat.icon,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(cat.name),
-                        ],
-                      ),
-                    );
-                  }).toList(),
 
-                  onChanged: (cat) {
-                    setState(() {
-                      selectedCategory = cat;
-                    });
-                  },
+                // ------------------ CATEGORY SELECTOR ------------------
+                SizedBox(
+                  height: 80,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length + 1, // +1 for Add button
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        // Add Category button
+                        return GestureDetector(
+                          onTap: addCustomCategory,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.amber,
+                                    width: 2,
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.amber,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                "Add",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final cat = categories[index - 1]; // shift by -1
+                      final isSelected = cat['name'] == selectedCategoryName;
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedCategoryName = cat['name'];
+                          });
+                        },
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: cat['color'],
+                              radius: 24,
+                              child: Icon(
+                                cat['icon'],
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              cat['name'],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected ? Colors.blue : Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 20),
+
+                // Amount field
                 TextField(
                   controller: expenseController,
                   textAlignVertical: TextAlignVertical.center,
@@ -108,7 +338,6 @@ class _AddPageState extends State<AddPage> {
                   ],
                   decoration: InputDecoration(
                     hintText: "Amount",
-                    // prefix: Text('\$ '),
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
@@ -123,6 +352,8 @@ class _AddPageState extends State<AddPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Date field
                 TextField(
                   controller: dateController,
                   textAlignVertical: TextAlignVertical.center,
@@ -136,7 +367,6 @@ class _AddPageState extends State<AddPage> {
                       ),
                       lastDate: DateTime.now().add(const Duration(days: 10)),
                     );
-
                     if (setDate != null) {
                       dateController.text = DateFormat(
                         'dd/MM/yyyy',
@@ -160,6 +390,8 @@ class _AddPageState extends State<AddPage> {
                   ),
                 ),
                 const SizedBox(height: 30),
+
+                // Save button
                 SizedBox(
                   width: double.infinity,
                   height: kToolbarHeight,
@@ -171,8 +403,7 @@ class _AddPageState extends State<AddPage> {
                       ),
                     ),
                     onPressed: () {
-                      // Category check
-                      if (selectedCategory == null) {
+                      if (selectedCategoryName == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Please select a category'),
@@ -180,11 +411,9 @@ class _AddPageState extends State<AddPage> {
                         );
                         return;
                       }
+                      final category = getSelectedCategory();
+                      if (category == null) return;
 
-                      // Date
-                      final date = selectedDate;
-
-                      // Amount check
                       final amount = double.tryParse(expenseController.text);
                       if (amount == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,11 +422,10 @@ class _AddPageState extends State<AddPage> {
                         return;
                       }
 
-                      // Insert into DB
                       addExpense(
-                        category: selectedCategory!.name,
+                        category: category['name'],
                         amount: amount,
-                        date: date,
+                        date: selectedDate,
                       );
 
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,11 +433,7 @@ class _AddPageState extends State<AddPage> {
                       );
 
                       Navigator.pop(context);
-
-                      // Clear fields
-                      setState(() {
-                        selectedCategory = null;
-                      });
+                      setState(() => selectedCategoryName = null);
                       expenseController.clear();
                       dateController.clear();
                     },

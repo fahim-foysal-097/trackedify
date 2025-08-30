@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/database/models/category.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {
@@ -14,6 +13,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
     with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> expenses = [];
   bool showTip = false;
+  Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
 
   late AnimationController _controller;
   late Animation<Offset> _wiggleAnimation;
@@ -22,6 +22,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
   void initState() {
     super.initState();
     initAnimation();
+    loadCategories();
     loadExpenses();
   }
 
@@ -37,6 +38,19 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
     _controller.repeat(reverse: true);
   }
 
+  Future<void> loadCategories() async {
+    final dbCategories = await DatabaseHelper().getCategories();
+    setState(() {
+      categoryMap = {
+        for (var cat in dbCategories)
+          cat['name']: {
+            'color': Color(cat['color']),
+            'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
+          },
+      };
+    });
+  }
+
   Future<void> checkTips() async {
     if (expenses.isEmpty) return; // Do not show tip if no data
 
@@ -44,7 +58,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
     final result = await db.query('user_info', limit: 1);
 
     if (result.isEmpty) {
-      // Insert default user row if none exists
       await db.insert('user_info', {'username': 'User', 'tips_shown': 0});
     }
 
@@ -55,7 +68,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
       setState(() {
         showTip = true;
       });
-      // Update tips_shown to 1 so it never shows again
       await db.update(
         'user_info',
         {'tips_shown': 1},
@@ -71,14 +83,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
     setState(() {
       expenses = data;
     });
-    await checkTips(); // check tips after loading data
+    await checkTips();
   }
 
-  Category getCategory(String name) {
-    return categories.firstWhere(
-      (cat) => cat.name == name,
-      orElse: () => categories[0],
-    );
+  Map<String, dynamic> getCategory(String name) {
+    return categoryMap[name] ?? {'color': Colors.grey, 'icon': Icons.category};
   }
 
   Future<void> deleteExpense(int id) async {
@@ -94,11 +103,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
   }
 
   void confirmDelete(Map<String, dynamic> expense) {
-    if (showTip) {
-      setState(() {
-        showTip = false;
-      });
-    }
+    if (showTip) setState(() => showTip = false);
 
     showDialog(
       context: context,
@@ -123,11 +128,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
   }
 
   void openEdit(Map<String, dynamic> expense) {
-    if (showTip) {
-      setState(() {
-        showTip = false;
-      });
-    }
+    if (showTip) setState(() => showTip = false);
 
     Navigator.push(
       context,
@@ -179,11 +180,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: cat.color,
-                              child: Icon(cat.icon, color: Colors.white),
+                              backgroundColor: cat['color'],
+                              child: Icon(cat['icon'], color: Colors.white),
                             ),
                             title: Text(
-                              cat.name,
+                              expense['category'],
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/database/models/category.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/shared/widgets/overview_widget.dart';
@@ -17,11 +16,26 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> expenses = [];
+  Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
 
   @override
   void initState() {
     super.initState();
+    loadCategories();
     loadExpenses();
+  }
+
+  Future<void> loadCategories() async {
+    final dbCategories = await DatabaseHelper().getCategories();
+    setState(() {
+      categoryMap = {
+        for (var cat in dbCategories)
+          cat['name']: {
+            'color': Color(cat['color']),
+            'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
+          },
+      };
+    });
   }
 
   Future<void> loadExpenses() async {
@@ -32,12 +46,8 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Category getCategory(String name) {
-    // find the category by name, default to Food if not found
-    return categories.firstWhere(
-      (cat) => cat.name == name,
-      orElse: () => categories[0],
-    );
+  Map<String, dynamic> getCategory(String name) {
+    return categoryMap[name] ?? {'color': Colors.grey, 'icon': Icons.category};
   }
 
   @override
@@ -67,16 +77,18 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddPage()),
-          ).then((_) => loadExpenses());
+          ).then((_) {
+            loadExpenses();
+            loadCategories(); // reload categories in case user added new
+          });
         },
       ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // using const will make OverviewWidget and WelcomeWidget not update
           Stack(
-            children: [
-              const CurvedboxWidget(),
+            children: const [
+              CurvedboxWidget(),
               OverviewWidget(),
               WelcomeWidget(),
             ],
@@ -96,11 +108,12 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) {
-                          return const ExpenseHistoryPage();
-                        },
+                        builder: (context) => const ExpenseHistoryPage(),
                       ),
-                    ).then((_) => loadExpenses());
+                    ).then((_) {
+                      loadExpenses();
+                      loadCategories();
+                    });
                   },
                   child: const Text(
                     'Show all',
@@ -133,12 +146,12 @@ class _HomePageState extends State<HomePage> {
                         Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: cat.color,
-                              child: Icon(cat.icon, color: Colors.white),
+                              backgroundColor: cat['color'],
+                              child: Icon(cat['icon'], color: Colors.white),
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              cat.name,
+                              expense['category'],
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
