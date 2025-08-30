@@ -9,33 +9,16 @@ class ExpenseHistoryPage extends StatefulWidget {
   State<ExpenseHistoryPage> createState() => _ExpenseHistoryPageState();
 }
 
-class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
-    with SingleTickerProviderStateMixin {
+class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   List<Map<String, dynamic>> expenses = [];
   bool showTip = false;
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
 
-  late AnimationController _controller;
-  late Animation<Offset> _wiggleAnimation;
-
   @override
   void initState() {
     super.initState();
-    initAnimation();
     loadCategories();
     loadExpenses();
-  }
-
-  void initAnimation() {
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _wiggleAnimation = Tween<Offset>(
-      begin: const Offset(-0.02, 0),
-      end: const Offset(0.02, 0),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    _controller.repeat(reverse: true);
   }
 
   Future<void> loadCategories() async {
@@ -58,11 +41,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
     final result = await db.query('user_info', limit: 1);
 
     if (result.isEmpty) {
-      await db.insert('user_info', {'username': 'User', 'tips_shown': 0});
+      await db.insert('user_info', {
+        'username': 'User',
+        'history_tip_shown': 0,
+      });
     }
 
     final row = (await db.query('user_info', limit: 1)).first;
-    final tipsShown = row['tips_shown'] ?? 0;
+    final tipsShown = row['history_tip_shown'] ?? 0;
 
     if (tipsShown == 0) {
       setState(() {
@@ -70,7 +56,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
       });
       await db.update(
         'user_info',
-        {'tips_shown': 1},
+        {'history_tip_shown': 1},
         where: 'id = ?',
         whereArgs: [row['id']],
       );
@@ -137,12 +123,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -152,71 +132,22 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
         ),
         centerTitle: true,
       ),
-      body: Stack(
-        children: [
-          expenses.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No expenses to show',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                  itemCount: expenses.length,
-                  itemBuilder: (context, index) {
-                    final expense = expenses[index];
-                    final cat = getCategory(expense['category']);
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: GestureDetector(
-                        onTap: () => openEdit(expense),
-                        onLongPress: () => confirmDelete(expense),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: cat['color'],
-                              child: Icon(cat['icon'], color: Colors.white),
-                            ),
-                            title: Text(
-                              expense['category'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Text(
-                              expense['date'],
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            trailing: Text(
-                              "-\$${expense['amount'].toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-          if (showTip && expenses.isNotEmpty)
-            Positioned(
-              top: 10,
-              left: 0,
-              right: 0,
-              child: SlideTransition(
-                position: _wiggleAnimation,
-                child: Column(
-                  children: [
-                    Container(
+      body: expenses.isEmpty
+          ? const Center(
+              child: Text(
+                'No expenses to show',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+              itemCount: expenses.length + (showTip ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (showTip && index == 1) {
+                  // Show tip below the first expense
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                         vertical: 12,
                         horizontal: 20,
@@ -230,33 +161,52 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage>
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    CustomPaint(
-                      size: const Size(20, 10),
-                      painter: _TrianglePainter(),
+                  );
+                }
+
+                final adjustedIndex = showTip && index > 1 ? index - 1 : index;
+                final expense = expenses[adjustedIndex];
+                final cat = getCategory(expense['category']);
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: GestureDetector(
+                    onTap: () => openEdit(expense),
+                    onLongPress: () => confirmDelete(expense),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: cat['color'],
+                          child: Icon(cat['icon'], color: Colors.white),
+                        ),
+                        title: Text(
+                          expense['category'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          expense['date'],
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: Text(
+                          "-\$${expense['amount'].toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
-        ],
-      ),
     );
   }
-}
-
-class _TrianglePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.blueAccent;
-    final path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(size.width / 2, size.height);
-    path.lineTo(size.width, 0);
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -87,10 +87,10 @@ class _HomePageState extends State<HomePage> {
         padding: EdgeInsets.zero,
         children: [
           Stack(
-            children: const [
-              CurvedboxWidget(),
+            children: [
+              const CurvedboxWidget(),
               OverviewWidget(),
-              WelcomeWidget(),
+              const WelcomeWidget(),
             ],
           ),
           Padding(

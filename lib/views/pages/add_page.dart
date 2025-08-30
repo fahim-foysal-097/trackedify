@@ -22,6 +22,14 @@ class _AddPageState extends State<AddPage> {
   String? selectedCategoryName;
   List<Map<String, dynamic>> categories = [];
 
+  // -------- Tips --------
+  bool showTips = false;
+  List<String> tips = [
+    "💡 Tip: You can create your own categories!",
+    "💡 Tip: Long press a category to delete it.",
+    "💡 Tip: Tap a category to select it.",
+  ];
+
   final List<IconData> iconOptions = [
     Icons.fastfood,
     Icons.directions_bus,
@@ -60,6 +68,23 @@ class _AddPageState extends State<AddPage> {
     super.initState();
     dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
     loadCategories();
+    checkShowTips();
+  }
+
+  Future<void> checkShowTips() async {
+    final db = await DatabaseHelper().database;
+    final res = await db.query("user_info", limit: 1);
+    if (res.isEmpty) {
+      // create a default user row if none exists
+      await db.insert("user_info", {"username": "User"});
+      setState(() => showTips = true);
+      return;
+    }
+    final row = res.first;
+    if ((row["add_tip_shown"] ?? 0) == 0) {
+      setState(() => showTips = true);
+      await db.update("user_info", {"add_tip_shown": 1});
+    }
   }
 
   Future<void> loadCategories() async {
@@ -67,6 +92,7 @@ class _AddPageState extends State<AddPage> {
     setState(() {
       categories = dbCategories.map((cat) {
         return {
+          'id': cat['id'],
           'name': cat['name'],
           'color': Color(cat['color']),
           'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
@@ -100,7 +126,6 @@ class _AddPageState extends State<AddPage> {
                     hintText: "Category Name",
                     filled: true,
                     fillColor: Colors.white,
-
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide.none,
@@ -206,6 +231,36 @@ class _AddPageState extends State<AddPage> {
     }
   }
 
+  Future<void> deleteCategory(int id, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Category"),
+        content: Text("Are you sure you want to delete '$name'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final db = await DatabaseHelper().database;
+      await db.delete("categories", where: "id = ?", whereArgs: [id]);
+      await loadCategories();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Category '$name' deleted!")));
+    }
+  }
+
   Map<String, dynamic>? getSelectedCategory() {
     if (selectedCategoryName == null) return null;
     try {
@@ -240,7 +295,47 @@ class _AddPageState extends State<AddPage> {
                   "Add Expenses",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 20),
+
+                // ------------------ TIPS ------------------
+                if (showTips && tips.isNotEmpty)
+                  SizedBox(
+                    height: 60,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: tips.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onLongPress: () {
+                            setState(() => tips.removeAt(index));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blueAccent),
+                            ),
+                            child: Center(
+                              child: Text(
+                                tips[index],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 30),
 
                 // ------------------ CATEGORY SELECTOR ------------------
                 SizedBox(
@@ -296,6 +391,8 @@ class _AddPageState extends State<AddPage> {
                             selectedCategoryName = cat['name'];
                           });
                         },
+                        onLongPress: () =>
+                            deleteCategory(cat['id'], cat['name']),
                         child: Column(
                           children: [
                             CircleAvatar(
@@ -449,5 +546,18 @@ class _AddPageState extends State<AddPage> {
         ),
       ),
     );
+  }
+}
+
+extension ColorHex on Color {
+  int toARGB32() {
+    final alphaValue = (a * 255.0).round() & 0xff;
+    final redValue = (r * 255.0).round() & 0xff;
+    final greenValue = (g * 255.0).round() & 0xff;
+    final blueValue = (b * 255.0).round() & 0xff;
+    return (alphaValue << 24) |
+        (redValue << 16) |
+        (greenValue << 8) |
+        blueValue;
   }
 }
