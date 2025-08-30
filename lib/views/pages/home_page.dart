@@ -73,6 +73,7 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
+          // using const will make OverviewWidget and WelcomeWidget not update
           Stack(
             children: [
               const CurvedboxWidget(),

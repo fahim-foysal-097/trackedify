@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/database/models/category.dart';
+import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {
   const ExpenseHistoryPage({super.key});
@@ -38,13 +39,41 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
     await loadExpenses();
 
-    setState(() {});
-
     if (mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Expense deleted')));
     }
+  }
+
+  void confirmDelete(Map<String, dynamic> expense) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Expense?'),
+        content: const Text('Are you sure you want to delete this expense?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              deleteExpense(expense['id']);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void openEdit(Map<String, dynamic> expense) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditExpensePage(expense: expense)),
+    ).then((_) => loadExpenses());
   }
 
   @override
@@ -73,73 +102,37 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: cat.color,
-                        child: Icon(cat.icon, color: Colors.white),
+                  child: GestureDetector(
+                    onTap: () => openEdit(expense),
+                    onLongPress: () => confirmDelete(expense),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      title: Text(
-                        cat.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: cat.color,
+                          child: Icon(cat.icon, color: Colors.white),
                         ),
-                      ),
-                      subtitle: Text(
-                        expense['date'],
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "-\$${expense['amount'].toStringAsFixed(2)}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        title: Text(
+                          cat.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () {
-                              // Confirm deletion
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Delete Expense?'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this expense?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        deleteExpense(expense['id']);
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: const Icon(
-                              Icons.delete_forever,
-                              color: Colors.red,
-                            ),
+                        ),
+                        subtitle: Text(
+                          expense['date'],
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: Text(
+                          "-\$${expense['amount'].toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
