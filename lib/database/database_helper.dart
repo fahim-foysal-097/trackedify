@@ -45,7 +45,9 @@ class DatabaseHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               username TEXT NOT NULL,
               history_tip_shown INTEGER DEFAULT 0,
-              add_tip_shown INTEGER DEFAULT 0
+              add_tip_shown INTEGER DEFAULT 0,
+              user_tip_shown INTEGER DEFAULT 0,
+              profile_pic TEXT
             )
           ''');
 
@@ -64,7 +66,6 @@ class DatabaseHelper {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          // Add columns safely
           try {
             await db.execute(
               'ALTER TABLE user_info ADD COLUMN history_tip_shown INTEGER DEFAULT 0',
@@ -74,6 +75,18 @@ class DatabaseHelper {
           try {
             await db.execute(
               'ALTER TABLE user_info ADD COLUMN add_tip_shown INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN user_tip_shown INTEGER DEFAULT 0',
+            );
+          } catch (_) {}
+
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN profile_pic TEXT',
             );
           } catch (_) {}
 

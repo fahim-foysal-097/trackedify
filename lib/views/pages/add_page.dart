@@ -307,7 +307,7 @@ class _AddPageState extends State<AddPage> {
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, index) {
                         return GestureDetector(
-                          onLongPress: () {
+                          onTap: () {
                             setState(() => tips.removeAt(index));
                           },
                           child: Container(
