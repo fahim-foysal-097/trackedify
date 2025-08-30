@@ -15,6 +15,7 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
     <img src="readme_assets/ss_home.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_add.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_all.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_edit.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_pie.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_bar.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_profile.jpg" alt="App Screenshot" width="200"/>
@@ -40,8 +41,8 @@ Then install compatible apk from build forlder.
 
 [Learn More](https://docs.flutter.dev/deployment/android)
 
-
 #### Structure
+
 ```
 Project Root
 ├── analysis_options.yaml

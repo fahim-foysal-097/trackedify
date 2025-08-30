@@ -147,18 +147,23 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   // Show tip below the first expense
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        "Tip: Tap to edit, long press to delete!",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => showTip = false);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          "Tip: Tap to edit, long press to delete!",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                       ),
                     ),
                   );
