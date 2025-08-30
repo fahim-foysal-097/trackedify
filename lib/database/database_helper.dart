@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Incremented version
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -45,13 +45,20 @@ class DatabaseHelper {
           await txn.execute('''
             CREATE TABLE user_info (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              username TEXT NOT NULL
+              username TEXT NOT NULL,
+              tips_shown INTEGER DEFAULT 0
             )
           ''');
-
-          // Insert default user row with username
-          // await db.insert('user_info', {'id': 1, 'username': 'User Name'});
         });
+      },
+
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Add the new column for existing databases
+          await db.execute('''
+            ALTER TABLE user_info ADD COLUMN tips_shown INTEGER DEFAULT 0
+          ''');
+        }
       },
     );
   }
