@@ -11,8 +11,10 @@ class ExpenseHistoryPage extends StatefulWidget {
 
 class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   List<Map<String, dynamic>> expenses = [];
+  List<Map<String, dynamic>> filteredExpenses = [];
   bool showTip = false;
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     final data = await db.query('expenses', orderBy: 'date DESC');
     setState(() {
       expenses = data;
+      filteredExpenses = data;
     });
     await checkTips();
   }
@@ -122,126 +125,174 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     ).then((_) => loadExpenses());
   }
 
+  /// Search filter
+  void filterExpenses(String query) {
+    if (query.isEmpty) {
+      setState(() => filteredExpenses = expenses);
+      return;
+    }
+
+    query = query.toLowerCase();
+    setState(() {
+      filteredExpenses = expenses.where((expense) {
+        final category = expense['category'].toString().toLowerCase();
+        final amount = expense['amount'].toString().toLowerCase();
+        final date = expense['date'].toString().toLowerCase();
+
+        return category.contains(query) ||
+            amount.contains(query) ||
+            date.contains(query);
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Expense History",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-        ),
-        centerTitle: true,
-      ),
-      body: expenses.isEmpty
-          ? const Center(
-              child: Text(
-                'No expenses to show',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Expense History",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          ),
+          centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(50),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                controller: _searchController,
+                onChanged: filterExpenses,
+                decoration: InputDecoration(
+                  hintText: "Search by category, amount, or date",
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-              itemCount: expenses.length + (showTip ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (showTip && index == 1) {
-                  // Show tip below the first expense
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => showTip = false);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 20,
+            ),
+          ),
+        ),
+        body: filteredExpenses.isEmpty
+            ? const Center(
+                child: Text(
+                  'No expenses to show',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                itemCount: filteredExpenses.length + (showTip ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (showTip && index == 1) {
+                    // Show tip below the first expense
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => showTip = false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            "Tip: Swipe left to edit,\n swipe right to delete!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
                         ),
+                      ),
+                    );
+                  }
+
+                  final adjustedIndex = showTip && index > 1
+                      ? index - 1
+                      : index;
+                  final expense = filteredExpenses[adjustedIndex];
+                  final cat = getCategory(expense['category']);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Dismissible(
+                      key: Key(expense['id'].toString()),
+                      background: Container(
                         decoration: BoxDecoration(
-                          color: Colors.blueAccent,
+                          color: Colors.red,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          "Tip: Swipe left to edit,\n swipe right to delete!",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      secondaryBackground: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.edit, color: Colors.white),
+                      ),
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          confirmDelete(expense); // delete
+                          return false;
+                        } else if (direction == DismissDirection.endToStart) {
+                          openEdit(expense); // edit
+                          return false;
+                        }
+                        return false;
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: cat['color'],
+                            child: Icon(cat['icon'], color: Colors.white),
+                          ),
+                          title: Text(
+                            expense['category'],
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: Text(
+                            expense['date'],
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          trailing: Text(
+                            "-\$${expense['amount'].toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   );
-                }
-
-                final adjustedIndex = showTip && index > 1 ? index - 1 : index;
-                final expense = expenses[adjustedIndex];
-                final cat = getCategory(expense['category']);
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Dismissible(
-                    key: Key(expense['id'].toString()),
-                    background: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    secondaryBackground: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.edit, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        // Swipe right → delete
-                        confirmDelete(expense);
-                        return false; // Don't auto-remove from list
-                      } else if (direction == DismissDirection.endToStart) {
-                        // Swipe left → edit
-                        openEdit(expense);
-                        return false;
-                      }
-                      return false;
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: cat['color'],
-                          child: Icon(cat['icon'], color: Colors.white),
-                        ),
-                        title: Text(
-                          expense['category'],
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Text(
-                          expense['date'],
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                        trailing: Text(
-                          "-\$${expense['amount'].toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                },
+              ),
+      ),
     );
   }
 }
