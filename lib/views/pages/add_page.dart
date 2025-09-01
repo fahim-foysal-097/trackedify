@@ -6,6 +6,7 @@ import 'package:lottie/lottie.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:spendle/database/Logic/add_expense.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:spendle/views/pages/calculator.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -148,7 +149,7 @@ class _AddPageState extends State<AddPage> {
                       child: CircleAvatar(
                         backgroundColor: selectedIcon == icon
                             ? Colors.blue
-                            : Colors.grey[300],
+                            : Colors.black54,
                         child: Icon(icon, color: Colors.white),
                       ),
                     );
@@ -268,6 +269,22 @@ class _AddPageState extends State<AddPage> {
     } catch (e) {
       return null;
     }
+  }
+
+  void _showCalculator() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => ExpenseCalculator(
+        onResult: (value) {
+          expenseController.text = value.toStringAsFixed(2);
+          Navigator.pop(context);
+        },
+      ),
+    );
   }
 
   @override
@@ -397,7 +414,7 @@ class _AddPageState extends State<AddPage> {
                           children: [
                             CircleAvatar(
                               backgroundColor: cat['color'],
-                              radius: 24,
+                              radius: isSelected ? 25 : 24,
                               child: Icon(
                                 cat['icon'],
                                 color: Colors.white,
@@ -423,30 +440,55 @@ class _AddPageState extends State<AddPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Amount field
-                TextField(
-                  controller: expenseController,
-                  textAlignVertical: TextAlignVertical.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}'),
+                // Amount field & Calculator
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: expenseController,
+                        textAlignVertical: TextAlignVertical.center,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          hintText: "Amount",
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: const Icon(
+                            FontAwesomeIcons.dollarSign,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Material(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        onTap: _showCalculator,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 17,
+                            horizontal: 17,
+                          ),
+                          child: const Icon(
+                            Icons.calculate,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
-                  decoration: InputDecoration(
-                    hintText: "Amount",
-                    filled: true,
-                    fillColor: Colors.white,
-                    prefixIcon: const Icon(
-                      FontAwesomeIcons.dollarSign,
-                      size: 18,
-                      color: Colors.grey,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 20),
 
