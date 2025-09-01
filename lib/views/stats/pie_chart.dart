@@ -30,8 +30,11 @@ class _MyPieChartState extends State<MyPieChart> {
       for (var cat in dbCategories)
         (cat['name'] as String): {
           'color': Color(cat['color'] as int),
-          'icon': IconData(cat['icon_code'] as int, fontFamily: 'MaterialIcons'),
-        }
+          'icon': IconData(
+            cat['icon_code'] as int,
+            fontFamily: 'MaterialIcons',
+          ),
+        },
     };
 
     // Load expenses
@@ -52,34 +55,37 @@ class _MyPieChartState extends State<MyPieChart> {
   @override
   Widget build(BuildContext context) {
     if (categoryTotals.isEmpty) {
-      return const Center(child: Text('No data for pie chart'));
+      return const Center(
+        child: Text(
+          "No data for pie chart",
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
     }
 
-    final sections = categoryTotals.entries.toList().asMap().entries.map(
-      (entry) {
-        final index = entry.key;
-        final data = entry.value;
-        final cat = categoryMap[data.key] ??
-            {
-              'color': Colors.grey,
-              'icon': Icons.category,
-            };
+    final sections = categoryTotals.entries.toList().asMap().entries.map((
+      entry,
+    ) {
+      final index = entry.key;
+      final data = entry.value;
+      final cat =
+          categoryMap[data.key] ??
+          {'color': Colors.grey, 'icon': Icons.category};
 
-        final isTouched = index == touchedIndex;
+      final isTouched = index == touchedIndex;
 
-        return PieChartSectionData(
-          color: cat['color'] as Color,
-          value: data.value,
-          radius: isTouched ? 130 : 110,
-          title: isTouched ? '\$${data.value.toStringAsFixed(0)}' : '',
-          titleStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        );
-      },
-    ).toList();
+      return PieChartSectionData(
+        color: cat['color'] as Color,
+        value: data.value,
+        radius: isTouched ? 130 : 110,
+        title: isTouched ? '\$${data.value.toStringAsFixed(0)}' : '',
+        titleStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      );
+    }).toList();
 
     return Column(
       children: [
@@ -112,47 +118,45 @@ class _MyPieChartState extends State<MyPieChart> {
         Wrap(
           spacing: 14,
           runSpacing: 6,
-          children: categoryTotals.entries.toList().asMap().entries.map(
-            (entry) {
-              final index = entry.key;
-              final data = entry.value;
-              final cat = categoryMap[data.key] ??
-                  {
-                    'color': Colors.grey,
-                    'icon': Icons.category,
-                  };
+          children: categoryTotals.entries.toList().asMap().entries.map((
+            entry,
+          ) {
+            final index = entry.key;
+            final data = entry.value;
+            final cat =
+                categoryMap[data.key] ??
+                {'color': Colors.grey, 'icon': Icons.category};
 
-              final isSelected = touchedIndex == index;
+            final isSelected = touchedIndex == index;
 
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: cat['color'] as Color,
-                      shape: BoxShape.circle,
-                      border: isSelected
-                          ? Border.all(width: 2, color: Colors.black)
-                          : null,
-                    ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: cat['color'] as Color,
+                    shape: BoxShape.circle,
+                    border: isSelected
+                        ? Border.all(width: 2, color: Colors.black)
+                        : null,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${data.key} (\$${data.value.toStringAsFixed(0)})',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: isSelected ? Colors.black : Colors.grey[800],
-                    ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${data.key} (\$${data.value.toStringAsFixed(0)})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected ? Colors.black : Colors.grey[800],
                   ),
-                ],
-              );
-            },
-          ).toList(),
+                ),
+              ],
+            );
+          }).toList(),
         ),
       ],
     );

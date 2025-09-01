@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spendle/views/stats/bar_chart.dart';
+import 'package:spendle/views/stats/monthly_overview.dart';
 import 'package:spendle/views/stats/pie_chart.dart';
 
 class StatsPage extends StatelessWidget {
@@ -8,7 +9,7 @@ class StatsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2, // Two tabs
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
@@ -18,7 +19,8 @@ class StatsPage extends StatelessWidget {
           ),
           bottom: const TabBar(
             tabs: [
-              Tab(text: "All Time Expenses"),
+              Tab(text: "All Time"),
+              Tab(text: "Monthly"),
               Tab(text: "Last 7 Days"),
             ],
           ),
@@ -34,6 +36,7 @@ class StatsPage extends StatelessWidget {
                 ],
               ),
             ),
+            Padding(padding: EdgeInsets.all(16.0), child: MonthlyOverviewTab()),
             Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(children: [Expanded(child: MyBarChart())]),

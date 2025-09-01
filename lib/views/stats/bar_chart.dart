@@ -63,7 +63,12 @@ class _MyBarChartState extends State<MyBarChart> {
     final hasData = dailyTotals.any((e) => e > 0);
 
     if (!hasData) {
-      return const Center(child: Text("No data to show"));
+      return const Center(
+        child: Text(
+          "No data to show",
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
     }
 
     return BarChart(
