@@ -157,7 +157,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
           ),
           centerTitle: true,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(50),
+            preferredSize: const Size.fromHeight(70),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: TextField(
@@ -189,7 +189,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 ),
               )
             : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
                 itemCount: filteredExpenses.length + (showTip ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (showTip && index == 1) {

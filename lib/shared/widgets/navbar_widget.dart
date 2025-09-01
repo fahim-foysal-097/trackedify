@@ -31,7 +31,7 @@ class _NavBarState extends State<NavBarWidget> {
             ),
             NavigationDestination(
               icon: Icon(FontAwesomeIcons.userGear),
-              label: 'Functions',
+              label: 'User',
             ),
           ],
           onDestinationSelected: (int value) {
