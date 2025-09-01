@@ -211,7 +211,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
-                            "Tip: Swipe left to edit,\n swipe right to delete!",
+                            "Tip: Swipe left to delete,\n swipe right to edit!",
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
@@ -232,28 +232,45 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       key: Key(expense['id'].toString()),
                       background: Container(
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: Colors.blue,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.only(left: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.edit, color: Colors.white),
+                            SizedBox(width: 10),
+                            Text("Edit", style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       ),
                       secondaryBackground: Container(
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: Colors.red,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.edit, color: Colors.white),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            SizedBox(width: 10),
+                            Icon(Icons.delete, color: Colors.white),
+                          ],
+                        ),
                       ),
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
-                          confirmDelete(expense); // delete
+                          openEdit(expense);
                           return false;
                         } else if (direction == DismissDirection.endToStart) {
-                          openEdit(expense); // edit
+                          confirmDelete(expense);
                           return false;
                         }
                         return false;
