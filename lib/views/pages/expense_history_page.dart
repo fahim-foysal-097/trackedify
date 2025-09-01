@@ -161,7 +161,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
-                          "Tip: Tap to edit, long press to delete!",
+                          "Tip: Swipe left to edit,\n swipe right to delete!",
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
@@ -175,9 +176,38 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: GestureDetector(
-                    onTap: () => openEdit(expense),
-                    onLongPress: () => confirmDelete(expense),
+                  child: Dismissible(
+                    key: Key(expense['id'].toString()),
+                    background: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    secondaryBackground: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(Icons.edit, color: Colors.white),
+                    ),
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        // Swipe right → delete
+                        confirmDelete(expense);
+                        return false; // Don't auto-remove from list
+                      } else if (direction == DismissDirection.endToStart) {
+                        // Swipe left → edit
+                        openEdit(expense);
+                        return false;
+                      }
+                      return false;
+                    },
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
