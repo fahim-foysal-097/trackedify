@@ -37,7 +37,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   Future<void> checkTips() async {
-    if (expenses.isEmpty) return; // Do not show tip if no data
+    if (expenses.isEmpty) return;
 
     final db = await DatabaseHelper().database;
     final result = await db.query('user_info', limit: 1);
@@ -125,7 +125,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     ).then((_) => loadExpenses());
   }
 
-  /// Search filter
   void filterExpenses(String query) {
     if (query.isEmpty) {
       setState(() => filteredExpenses = expenses);
@@ -194,26 +193,29 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 itemCount: filteredExpenses.length + (showTip ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (showTip && index == 1) {
-                    // Show tip below the first expense
+                    // Tip in "callout" style
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => showTip = false);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 20,
+                      child: Card(
+                        color: Colors.lightBlue.shade50,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.lightbulb,
+                            color: Colors.blue,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            borderRadius: BorderRadius.circular(12),
+                          title: const Text(
+                            "Tip: Swipe left to delete, swipe right to edit!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
                           ),
-                          child: const Text(
-                            "Tip: Swipe left to delete,\n swipe right to edit!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey),
+                            onPressed: () => setState(() => showTip = false),
                           ),
                         ),
                       ),

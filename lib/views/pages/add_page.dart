@@ -333,16 +333,18 @@ class _AddPageState extends State<AddPage> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue,
+                              color: Colors.lightBlue.shade50,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.blueAccent),
+                              border: Border.all(
+                                color: Colors.lightBlueAccent.shade200,
+                              ),
                             ),
                             child: Center(
                               child: Text(
                                 tips[index],
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),

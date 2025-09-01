@@ -160,21 +160,34 @@ class _UserPageState extends State<UserPage> {
                       ),
                       const SizedBox(height: 10),
                       if (showTip)
-                        GestureDetector(
-                          onTap: () => setState(() => showTip = false),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 16,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Card(
+                            color: Colors.lightBlue.shade50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.blueAccent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              "Tip: Tap to change profile picture \nand long press to delete!",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                            child: ListTile(
+                              leading: const Icon(
+                                Icons.lightbulb,
+                                color: Colors.blue,
+                              ),
+                              title: const Text(
+                                "Tip: Tap to change profile picture and long press to delete!",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () =>
+                                    setState(() => showTip = false),
+                              ),
                             ),
                           ),
                         ),
