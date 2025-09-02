@@ -7,18 +7,20 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 - Interactive charts & visualizations
 - Simple, clean, and intuitive UI
 - Works fully offline (your data stays on your device)
-- Delete expenses anytime
+- Delete or edit expenses anytime
+- Search expenses by category, amount or date
+- Swipe feature
 
 ## Screenshots
 
 <p float="center">
     <img src="readme_assets/ss_home.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_add.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_calculator.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_all.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_edit.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_monthly.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_pie.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_bar.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_profile.jpg" alt="App Screenshot" width="200"/>
 </p>
 
 ## Test/Build
