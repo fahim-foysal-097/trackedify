@@ -170,8 +170,7 @@ class DatabaseHelper {
       await dir.create(recursive: true); // create folder if missing
     }
 
-    final fileName =
-        "expense_backup_${DateTime.now().millisecondsSinceEpoch}.db";
+    final fileName = "expense_backup_${DateTime.now()}.db";
     final targetFile = File(join(targetDir, fileName));
 
     return dbFile.copy(targetFile.path);
