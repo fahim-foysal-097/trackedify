@@ -17,9 +17,13 @@ class DatabaseHelper {
     return _db!;
   }
 
-  Future<Database> initDb() async {
+  Future<String> _dbPath() async {
     Directory documentsDir = await getApplicationDocumentsDirectory();
-    String path = join(documentsDir.path, "expense_tracker.db");
+    return join(documentsDir.path, "expense_tracker.db");
+  }
+
+  Future<Database> initDb() async {
+    String path = await _dbPath();
 
     return await openDatabase(
       path,
@@ -154,5 +158,37 @@ class DatabaseHelper {
       'color': color,
       'icon_code': iconCode,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // Export DB
+  Future<File> exportDatabase(String targetDir) async {
+    final dbPath = await _dbPath();
+    final dbFile = File(dbPath);
+
+    final dir = Directory(targetDir);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true); // create folder if missing
+    }
+
+    final fileName =
+        "expense_backup_${DateTime.now().millisecondsSinceEpoch}.db";
+    final targetFile = File(join(targetDir, fileName));
+
+    return dbFile.copy(targetFile.path);
+  }
+
+  // Import DB from file
+  Future<void> importDatabase(String sourcePath) async {
+    final dbPath = await _dbPath();
+
+    if (_db != null) {
+      await _db!.close();
+      _db = null;
+    }
+
+    final sourceFile = File(sourcePath);
+    await sourceFile.copy(dbPath);
+
+    await database; // reopen
   }
 }

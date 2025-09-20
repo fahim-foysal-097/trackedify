@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' show join;
+import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/icon_text_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
@@ -40,12 +43,14 @@ class _UserPageState extends State<UserPage> {
       profilePicPath = null;
       username = "User";
       showTip = true;
+      if (!mounted) return;
       setState(() {});
       return;
     }
 
     final row = res.first;
     userId = row['id'] as int?;
+    if (!mounted) return;
     setState(() {
       username = row['username'] as String? ?? "User";
       profilePicPath = row['profile_pic'] as String?;
@@ -65,6 +70,8 @@ class _UserPageState extends State<UserPage> {
   Future<void> pickProfilePicture() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (!mounted) return;
+
     if (pickedFile != null && userId != null) {
       profilePicPath = pickedFile.path;
       final db = await DatabaseHelper().database;
@@ -74,6 +81,7 @@ class _UserPageState extends State<UserPage> {
         where: 'id = ?',
         whereArgs: [userId],
       );
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -83,7 +91,7 @@ class _UserPageState extends State<UserPage> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (BuildContext context) => AlertDialog(
         title: const Text("Delete Profile Picture?"),
         content: const Text(
           "Are you sure you want to delete your profile picture?",
@@ -101,6 +109,7 @@ class _UserPageState extends State<UserPage> {
       ),
     );
 
+    if (!mounted) return;
     if (confirm == true) {
       profilePicPath = null;
       final db = await DatabaseHelper().database;
@@ -110,7 +119,63 @@ class _UserPageState extends State<UserPage> {
         where: 'id = ?',
         whereArgs: [userId],
       );
+      if (!mounted) return;
       setState(() {});
+    }
+  }
+
+  // Export DB
+  Future<void> exportDb() async {
+    try {
+      Directory? extDir;
+
+      if (Platform.isAndroid) {
+        // Use app's external files dir (no special permission needed)
+        extDir = await getExternalStorageDirectory();
+      } else {
+        // iOS sandboxed directory
+        extDir = await getApplicationDocumentsDirectory();
+      }
+
+      final exportDir = join(extDir!.path, 'expense_tracker_backup');
+
+      final file = await DatabaseHelper().exportDatabase(exportDir);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Database exported to: ${file.path}")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
+    }
+  }
+
+  // Export DB
+  Future<void> importDb() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['db'],
+      );
+
+      if (!mounted) return;
+
+      if (result != null && result.files.single.path != null) {
+        await DatabaseHelper().importDatabase(result.files.single.path!);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Database imported successfully!")),
+        );
+        await loadUserInfo();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
     }
   }
 
@@ -210,10 +275,12 @@ class _UserPageState extends State<UserPage> {
                     Icons.settings,
                     "Settings",
                     onPressed: () {
+                      if (!mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SettingsPage(),
+                          builder: (BuildContext context) =>
+                              const SettingsPage(),
                         ),
                       );
                     },
@@ -222,9 +289,10 @@ class _UserPageState extends State<UserPage> {
                     Icons.delete_forever,
                     "Wipe Data",
                     onPressed: () {
+                      if (!mounted) return;
                       showDialog(
                         context: context,
-                        builder: (context) {
+                        builder: (BuildContext context) {
                           return AlertDialog.adaptive(
                             title: const Text("Wipe Data?"),
                             content: const Text(
@@ -264,13 +332,24 @@ class _UserPageState extends State<UserPage> {
                     },
                   ),
                   IconTextButton(
+                    Icons.upload,
+                    "Export Database",
+                    onPressed: exportDb,
+                  ),
+                  IconTextButton(
+                    Icons.download,
+                    "Import Database",
+                    onPressed: importDb,
+                  ),
+                  IconTextButton(
                     Icons.info,
                     "About",
                     onPressed: () {
+                      if (!mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AboutPage(),
+                          builder: (BuildContext context) => const AboutPage(),
                         ),
                       );
                     },

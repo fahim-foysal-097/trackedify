@@ -47,6 +47,7 @@ dependencies:
   image_picker: ^1.2.0
   flutter_native_splash: ^2.4.6
   math_expressions: ^3.1.0
+  file_picker: ^10.3.3
 
 dev_dependencies:
   flutter_test:
