@@ -42,12 +42,12 @@ class _WidgetTreeState extends State<WidgetTree> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // No user → show tutorial first
+    // No user -> show tutorial first
     if (!hasUser) {
       return const OnboardingPage();
     }
 
-    // User exists → main app
+    // User exists -> main app
     return Scaffold(
       body: ValueListenableBuilder(
         valueListenable: selectedPageNotifier,

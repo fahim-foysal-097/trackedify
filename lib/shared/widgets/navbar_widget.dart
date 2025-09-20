@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:spendle/data/notifiers.dart';
 
 class NavBarWidget extends StatefulWidget {
@@ -12,32 +13,36 @@ class NavBarWidget extends StatefulWidget {
 class _NavBarState extends State<NavBarWidget> {
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<int>(
       valueListenable: selectedPageNotifier,
       builder: (context, selectedPage, child) {
-        return NavigationBar(
-          backgroundColor: Colors.white,
-          indicatorColor: Theme.of(context).colorScheme.secondary,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        return SizedBox(
           height: 60,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(FontAwesomeIcons.house),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(FontAwesomeIcons.chartColumn),
-              label: 'Stats',
-            ),
-            NavigationDestination(
-              icon: Icon(FontAwesomeIcons.userGear),
-              label: 'User',
-            ),
-          ],
-          onDestinationSelected: (int value) {
-            selectedPageNotifier.value = value;
-          },
-          selectedIndex: selectedPage,
+          child: SalomonBottomBar(
+            currentIndex: selectedPage,
+            selectedItemColor: const Color(0xff6200ee),
+            unselectedItemColor: const Color(0xff757575),
+            onTap: (index) {
+              selectedPageNotifier.value = index;
+            },
+            items: [
+              SalomonBottomBarItem(
+                icon: const Icon(FontAwesomeIcons.houseChimney),
+                title: const Text('Home'),
+                selectedColor: Colors.purple,
+              ),
+              SalomonBottomBarItem(
+                icon: const Icon(FontAwesomeIcons.chartSimple),
+                title: const Text('Stats'),
+                selectedColor: Colors.pink,
+              ),
+              SalomonBottomBarItem(
+                icon: const Icon(FontAwesomeIcons.solidAddressCard),
+                title: const Text('User'),
+                selectedColor: Colors.blue,
+              ),
+            ],
+          ),
         );
       },
     );

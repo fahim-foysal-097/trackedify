@@ -48,6 +48,7 @@ dependencies:
   flutter_native_splash: ^2.4.6
   math_expressions: ^3.1.0
   file_picker: ^10.3.3
+  salomon_bottom_bar: ^3.3.2
 
 dev_dependencies:
   flutter_test:
