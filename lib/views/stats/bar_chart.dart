@@ -41,10 +41,12 @@ class _MyBarChartState extends State<MyBarChart> {
       }
     }
 
-    setState(() {
-      dailyTotals = totals.values.toList();
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        dailyTotals = totals.values.toList();
+        isLoading = false;
+      });
+    }
   }
 
   LinearGradient get _barsGradient => const LinearGradient(
@@ -71,71 +73,79 @@ class _MyBarChartState extends State<MyBarChart> {
       );
     }
 
-    return BarChart(
-      BarChartData(
-        barTouchData: BarTouchData(
-          enabled: false,
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (group) => Colors.transparent,
-            tooltipPadding: EdgeInsets.zero,
-            tooltipMargin: 8,
-            getTooltipItem:
-                (
-                  BarChartGroupData group,
-                  int groupIndex,
-                  BarChartRodData rod,
-                  int rodIndex,
-                ) {
-                  return BarTooltipItem(
-                    rod.toY.round().toString(),
-                    const TextStyle(
-                      color: Colors.cyan,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  );
-                },
-          ),
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 36,
-              getTitlesWidget: getTitles,
+    // ensure a safe maxY (avoid zero or negative)
+    final maxDaily = dailyTotals.reduce((a, b) => a > b ? a : b);
+    final computedMaxY = (maxDaily * 1.2).clamp(1.0, double.infinity);
+
+    // give the bar chart a bounded height to avoid unbounded/expanding behavior
+    return SizedBox(
+      height: 450,
+      child: BarChart(
+        BarChartData(
+          barTouchData: BarTouchData(
+            enabled: false,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (group) => Colors.transparent,
+              tooltipPadding: EdgeInsets.zero,
+              tooltipMargin: 8,
+              getTooltipItem:
+                  (
+                    BarChartGroupData group,
+                    int groupIndex,
+                    BarChartRodData rod,
+                    int rodIndex,
+                  ) {
+                    return BarTooltipItem(
+                      rod.toY.round().toString(),
+                      const TextStyle(
+                        color: Colors.cyan,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
             ),
           ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        gridData: const FlGridData(show: false),
-        alignment: BarChartAlignment.spaceAround,
-        maxY: dailyTotals.reduce((a, b) => a > b ? a : b) * 1.2,
-        barGroups: List.generate(7, (i) {
-          return BarChartGroupData(
-            x: i,
-            barRods: [
-              BarChartRodData(
-                toY: dailyTotals[i],
-                gradient: _barsGradient,
-                backDrawRodData: BackgroundBarChartRodData(
-                  show: true,
-                  toY: dailyTotals.reduce((a, b) => a > b ? a : b),
-                  color: Colors.grey.shade200,
-                ),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 36,
+                getTitlesWidget: getTitles,
               ),
-            ],
-            showingTooltipIndicators: [0],
-          );
-        }),
+            ),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          gridData: const FlGridData(show: false),
+          alignment: BarChartAlignment.spaceAround,
+          maxY: computedMaxY,
+          barGroups: List.generate(7, (i) {
+            return BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: dailyTotals[i],
+                  gradient: _barsGradient,
+                  backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: maxDaily,
+                    color: Colors.grey.shade200,
+                  ),
+                ),
+              ],
+              showingTooltipIndicators: [0],
+            );
+          }),
+        ),
       ),
     );
   }

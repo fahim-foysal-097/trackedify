@@ -1,3 +1,4 @@
+// stats_page.dart
 import 'package:flutter/material.dart';
 import 'package:spendle/views/stats/bar_chart.dart';
 import 'package:spendle/views/stats/monthly_overview.dart';
@@ -25,21 +26,67 @@ class StatsPage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
+            // --- All Time tab ---
             Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 20),
-                  Expanded(child: MyPieChart()),
-                ],
+              padding: const EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [SizedBox(height: 20), MyPieChart()],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            Padding(padding: EdgeInsets.all(16.0), child: MonthlyOverviewTab()),
+
+            // --- Monthly tab ---
             Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(children: [Expanded(child: MyBarChart())]),
+              padding: const EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: const Column(
+                        children: [SizedBox(height: 8), MonthlyOverviewTab()],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // --- Last 7 Days tab ---
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: const Column(
+                        children: [SizedBox(height: 8), MyBarChart()],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),

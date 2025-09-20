@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> loadExpenses() async {
     final db = await DatabaseHelper().database;
-    final data = await db.query('expenses', orderBy: 'date DESC', limit: 4);
+    final data = await db.query('expenses', orderBy: 'date DESC', limit: 6);
     setState(() {
       expenses = data;
     });

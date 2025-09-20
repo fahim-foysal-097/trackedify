@@ -35,11 +35,12 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       Map<String, double> categoryTotals = {};
       double monthTotal = 0;
       for (var exp in expenses) {
-        monthTotal += exp['amount'];
+        final amount = (exp['amount'] as num).toDouble();
+        monthTotal += amount;
         categoryTotals.update(
           exp['category'],
-          (value) => value + exp['amount'],
-          ifAbsent: () => exp['amount'],
+          (value) => value + amount,
+          ifAbsent: () => amount,
         );
       }
 
@@ -53,9 +54,16 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       });
     });
 
-    setState(() {
-      monthlyData = summary;
-    });
+    // optionally sort months descending
+    summary.sort(
+      (a, b) => (b['month'] as String).compareTo(a['month'] as String),
+    );
+
+    if (mounted) {
+      setState(() {
+        monthlyData = summary;
+      });
+    }
   }
 
   String formatMonth(String monthKey) {
@@ -91,12 +99,16 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       );
     }
 
+    // IMPORTANT: shrinkWrap + non-scrollable physics so this LIST won't conflict
+    // with an outer SingleChildScrollView (the typical cause of the "unbounded height" error).
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: monthlyData.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final monthInfo = monthlyData[index];
-        final total = monthInfo['total'] as double;
+        final total = (monthInfo['total'] as num).toDouble();
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -122,7 +134,7 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               children: [
                 // Month
                 Text(
-                  formatMonth(monthInfo['month']),
+                  formatMonth(monthInfo['month'] as String),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -149,10 +161,13 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 ),
                 const SizedBox(height: 8),
 
-                ...monthInfo['topCategories'].map<Widget>((cat) {
-                  final category = cat.key.toString();
-                  final value = (cat.value as double);
-                  final percent = (value / total);
+                ...((monthInfo['topCategories'] as List).map<Widget>((
+                  catEntry,
+                ) {
+                  // catEntry is MapEntry<String,double>
+                  final category = catEntry.key.toString();
+                  final value = (catEntry.value as num).toDouble();
+                  final percent = total > 0 ? (value / total) : 0.0;
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -182,7 +197,7 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
-                            value: percent,
+                            value: percent.clamp(0.0, 1.0),
                             minHeight: 8,
                             backgroundColor: Colors.white24,
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -193,7 +208,7 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                       ],
                     ),
                   );
-                }).toList(),
+                })),
               ],
             ),
           ),
