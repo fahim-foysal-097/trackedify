@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart' show join;
-import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
@@ -24,6 +23,9 @@ class _UserPageState extends State<UserPage> {
   String? profilePicPath;
   bool showTip = false;
   int? userId;
+
+  // prevent concurrent import/export
+  bool _isProcessingDb = false;
 
   @override
   void initState() {
@@ -125,75 +127,164 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  // Export DB
-  Future<void> exportDb() async {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
+  /// Best-effort permission request on Android. Returns true if OK.
+  Future<bool> _requestStoragePermission() async {
+    if (!Platform.isAndroid) return true;
 
-    try {
-      Directory? extDir;
+    var status = await Permission.storage.status;
+    if (status.isGranted) return true;
 
-      if (Platform.isAndroid) {
-        // Use app's external files dir (no special permission needed)
-        extDir = await getExternalStorageDirectory();
-      } else {
-        // iOS sandboxed directory
-        extDir = await getApplicationDocumentsDirectory();
-      }
+    status = await Permission.storage.request();
+    if (status.isGranted) return true;
 
-      final exportDir = join(extDir!.path, 'expense_tracker_backup');
+    // fallback: try manage external storage for Android 11+
+    var manageStatus = await Permission.manageExternalStorage.status;
+    if (manageStatus.isGranted) return true;
 
-      final file = await DatabaseHelper().exportDatabase(exportDir);
+    manageStatus = await Permission.manageExternalStorage.request();
+    if (manageStatus.isGranted) return true;
 
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Database exported to: ${file.path}")),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
-    }
+    return false;
   }
 
-  // Import DB
-  Future<void> importDb() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['db'],
-      );
+  // Export DB — user picks directory; robust dialog handling; no isolates used
+  Future<void> exportDb() async {
+    if (_isProcessingDb || !mounted) return;
 
+    final permGranted = await _requestStoragePermission();
+    if (!permGranted) {
       if (!mounted) return;
-      if (result == null || result.files.single.path == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Storage permission denied.")),
+      );
+      return;
+    }
 
+    // Let user choose directory
+    String? selectedDir;
+    try {
+      selectedDir = await FilePicker.platform.getDirectoryPath();
+    } catch (_) {
+      selectedDir = null;
+    }
+
+    if (selectedDir == null || selectedDir.isEmpty) {
+      // user cancelled
+      return;
+    }
+
+    setState(() => _isProcessingDb = true);
+    bool dialogShown = false;
+
+    try {
+      // show progress
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+      dialogShown = true;
 
-      await DatabaseHelper().importDatabase(result.files.single.path!);
+      // perform export (async file copy) on main isolate — safe for I/O
+      final file = await DatabaseHelper().exportDatabase(selectedDir);
+
+      if (!mounted) return;
+
+      // close dialog if open
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Database exported to: ${file.path}")),
+      );
+    } catch (e) {
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
+      }
+    } finally {
+      setState(() => _isProcessingDb = false);
+    }
+  }
+
+  // Import DB — user picks file; robust dialog handling; reload UI after import
+  Future<void> importDb() async {
+    if (_isProcessingDb || !mounted) return;
+
+    final permGranted = await _requestStoragePermission();
+    if (!permGranted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Storage permission denied.")),
+      );
+      return;
+    }
+
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['db'],
+      );
+    } catch (e) {
+      result = null;
+    }
+
+    if (!mounted) return;
+    if (result == null || result.files.single.path == null) return;
+
+    final importPath = result.files.single.path!;
+
+    setState(() => _isProcessingDb = true);
+    bool dialogShown = false;
+
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      dialogShown = true;
+
+      await DatabaseHelper().importDatabase(importPath);
+
+      // close DB if needed, then reload
       await DatabaseHelper().closeDatabase();
       await loadUserInfo();
 
       if (!mounted) return;
-      Navigator.pop(context);
+
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+
+      // ensure UI refresh
+      setState(() {});
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Database imported successfully!")),
       );
     } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
+      }
+    } finally {
+      setState(() => _isProcessingDb = false);
     }
   }
 
@@ -350,17 +441,24 @@ class _UserPageState extends State<UserPage> {
                       );
                     },
                   ),
+                  // Wrap in void callbacks to keep parameter type VoidCallback
                   styledButton(
                     icon: FontAwesomeIcons.upload,
                     text: "Export Database",
                     iconColor: Colors.green,
-                    onPressed: exportDb,
+                    onPressed: () {
+                      if (_isProcessingDb) return;
+                      exportDb();
+                    },
                   ),
                   styledButton(
                     icon: FontAwesomeIcons.download,
                     text: "Import Database",
                     iconColor: Colors.deepPurple,
-                    onPressed: importDb,
+                    onPressed: () {
+                      if (_isProcessingDb) return;
+                      importDb();
+                    },
                   ),
                   styledButton(
                     icon: FontAwesomeIcons.circleInfo,
