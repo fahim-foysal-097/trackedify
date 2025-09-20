@@ -5,30 +5,51 @@ import 'package:spendle/database/database_helper.dart';
 class OverviewWidget extends StatelessWidget {
   const OverviewWidget({super.key});
 
-  /// Fetch total expenses, average daily, total transactions from DB
+  /// Fetch total expenses, average monthly, total transactions from DB
   Future<Map<String, dynamic>> _loadOverview() async {
     final db = await DatabaseHelper().database;
     final rows = await db.query('expenses');
 
     double totalExpenses = 0;
-    Map<String, double> dailyTotals = {};
+    final Map<String, double> monthlyTotals = {};
 
     for (var row in rows) {
       final amount = (row['amount'] as num).toDouble();
-      final date = row['date'] as String;
+      final dateStr = row['date'] as String;
       totalExpenses += amount;
-      dailyTotals[date] = (dailyTotals[date] ?? 0) + amount;
+
+      // Try to parse date with DateTime; fall back to splitting (e.g. "YYYY-MM-DD" or "YYYY/MM/DD")
+      String monthKey;
+      final dt = DateTime.tryParse(dateStr);
+      if (dt != null) {
+        // Key: "YYYY-MM"
+        monthKey =
+            '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}';
+      } else {
+        // Fallback: split on common separators and take first two parts
+        final parts = dateStr.split(RegExp(r'[-/]'));
+        if (parts.length >= 2) {
+          final year = parts[0].padLeft(4, '0');
+          final month = parts[1].padLeft(2, '0');
+          monthKey = '$year-$month';
+        } else {
+          // If all else fails use the raw date string as key (prevents crash)
+          monthKey = dateStr;
+        }
+      }
+
+      monthlyTotals[monthKey] = (monthlyTotals[monthKey] ?? 0) + amount;
     }
 
-    double avgDaily = 0;
-    if (dailyTotals.isNotEmpty) {
-      avgDaily =
-          dailyTotals.values.reduce((a, b) => a + b) / dailyTotals.length;
+    double avgMonthly = 0;
+    if (monthlyTotals.isNotEmpty) {
+      final totalPerMonth = monthlyTotals.values.reduce((a, b) => a + b);
+      avgMonthly = totalPerMonth / monthlyTotals.length;
     }
 
     return {
       'totalExpenses': totalExpenses,
-      'averageDaily': avgDaily,
+      'averageMonthly': avgMonthly,
       'totalTransactions': rows.length,
     };
   }
@@ -40,13 +61,13 @@ class OverviewWidget extends StatelessWidget {
       builder: (context, snapshot) {
         // Default values if DB not yet loaded
         double totalExpenses = 0;
-        double averageDaily = 0;
+        double averageMonthly = 0;
         int totalTransactions = 0;
 
         if (snapshot.hasData) {
-          totalExpenses = snapshot.data!['totalExpenses'];
-          averageDaily = snapshot.data!['averageDaily'];
-          totalTransactions = snapshot.data!['totalTransactions'];
+          totalExpenses = snapshot.data!['totalExpenses'] as double;
+          averageMonthly = snapshot.data!['averageMonthly'] as double;
+          totalTransactions = snapshot.data!['totalTransactions'] as int;
         }
 
         return Padding(
@@ -125,12 +146,12 @@ class OverviewWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Daily Average',
+                      'Monthly Average',
                       style: KTextstyle.smallHeaderText,
                     ),
                     const SizedBox(height: 0),
                     Text(
-                      '\$ ${averageDaily.toStringAsFixed(2)}',
+                      '\$ ${averageMonthly.toStringAsFixed(2)}',
                       style: KTextstyle.moneySmallText,
                     ),
                   ],

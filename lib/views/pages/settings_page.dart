@@ -113,7 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
-                      Icons.abc_outlined,
+                      Icons.type_specimen,
                       size: 28,
                       color: Colors.grey,
                     ),

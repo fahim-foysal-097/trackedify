@@ -160,6 +160,13 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
+  Future<void> closeDatabase() async {
+    if (_db != null) {
+      await _db!.close();
+      _db = null;
+    }
+  }
+
   // Export DB
   Future<File> exportDatabase(String targetDir) async {
     final dbPath = await _dbPath();

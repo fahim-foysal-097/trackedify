@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/constants/icon_text_button.dart';
+import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
@@ -126,6 +127,13 @@ class _UserPageState extends State<UserPage> {
 
   // Export DB
   Future<void> exportDb() async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     try {
       Directory? extDir;
 
@@ -142,6 +150,7 @@ class _UserPageState extends State<UserPage> {
       final file = await DatabaseHelper().exportDatabase(exportDir);
 
       if (!mounted) return;
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Database exported to: ${file.path}")),
       );
@@ -153,7 +162,7 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  // Export DB
+  // Import DB
   Future<void> importDb() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -162,17 +171,26 @@ class _UserPageState extends State<UserPage> {
       );
 
       if (!mounted) return;
+      if (result == null || result.files.single.path == null) return;
 
-      if (result != null && result.files.single.path != null) {
-        await DatabaseHelper().importDatabase(result.files.single.path!);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Database imported successfully!")),
-        );
-        await loadUserInfo();
-      }
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      await DatabaseHelper().importDatabase(result.files.single.path!);
+      await DatabaseHelper().closeDatabase();
+      await loadUserInfo();
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Database imported successfully!")),
+      );
     } catch (e) {
       if (!mounted) return;
+      Navigator.pop(context);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
@@ -267,13 +285,13 @@ class _UserPageState extends State<UserPage> {
               child: Text(username, style: KTextstyle.headerBlackText),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
+              padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconTextButton(
-                    Icons.settings,
-                    "Settings",
+                  styledButton(
+                    icon: FontAwesomeIcons.gear,
+                    text: "Settings",
                     onPressed: () {
                       if (!mounted) return;
                       Navigator.push(
@@ -285,9 +303,10 @@ class _UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  IconTextButton(
-                    Icons.delete_forever,
-                    "Wipe Data",
+                  styledButton(
+                    icon: FontAwesomeIcons.trash,
+                    text: "Wipe Data",
+                    iconColor: Colors.redAccent,
                     onPressed: () {
                       if (!mounted) return;
                       showDialog(
@@ -331,19 +350,22 @@ class _UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  IconTextButton(
-                    Icons.upload,
-                    "Export Database",
+                  styledButton(
+                    icon: FontAwesomeIcons.upload,
+                    text: "Export Database",
+                    iconColor: Colors.green,
                     onPressed: exportDb,
                   ),
-                  IconTextButton(
-                    Icons.download,
-                    "Import Database",
+                  styledButton(
+                    icon: FontAwesomeIcons.download,
+                    text: "Import Database",
+                    iconColor: Colors.deepPurple,
                     onPressed: importDb,
                   ),
-                  IconTextButton(
-                    Icons.info,
-                    "About",
+                  styledButton(
+                    icon: FontAwesomeIcons.circleInfo,
+                    text: "About",
+                    iconColor: Colors.orange,
                     onPressed: () {
                       if (!mounted) return;
                       Navigator.push(
