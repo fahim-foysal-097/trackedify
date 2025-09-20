@@ -91,10 +91,30 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   @override
   Widget build(BuildContext context) {
     if (monthlyData.isEmpty) {
-      return const Center(
-        child: Text(
-          "No monthly expenses to show",
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+      return Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height / 2),
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No monthly expenses to show',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Please add some expenses to view monthly expenses.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }

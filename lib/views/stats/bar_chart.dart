@@ -65,10 +65,30 @@ class _MyBarChartState extends State<MyBarChart> {
     final hasData = dailyTotals.any((e) => e > 0);
 
     if (!hasData) {
-      return const Center(
-        child: Text(
-          "No data to show",
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+      return Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height / 2),
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No data for the chart',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Please add some expenses to view the chart.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }
@@ -77,75 +97,154 @@ class _MyBarChartState extends State<MyBarChart> {
     final maxDaily = dailyTotals.reduce((a, b) => a > b ? a : b);
     final computedMaxY = (maxDaily * 1.2).clamp(1.0, double.infinity);
 
+    // Compute insights for last 7 days
+    final NumberFormat currency = NumberFormat.simpleCurrency(name: 'USD');
+    final double total7 = dailyTotals.fold(0.0, (a, b) => a + b);
+    final double avg7 = total7 / 7.0;
+    final int maxIndex = dailyTotals.indexWhere((v) => v == maxDaily);
+    final DateTime? maxDay = (maxIndex >= 0 && maxIndex < last7Days.length)
+        ? last7Days[maxIndex]
+        : null;
+
     // give the bar chart a bounded height to avoid unbounded/expanding behavior
     return SizedBox(
-      height: 450,
-      child: BarChart(
-        BarChartData(
-          barTouchData: BarTouchData(
-            enabled: false,
-            touchTooltipData: BarTouchTooltipData(
-              getTooltipColor: (group) => Colors.transparent,
-              tooltipPadding: EdgeInsets.zero,
-              tooltipMargin: 8,
-              getTooltipItem:
-                  (
-                    BarChartGroupData group,
-                    int groupIndex,
-                    BarChartRodData rod,
-                    int rodIndex,
-                  ) {
-                    return BarTooltipItem(
-                      rod.toY.round().toString(),
-                      const TextStyle(
-                        color: Colors.cyan,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
+      height: 520,
+      child: Column(
+        children: [
+          // Last 7 days insights row
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
             ),
-          ),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 36,
-                getTitlesWidget: getTitles,
-              ),
-            ),
-            leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          gridData: const FlGridData(show: false),
-          alignment: BarChartAlignment.spaceAround,
-          maxY: computedMaxY,
-          barGroups: List.generate(7, (i) {
-            return BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: dailyTotals[i],
-                  gradient: _barsGradient,
-                  backDrawRodData: BackgroundBarChartRodData(
-                    show: true,
-                    toY: maxDaily,
-                    color: Colors.grey.shade200,
+            child: Row(
+              children: [
+                // Total (7 days)
+                Expanded(
+                  child: _InsightCard(
+                    title: 'Total (7d)',
+                    value: currency.format(total7),
+                    subtitle: 'Total',
+                    backgroundColor: Colors.blue.shade50,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Average/day
+                Expanded(
+                  child: _InsightCard(
+                    title: 'Avg / day',
+                    value: currency.format(avg7),
+                    subtitle: 'Avg (7d)',
+                    backgroundColor: Colors.green.shade50,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Highest day
+                Expanded(
+                  child: _InsightCard(
+                    title: 'Highest day',
+                    value: maxDay != null
+                        ? DateFormat('MM/dd').format(maxDay)
+                        : '-',
+                    subtitle: currency.format(maxDaily),
+                    backgroundColor: Colors.orange.shade50,
                   ),
                 ),
               ],
-              showingTooltipIndicators: [0],
-            );
-          }),
-        ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // The bar chart
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: BarChart(
+                BarChartData(
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipColor: (group) => Colors.transparent,
+                      tooltipPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      tooltipMargin: 8,
+                      fitInsideHorizontally: true,
+                      fitInsideVertically: true,
+                      getTooltipItem:
+                          (
+                            BarChartGroupData group,
+                            int groupIndex,
+                            BarChartRodData rod,
+                            int rodIndex,
+                          ) {
+                            // Do not show tooltip if the value is 0 or less
+                            if (rod.toY <= 0) return null;
+
+                            // Format currency
+                            final String amountLabel = currency.format(rod.toY);
+
+                            return BarTooltipItem(
+                              amountLabel,
+                              const TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                    ),
+                  ),
+
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 36,
+                        getTitlesWidget: getTitles,
+                      ),
+                    ),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  gridData: const FlGridData(show: false),
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: computedMaxY,
+                  barGroups: List.generate(7, (i) {
+                    return BarChartGroupData(
+                      x: i,
+                      barRods: [
+                        BarChartRodData(
+                          toY: dailyTotals[i],
+                          gradient: _barsGradient,
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: maxDaily,
+                            color: Colors.grey.shade200,
+                          ),
+                        ),
+                      ],
+                      // only show tooltip indicator for non-zero bars
+                      showingTooltipIndicators: dailyTotals[i] > 0
+                          ? [0]
+                          : <int>[],
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -168,6 +267,65 @@ class _MyBarChartState extends State<MyBarChart> {
       meta: meta,
       space: 6,
       child: Text(text, style: style),
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final Color backgroundColor;
+
+  const _InsightCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    this.backgroundColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

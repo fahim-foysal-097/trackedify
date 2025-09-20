@@ -80,10 +80,30 @@ class _MyPieChartState extends State<MyPieChart> {
   @override
   Widget build(BuildContext context) {
     if (categoryTotals.isEmpty) {
-      return const Center(
-        child: Text(
-          "No data for pie chart",
-          style: TextStyle(fontSize: 16, color: Colors.grey),
+      return Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height / 2),
+            const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No data for pie chart',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Please add some expenses to view the chart.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }
@@ -94,10 +114,10 @@ class _MyPieChartState extends State<MyPieChart> {
     final averageExpense = totalExpense / totalTx;
 
     // sizing constants
-    const chartHeight = 260.0;
+    const chartHeight = 320.0;
     const baseRadius = 78.0;
     const touchedRadius = 95.0;
-    const centerSpaceRadius = 48.0; // empty center size
+    const centerSpaceRadius = 52.0; // empty center size
 
     final sections = entries.asMap().entries.map((entry) {
       final index = entry.key;
@@ -119,7 +139,7 @@ class _MyPieChartState extends State<MyPieChart> {
           color: Colors.white,
         ),
         borderSide: isTouched
-            ? const BorderSide(color: Colors.black26, width: 2)
+            ? const BorderSide(color: Colors.black38, width: 2)
             : BorderSide.none,
       );
     }).toList();
