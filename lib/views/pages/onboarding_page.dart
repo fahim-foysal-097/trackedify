@@ -2,147 +2,261 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:spendle/views/pages/get_started_page.dart';
 
-class OnboardingPage extends StatefulWidget {
+class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
   @override
-  State<OnboardingPage> createState() => _OnBoardingPageState();
+  Widget build(BuildContext context) {
+    final pages = [
+      OnboardingPageModel(
+        title: 'Welcome to Spendle',
+        description: 'Manage your expenses efficiently and smartly',
+        lottieAsset: 'assets/lotties/wallet2.json',
+        bgColor: const Color(0xFF287ce9),
+      ),
+      OnboardingPageModel(
+        title: 'Track Your Expenses',
+        description:
+            'Add & categorize your daily expenses easily and delete them when you need to',
+        lottieAsset: 'assets/lotties/list.json',
+        bgColor: const Color(0xfffeae4f),
+      ),
+      OnboardingPageModel(
+        title: 'Analyze & Grow',
+        description: 'Get insights with charts and statistics',
+        lottieAsset: 'assets/lotties/chart.json',
+      ),
+    ];
+
+    return OnboardingPagePresenter(
+      pages: pages,
+      // Default actions: skip & finish go to GetStartedPage (replace)
+      onSkip: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const GetStartedPage()),
+        );
+      },
+      onFinish: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const GetStartedPage()),
+        );
+      },
+    );
+  }
 }
 
-class _OnBoardingPageState extends State<OnboardingPage> {
-  final PageController _controller = PageController();
-  int _currentPage = 0;
+class OnboardingPagePresenter extends StatefulWidget {
+  final List<OnboardingPageModel> pages;
+  final VoidCallback? onSkip;
+  final VoidCallback? onFinish;
 
-  final List<Map<String, String>> tutorialData = [
-    {
-      "title": "Welcome to Spendle",
-      "subtitle": "Manage your expenses efficiently and smartly",
-      "lottie": "assets/lotties/wallet2.json",
-    },
-    {
-      "title": "Track Your Expenses",
-      "subtitle":
-          "Add & categorize your daily expenses easily and delete them when you need to",
-      "lottie": "assets/lotties/list.json",
-    },
-    {
-      "title": "Analyze & Grow",
-      "subtitle": "Get insights with charts and statistics",
-      "lottie": "assets/lotties/chart.json",
-    },
-  ];
+  const OnboardingPagePresenter({
+    super.key,
+    required this.pages,
+    this.onSkip,
+    this.onFinish,
+  });
+
+  @override
+  State<OnboardingPagePresenter> createState() =>
+      _OnboardingPagePresenterState();
+}
+
+class _OnboardingPagePresenterState extends State<OnboardingPagePresenter> {
+  int _currentPage = 0;
+  final PageController _pageController = PageController(initialPage: 0);
 
   @override
   void dispose() {
-    _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  void _nextPage() {
-    if (_currentPage < tutorialData.length - 1) {
-      _controller.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+  void _goNext() {
+    if (_currentPage == widget.pages.length - 1) {
+      widget.onFinish?.call();
     } else {
-      // Finished tutorial - go to GetStartedPage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const GetStartedPage()),
+      _pageController.animateToPage(
+        _currentPage + 1,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOutCubic,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final model = widget.pages[_currentPage];
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: tutorialData.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final page = tutorialData[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Lottie.asset(page["lottie"]!, height: 300),
-                        const SizedBox(height: 30),
-                        Text(
-                          page["title"]!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        color: model.bgColor,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // PageView takes available space
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: widget.pages.length,
+                  onPageChanged: (idx) {
+                    setState(() {
+                      _currentPage = idx;
+                    });
+                  },
+                  itemBuilder: (context, idx) {
+                    final item = widget.pages[idx];
+                    return Center(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Lottie.asset(
+                                item.lottieAsset,
+                                fit: BoxFit.contain,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.45,
+                                repeat: true,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                item.title,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: item.textColor,
+                                      fontSize: 22,
+                                    ),
+                              ),
+                            ),
+                            Container(
+                              constraints: const BoxConstraints(maxWidth: 320),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24.0,
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                item.description,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: item.textColor,
+                                      fontSize: 15,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Page indicators
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: widget.pages
+                    .map(
+                      (item) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: _currentPage == widget.pages.indexOf(item)
+                            ? 30
+                            : 8,
+                        height: 8,
+                        margin: const EdgeInsets.all(4.0),
+                        decoration: BoxDecoration(
+                          color: item.indicatorColor,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+
+              // Bottom bar with Skip and Next/Finish
+              SizedBox(
+                height: 100,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.comfortable,
+                          foregroundColor: model.textColor,
+                          textStyle: const TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          page["subtitle"]!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
+                        onPressed: () {
+                          widget.onSkip?.call();
+                        },
+                        child: const Text("Skip"),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.comfortable,
+                          foregroundColor: model.textColor,
+                          textStyle: const TextStyle(
                             fontSize: 16,
-                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                tutorialData.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  width: _currentPage == index ? 20 : 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Colors.blue
-                        : Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(5),
+                        onPressed: _goNext,
+                        child: Row(
+                          children: [
+                            Text(
+                              _currentPage == widget.pages.length - 1
+                                  ? "Finish"
+                                  : "Next",
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              _currentPage == widget.pages.length - 1
+                                  ? Icons.done
+                                  : Icons.arrow_forward,
+                              color: model.textColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: kToolbarHeight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: ElevatedButton(
-                  onPressed: _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    _currentPage == tutorialData.length - 1 ? "Got It" : "Next",
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class OnboardingPageModel {
+  final String title;
+  final String description;
+  final String lottieAsset;
+  final Color bgColor;
+  final Color textColor;
+  final Color indicatorColor;
+
+  OnboardingPageModel({
+    required this.title,
+    required this.description,
+    required this.lottieAsset,
+    this.bgColor = Colors.blue,
+    this.textColor = Colors.white,
+    Color? indicatorColor,
+  }) : indicatorColor = indicatorColor ?? (textColor);
 }
