@@ -44,11 +44,23 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
 
       String exp = _expression.replaceAll('×', '*').replaceAll('÷', '/');
 
-      // Handle percentages
-      exp = exp.replaceAllMapped(RegExp(r'(\d+(\.\d+)?)%'), (match) {
-        final val = double.parse(match.group(1)!);
-        return (val / 100).toString();
-      });
+      // Handle simple percentages for expressions like 100 + 20% or 100 - 20%
+      exp = exp.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)([\+\-])(\d+(\.\d+)?)%'),
+        (match) {
+          final num1 = double.parse(match.group(1)!);
+          final op = match.group(3)!;
+          final percent = double.parse(match.group(4)!);
+          final value = num1 * percent / 100;
+          return '$num1$op$value';
+        },
+      );
+
+      // Handle standalone percentages like 20%
+      exp = exp.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)%'),
+        (match) => '(${match.group(1)!}/100)',
+      );
 
       ShuntingYardParser p = ShuntingYardParser();
       Expression expression = p.parse(exp);

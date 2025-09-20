@@ -460,7 +460,7 @@ class _AddPageState extends State<AddPage> {
                           filled: true,
                           fillColor: Colors.white,
                           prefixIcon: const Icon(
-                            FontAwesomeIcons.dollarSign,
+                            FontAwesomeIcons.moneyCheckDollar,
                             size: 18,
                             color: Colors.grey,
                           ),
@@ -520,7 +520,7 @@ class _AddPageState extends State<AddPage> {
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
-                      FontAwesomeIcons.clock,
+                      FontAwesomeIcons.solidClock,
                       size: 18,
                       color: Colors.grey,
                     ),
@@ -557,6 +557,15 @@ class _AddPageState extends State<AddPage> {
 
                       final amount = double.tryParse(expenseController.text);
                       if (amount == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter an amount'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (amount <= 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Invalid amount')),
                         );
