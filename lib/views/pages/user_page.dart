@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
@@ -127,58 +127,14 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  /// Best-effort permission request on Android. Returns true if OK.
-  Future<bool> _requestStoragePermission() async {
-    if (!Platform.isAndroid) return true;
-
-    var status = await Permission.storage.status;
-    if (status.isGranted) return true;
-
-    status = await Permission.storage.request();
-    if (status.isGranted) return true;
-
-    // fallback: try manage external storage for Android 11+
-    var manageStatus = await Permission.manageExternalStorage.status;
-    if (manageStatus.isGranted) return true;
-
-    manageStatus = await Permission.manageExternalStorage.request();
-    if (manageStatus.isGranted) return true;
-
-    return false;
-  }
-
-  // Export DB — user picks directory; robust dialog handling; no isolates used
+  // Export DB - user picks directory
   Future<void> exportDb() async {
     if (_isProcessingDb || !mounted) return;
-
-    final permGranted = await _requestStoragePermission();
-    if (!permGranted) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Storage permission denied.")),
-      );
-      return;
-    }
-
-    // Let user choose directory
-    String? selectedDir;
-    try {
-      selectedDir = await FilePicker.platform.getDirectoryPath();
-    } catch (_) {
-      selectedDir = null;
-    }
-
-    if (selectedDir == null || selectedDir.isEmpty) {
-      // user cancelled
-      return;
-    }
-
     setState(() => _isProcessingDb = true);
-    bool dialogShown = false;
 
+    bool dialogShown = false;
     try {
-      // show progress
-      if (!mounted) return;
+      // show progress indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -186,67 +142,106 @@ class _UserPageState extends State<UserPage> {
       );
       dialogShown = true;
 
-      // perform export (async file copy) on main isolate — safe for I/O
-      final file = await DatabaseHelper().exportDatabase(selectedDir);
+      // get source DB path via public helper
+      final dbPath = await DatabaseHelper().getDatabasePath();
+      final dbFile = File(dbPath);
+
+      if (!await dbFile.exists()) {
+        // close spinner if shown
+        if (dialogShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          dialogShown = false;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Database file not found.")),
+        );
+        return;
+      }
+
+      // default filename
+      final timestamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .split('.')
+          .first;
+      final defaultFileName = 'expense_backup_$timestamp.db';
+
+      // Use SAF save dialog to let user pick destination (works on Android 11+)
+      final params = SaveFileDialogParams(
+        sourceFilePath: dbFile.path,
+        fileName: defaultFileName,
+      );
+
+      final savedPath = await FlutterFileDialog.saveFile(params: params);
+
+      // close spinner
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
 
       if (!mounted) return;
 
-      // close dialog if open
+      if (savedPath == null) {
+        // user cancelled the save dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Export cancelled.")));
+      } else {
+        // savedPath might be a content:// URI (Android SAF) or a file path.
+        final bool isContentUri = savedPath.startsWith('content://');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isContentUri
+                  ? 'Database exported successfully (SAF URI). You can open it from your Files app.'
+                  : 'Database exported to: $savedPath',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // ensure dialog is closed on error
       if (dialogShown && mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
         dialogShown = false;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Database exported to: ${file.path}")),
-      );
-    } catch (e) {
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
     } finally {
-      setState(() => _isProcessingDb = false);
+      if (mounted) setState(() => _isProcessingDb = false);
     }
   }
 
-  // Import DB — user picks file; robust dialog handling; reload UI after import
+  // Import DB - user picks file
   Future<void> importDb() async {
     if (_isProcessingDb || !mounted) return;
+    setState(() => _isProcessingDb = true);
 
-    final permGranted = await _requestStoragePermission();
-    if (!permGranted) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Storage permission denied.")),
-      );
-      return;
-    }
-
-    FilePickerResult? result;
+    bool dialogShown = false;
     try {
-      result = await FilePicker.platform.pickFiles(
+      // let user pick .db file
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['db'],
       );
-    } catch (e) {
-      result = null;
-    }
 
-    if (!mounted) return;
-    if (result == null || result.files.single.path == null) return;
+      if (!mounted) return;
 
-    final importPath = result.files.single.path!;
+      if (result == null || result.files.single.path == null) {
+        // user cancelled file picker
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
+        return;
+      }
 
-    setState(() => _isProcessingDb = true);
-    bool dialogShown = false;
-
-    try {
+      // show progress indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -254,6 +249,22 @@ class _UserPageState extends State<UserPage> {
       );
       dialogShown = true;
 
+      final importPath = result.files.single.path!;
+      final importFile = File(importPath);
+
+      if (!await importFile.exists()) {
+        if (dialogShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          dialogShown = false;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Selected file does not exist.")),
+        );
+        return;
+      }
+
+      // do the import
       await DatabaseHelper().importDatabase(importPath);
 
       // close DB if needed, then reload
@@ -261,14 +272,11 @@ class _UserPageState extends State<UserPage> {
       await loadUserInfo();
 
       if (!mounted) return;
-
+      // close spinner
       if (dialogShown && mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
         dialogShown = false;
       }
-
-      // ensure UI refresh
-      setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Database imported successfully!")),
@@ -278,13 +286,14 @@ class _UserPageState extends State<UserPage> {
         Navigator.pop(context);
         dialogShown = false;
       }
+
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
       }
     } finally {
-      setState(() => _isProcessingDb = false);
+      if (mounted) setState(() => _isProcessingDb = false);
     }
   }
 

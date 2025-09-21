@@ -197,4 +197,6 @@ class DatabaseHelper {
 
     await database; // reopen
   }
+
+  Future<String> getDatabasePath() async => await _dbPath();
 }
