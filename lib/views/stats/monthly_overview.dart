@@ -108,9 +108,11 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                   ),
                 ),
                 SizedBox(height: 6),
-                Text(
-                  'Please add some expenses to view monthly expenses.',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Center(
+                  child: Text(
+                    'Please add some expenses to view monthly expenses.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
                 ),
               ],
             ),
