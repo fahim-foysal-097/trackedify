@@ -160,11 +160,13 @@ class _UserPageState extends State<UserPage> {
       }
 
       // default filename
-      final timestamp = DateTime.now()
-          .toIso8601String()
-          .replaceAll(':', '-')
-          .split('.')
-          .first;
+      final now = DateTime.now();
+      final timestamp =
+          '${now.year.toString()}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}-T-'
+          '${now.hour.toString().padLeft(2, '0')}-'
+          '${now.minute.toString().padLeft(2, '0')}';
       final defaultFileName = 'expense_backup_$timestamp.db';
 
       // Use SAF save dialog to let user pick destination (works on Android 11+)
