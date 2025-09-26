@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:spendle/services/auth_gate.dart';
+import 'package:spendle/views/pages/set_pin_page.dart';
 import 'package:spendle/views/widget_tree.dart';
 
 void main() {
@@ -22,7 +24,8 @@ class MyApp extends StatelessWidget {
           surface: Colors.grey.shade100,
         ),
       ),
-      home: const WidgetTree(),
+      routes: {'/set-pin': (context) => const SetPinPage()},
+      home: const AuthGate(child: WidgetTree()),
     );
   }
 }
