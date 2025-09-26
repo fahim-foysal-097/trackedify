@@ -41,7 +41,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> loadExpenses() async {
     final db = await DatabaseHelper().database;
-    final data = await db.query('expenses', orderBy: 'date DESC', limit: 6);
+    final data = await db.query(
+      'expenses',
+      orderBy: 'date DESC, id DESC',
+      limit: 6,
+    );
     setState(() {
       expenses = data;
     });
@@ -195,8 +199,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ).then((_) {
                               // refresh after coming back from edit
-                              loadExpenses();
                               loadCategories();
+                              loadExpenses();
                             });
                           },
                           child: const Text(
@@ -260,8 +264,8 @@ class _HomePageState extends State<HomePage> {
             context,
             MaterialPageRoute(builder: (context) => const AddPage()),
           ).then((_) {
-            loadExpenses();
             loadCategories(); // reload categories in case user added new
+            loadExpenses();
           });
         },
       ),
@@ -293,8 +297,8 @@ class _HomePageState extends State<HomePage> {
                         builder: (context) => const ExpenseHistoryPage(),
                       ),
                     ).then((_) {
-                      loadExpenses();
                       loadCategories();
+                      loadExpenses();
                     });
                   },
                   child: const Text(

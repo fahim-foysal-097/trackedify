@@ -456,7 +456,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
-                      Icons.note,
+                      FontAwesomeIcons.solidNoteSticky,
                       size: 18,
                       color: Colors.grey,
                     ),

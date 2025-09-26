@@ -68,7 +68,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
   Future<void> loadExpenses() async {
     final db = await DatabaseHelper().database;
-    final data = await db.query('expenses', orderBy: 'date DESC');
+    final data = await db.query('expenses', orderBy: 'date DESC, id DESC');
     setState(() {
       expenses = data;
       filteredExpenses = data;
@@ -123,7 +123,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => EditExpensePage(expense: expense)),
-    ).then((_) => loadExpenses());
+    ).then((_) {
+      loadCategories();
+      loadExpenses();
+    });
   }
 
   void filterExpenses(String query) {
@@ -291,8 +294,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                     EditExpensePage(expense: expense),
                               ),
                             ).then((_) {
-                              loadExpenses();
                               loadCategories();
+                              loadExpenses();
                             });
                           },
                           child: const Text(
@@ -347,7 +350,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 controller: _searchController,
                 onChanged: filterExpenses,
                 decoration: InputDecoration(
-                  hintText: "Search by category, amount, date or note",
+                  hintText: "Search",
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,
@@ -490,7 +493,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 style: const TextStyle(color: Colors.grey),
                               ),
                               if (noteText.isNotEmpty) ...[
-                                const SizedBox(height: 6),
+                                // const SizedBox(height: 6),
                                 GestureDetector(
                                   onTap: () => _showExpenseDrawer(expense),
                                   child: Row(
