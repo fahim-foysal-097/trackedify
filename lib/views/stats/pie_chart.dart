@@ -526,6 +526,6 @@ class _MyPieChartState extends State<MyPieChart> {
     final biggest = largestExpenseCategory != null
         ? 'Largest single expense: ${largestExpenseCategory!} \$${largestSingleExpense.toStringAsFixed(2)}.'
         : '';
-    return 'Top spender: ${top.key} — \$${top.value.toStringAsFixed(2)} (${topPct.toStringAsFixed(1)}% of total). \n$biggest \n$frequentPart';
+    return 'Top spende: ${top.key} — \$${top.value.toStringAsFixed(2)} (${topPct.toStringAsFixed(1)}% of total). \n$biggest \n$frequentPart';
   }
 }

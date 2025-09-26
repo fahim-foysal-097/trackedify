@@ -113,18 +113,15 @@ class _MyBarChartState extends State<MyBarChart> {
         children: [
           // Last 7 days insights row
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Row(
               children: [
                 // Total (7 days)
                 Expanded(
                   child: _InsightCard(
-                    title: 'Total (7d)',
+                    title: 'Total',
                     value: currency.format(total7),
-                    subtitle: 'Total',
+                    subtitle: '7d',
                     backgroundColor: Colors.blue.shade50,
                   ),
                 ),
@@ -134,7 +131,7 @@ class _MyBarChartState extends State<MyBarChart> {
                   child: _InsightCard(
                     title: 'Avg / day',
                     value: currency.format(avg7),
-                    subtitle: 'Avg (7d)',
+                    subtitle: '7d',
                     backgroundColor: Colors.green.shade50,
                   ),
                 ),
@@ -146,7 +143,7 @@ class _MyBarChartState extends State<MyBarChart> {
                     value: maxDay != null
                         ? DateFormat('MM/dd').format(maxDay)
                         : '-',
-                    subtitle: currency.format(maxDaily),
+                    subtitle: "7d",
                     backgroundColor: Colors.orange.shade50,
                   ),
                 ),
