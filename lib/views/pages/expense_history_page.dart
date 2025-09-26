@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'edit_expense_page.dart';
 
@@ -134,15 +135,34 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     query = query.toLowerCase();
     setState(() {
       filteredExpenses = expenses.where((expense) {
-        final category = expense['category'].toString().toLowerCase();
-        final amount = expense['amount'].toString().toLowerCase();
-        final date = expense['date'].toString().toLowerCase();
+        final category = (expense['category'] ?? '').toString().toLowerCase();
+        final amount = (expense['amount'] ?? '').toString().toLowerCase();
+        final date = (expense['date'] ?? '').toString().toLowerCase();
+        final note = (expense['note'] ?? '').toString().toLowerCase();
 
         return category.contains(query) ||
             amount.contains(query) ||
-            date.contains(query);
+            date.contains(query) ||
+            note.contains(query);
       }).toList();
     });
+  }
+
+  void _showFullNoteDialog(String? note) {
+    final isEmpty = note == null || note.trim().isEmpty;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Note'),
+        content: isEmpty ? const Text("No note to show") : Text(note),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -164,7 +184,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 controller: _searchController,
                 onChanged: filterExpenses,
                 decoration: InputDecoration(
-                  hintText: "Search by category, amount, or date",
+                  hintText: "Search by category, amount, date or note",
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,
@@ -207,7 +227,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             color: Colors.blue,
                           ),
                           title: const Text(
-                            "Tip: Swipe left to delete, swipe right to edit!",
+                            "Tip: Swipe left to delete, swipe right to edit and tap to view note!",
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.black87,
@@ -226,7 +246,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       ? index - 1
                       : index;
                   final expense = filteredExpenses[adjustedIndex];
-                  final cat = getCategory(expense['category']);
+                  final cat = getCategory(expense['category'] ?? '');
+
+                  final noteText = (expense['note'] ?? '').toString();
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -283,23 +305,59 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
+                          onTap: () {
+                            _showFullNoteDialog(noteText);
+                          },
                           leading: CircleAvatar(
                             backgroundColor: cat['color'],
                             child: Icon(cat['icon'], color: Colors.white),
                           ),
                           title: Text(
-                            expense['category'],
+                            expense['category'] ?? '',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          subtitle: Text(
-                            expense['date'],
-                            style: const TextStyle(color: Colors.grey),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                expense['date'] ?? '',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                              if (noteText.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                GestureDetector(
+                                  onTap: () => _showFullNoteDialog(noteText),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        FontAwesomeIcons.solidNoteSticky,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          noteText,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           trailing: Text(
-                            "-\$${expense['amount'].toStringAsFixed(2)}",
+                            "-\$${(expense['amount'] is num) ? (expense['amount'] as num).toDouble().toStringAsFixed(2) : double.tryParse(expense['amount'].toString())?.toStringAsFixed(2) ?? expense['amount'].toString()}",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
