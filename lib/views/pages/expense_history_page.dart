@@ -148,20 +148,183 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     });
   }
 
-  void _showFullNoteDialog(String? note) {
-    final isEmpty = note == null || note.trim().isEmpty;
-    showDialog(
+  String _formatAmount(dynamic amount) {
+    if (amount is num) {
+      return amount.toDouble().toStringAsFixed(2);
+    }
+    final parsed = double.tryParse(amount?.toString() ?? '');
+    if (parsed != null) return parsed.toStringAsFixed(2);
+    return amount?.toString() ?? '0.00';
+  }
+
+  Future<void> _showExpenseDrawer(Map<String, dynamic> expense) async {
+    final note = (expense['note'] ?? '').toString();
+    final hasNote = note.trim().isNotEmpty;
+
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Note'),
-        content: isEmpty ? const Text("No note to show") : Text(note),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // header row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Expense',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // meta: category / amount / date
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: getCategory(
+                              expense['category'] ?? '',
+                            )['color'],
+                            child: Icon(
+                              getCategory(expense['category'] ?? '')['icon'],
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            expense['category'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "-\$${_formatAmount(expense['amount'])}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            expense['date'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // note content / placeholder
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: hasNote
+                        ? Text(
+                            note,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
+                          )
+                        : const Text(
+                            'No note to show',
+                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                          ),
+                  ),
+                  const SizedBox(height: 18),
+                  // actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.blue),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EditExpensePage(expense: expense),
+                              ),
+                            ).then((_) {
+                              loadExpenses();
+                              loadCategories();
+                            });
+                          },
+                          child: const Text(
+                            'Edit',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            'Close',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -306,7 +469,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                         ),
                         child: ListTile(
                           onTap: () {
-                            _showFullNoteDialog(noteText);
+                            _showExpenseDrawer(expense);
                           },
                           leading: CircleAvatar(
                             backgroundColor: cat['color'],
@@ -329,7 +492,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                               if (noteText.isNotEmpty) ...[
                                 const SizedBox(height: 6),
                                 GestureDetector(
-                                  onTap: () => _showFullNoteDialog(noteText),
+                                  onTap: () => _showExpenseDrawer(expense),
                                   child: Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
