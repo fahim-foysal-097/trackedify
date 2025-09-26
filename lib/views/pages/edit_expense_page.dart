@@ -18,6 +18,8 @@ class EditExpensePage extends StatefulWidget {
 class _EditExpensePageState extends State<EditExpensePage> {
   final TextEditingController expenseController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
+  final TextEditingController noteController =
+      TextEditingController(); // <- added
   DateTime selectedDate = DateTime.now();
 
   String? selectedCategoryName;
@@ -67,7 +69,10 @@ class _EditExpensePageState extends State<EditExpensePage> {
     // init controllers with expense values
     expenseController.text = widget.expense['amount'].toString();
 
+    noteController.text = (widget.expense['note'] ?? '') as String;
+
     try {
+      // try parsing date; expense['date'] expected as ISO / yyyy-MM-dd string
       selectedDate = DateTime.parse(widget.expense['date'] as String);
     } catch (_) {
       selectedDate = DateTime.now();
@@ -140,6 +145,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
         'category': selectedCategoryName,
         // store as yyyy-MM-dd to avoid timezone surprises
         'date': dbFormat.format(selectedDate),
+        'note': noteController.text.trim(),
       },
       where: 'id = ?',
       whereArgs: [widget.expense['id']],
@@ -169,7 +175,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
     }
   }
 
-  // --- NEW: Add category dialog taken from AddPage (icon grid + color picker) ---
+  // --- Add category dialog (icon grid + color picker) ---
   Future<void> addCategoryDialog() async {
     String name = '';
     Color selectedColor = Colors.blue;
@@ -207,7 +213,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         });
                       },
                       child: CircleAvatar(
-                        backgroundColor: isSel ? Colors.blue : Colors.grey[300],
+                        backgroundColor: isSel
+                            ? Colors.blue
+                            : Colors.grey.withAlpha(220),
                         child: Icon(icon, color: Colors.white),
                       ),
                     );
@@ -303,6 +311,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
   void dispose() {
     expenseController.dispose();
     dateController.dispose();
+    noteController.dispose();
     super.dispose();
   }
 
@@ -433,6 +442,30 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+
+                // Note Field
+                TextField(
+                  controller: noteController,
+                  textAlignVertical: TextAlignVertical.top,
+                  keyboardType: TextInputType.multiline,
+                  minLines: 1,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: "Add a note",
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(
+                      Icons.note,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 30),
                 SizedBox(
@@ -458,5 +491,18 @@ class _EditExpensePageState extends State<EditExpensePage> {
         ),
       ),
     );
+  }
+}
+
+extension ColorHex on Color {
+  int toARGB32() {
+    final alphaValue = (a * 255.0).round() & 0xff;
+    final redValue = (r * 255.0).round() & 0xff;
+    final greenValue = (g * 255.0).round() & 0xff;
+    final blueValue = (b * 255.0).round() & 0xff;
+    return (alphaValue << 24) |
+        (redValue << 16) |
+        (greenValue << 8) |
+        blueValue;
   }
 }

@@ -18,6 +18,7 @@ class AddPage extends StatefulWidget {
 class _AddPageState extends State<AddPage> {
   TextEditingController expenseController = TextEditingController();
   TextEditingController dateController = TextEditingController();
+  TextEditingController noteController = TextEditingController();
   DateTime selectedDate = DateTime.now();
 
   String? selectedCategoryName;
@@ -291,6 +292,7 @@ class _AddPageState extends State<AddPage> {
   void dispose() {
     expenseController.dispose();
     dateController.dispose();
+    noteController.dispose();
     super.dispose();
   }
 
@@ -530,6 +532,30 @@ class _AddPageState extends State<AddPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+
+                // Note Field
+                TextField(
+                  controller: noteController,
+                  textAlignVertical: TextAlignVertical.top,
+                  keyboardType: TextInputType.multiline,
+                  minLines: 1,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: "Add a note",
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(
+                      FontAwesomeIcons.solidNoteSticky,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 30),
 
                 // Save button
@@ -572,10 +598,13 @@ class _AddPageState extends State<AddPage> {
                         return;
                       }
 
+                      final noteText = noteController.text.trim();
+
                       addExpense(
                         category: category['name'],
                         amount: amount,
                         date: selectedDate,
+                        note: noteText,
                       );
 
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -586,6 +615,7 @@ class _AddPageState extends State<AddPage> {
                       setState(() => selectedCategoryName = null);
                       expenseController.clear();
                       dateController.clear();
+                      noteController.clear();
                     },
                     child: const Text(
                       "Save",

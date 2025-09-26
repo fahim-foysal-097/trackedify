@@ -4,6 +4,7 @@ Future<void> addExpense({
   required String category,
   required double amount,
   required DateTime date,
+  required String note,
 }) async {
   final db = await DatabaseHelper().database;
 
@@ -13,5 +14,6 @@ Future<void> addExpense({
     'category': category,
     'amount': amount,
     'date': formattedDate,
+    'note': note,
   });
 }

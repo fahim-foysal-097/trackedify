@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -39,7 +39,8 @@ class DatabaseHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               category TEXT NOT NULL,
               amount REAL NOT NULL,
-              date TEXT NOT NULL
+              date TEXT NOT NULL,
+              note TEXT
             )
           ''');
 
@@ -104,6 +105,13 @@ class DatabaseHelper {
           ''');
 
           await _insertDefaultCategories(db);
+        }
+
+        // add 'note' column to expenses table
+        if (oldVersion < 3) {
+          try {
+            await db.execute('ALTER TABLE expenses ADD COLUMN note TEXT');
+          } catch (_) {}
         }
       },
     );
