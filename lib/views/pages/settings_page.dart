@@ -107,7 +107,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final result = await showDialog<String?>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        title: Padding(padding: const EdgeInsets.fromLTRB(10, 10, 30, bottom), child: Text(title)),
         content: TextField(
           controller: ctl,
           obscureText: true,
@@ -466,7 +466,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
               _buildSecuritySection(),
               const SizedBox(height: 40),
             ],
