@@ -4,6 +4,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
@@ -92,24 +93,20 @@ class _UserPageState extends State<UserPage> {
   Future<void> deleteProfilePicture() async {
     if (userId == null) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text("Delete Profile Picture?"),
-        content: const Text(
-          "Are you sure you want to delete your profile picture?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirm = await PanaraConfirmDialog.show<bool>(
+      context,
+      title: "Delete?",
+      message: "Are you sure you want to delete your profile picture?",
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      onTapCancel: () {
+        Navigator.pop(context, false);
+      },
+      onTapConfirm: () {
+        Navigator.pop(context, true);
+      },
+      textColor: Colors.grey.shade700,
+      panaraDialogType: PanaraDialogType.warning,
     );
 
     if (!mounted) return;
@@ -411,44 +408,33 @@ class _UserPageState extends State<UserPage> {
                     iconColor: Colors.redAccent,
                     onPressed: () {
                       if (!mounted) return;
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog.adaptive(
-                            title: const Text("Wipe Data?"),
-                            content: const Text(
-                              "Are you sure you want to delete all data?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text("Cancel"),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  await DatabaseHelper().wipeAllData();
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    setState(() {
-                                      profilePicPath = null;
-                                      username = "User";
-                                      showTip = true;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("All data deleted!"),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text(
-                                  "Delete",
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                            ],
-                          );
+                      PanaraConfirmDialog.show(
+                        context,
+                        title: "Wipe Data?",
+                        message: "Are you sure you want to delete all data?",
+                        confirmButtonText: "Delete",
+                        cancelButtonText: "Cancel",
+                        onTapCancel: () {
+                          Navigator.pop(context);
                         },
+                        onTapConfirm: () async {
+                          await DatabaseHelper().wipeAllData();
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            setState(() {
+                              profilePicPath = null;
+                              username = "User";
+                              showTip = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("All data deleted!"),
+                              ),
+                            );
+                          }
+                        },
+                        textColor: Colors.grey.shade700,
+                        panaraDialogType: PanaraDialogType.error,
                       );
                     },
                   ),

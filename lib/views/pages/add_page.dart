@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/Logic/add_expense.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/views/pages/calculator.dart';
@@ -234,22 +235,20 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> deleteCategory(int id, String name) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Category"),
-        content: Text("Are you sure you want to delete '$name'?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirm = await PanaraConfirmDialog.show<bool>(
+      context,
+      title: "Delete Category?",
+      message: 'Are you sure you want to delete "$name"?',
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      onTapCancel: () {
+        Navigator.pop(context, false);
+      },
+      onTapConfirm: () {
+        Navigator.pop(context, true);
+      },
+      textColor: Colors.grey.shade700,
+      panaraDialogType: PanaraDialogType.error,
     );
 
     if (confirm == true) {

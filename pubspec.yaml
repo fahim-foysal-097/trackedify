@@ -53,6 +53,7 @@ dependencies:
   crypto: ^3.0.6
   flutter_secure_storage: ^9.2.4
   speech_to_text: ^7.3.0
+  panara_dialogs: ^0.1.5
 
 dev_dependencies:
   flutter_test:

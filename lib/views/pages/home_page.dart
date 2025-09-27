@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
@@ -543,20 +544,16 @@ class _HomePageState extends State<HomePage> {
     final parsed = _parseVoiceCommand(text);
     if (parsed == null) {
       if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Could not parse'),
-          content: const Text(
-            'Sorry, I could not understand the expense command.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
+      PanaraInfoDialog.show(
+        context,
+        title: 'Could not parse',
+        message: 'Sorry, could not parse the expense command.',
+        buttonText: "Okay",
+        onTapDismiss: () {
+          Navigator.of(context).pop();
+        },
+        textColor: Colors.grey.shade700,
+        panaraDialogType: PanaraDialogType.error,
       );
       return;
     }

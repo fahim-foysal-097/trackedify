@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/services/auth_service.dart';
 import 'package:spendle/views/pages/set_pin_page.dart';
@@ -107,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final result = await showDialog<String?>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Padding(padding: const EdgeInsets.fromLTRB(10, 10, 30, bottom), child: Text(title)),
+        title: Text(title),
         content: TextField(
           controller: ctl,
           obscureText: true,
@@ -312,33 +313,28 @@ class _SettingsPageState extends State<SettingsPage> {
           value: _pinSet,
           onChanged: (v) async {
             if (!mounted) return;
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(v ? 'Enable App Lock?' : 'Disable App Lock?'),
-                content: Text(
-                  v
-                      ? 'Enabling app lock requires creating a PIN and recovery password. Proceed?'
-                      : 'Disabling lock will remove the PIN and recovery password. Are you sure?',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text(
-                      'Confirm',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
+            final confirm = await PanaraConfirmDialog.show<bool>(
+              context,
+              title: v ? 'Enable App Lock?' : 'Disable App Lock?',
+              message: v
+                  ? 'Enabling app lock requires creating a PIN and recovery password. Proceed?'
+                  : 'Disabling lock will remove the PIN and recovery password. Are you sure?',
+              confirmButtonText: "Confirm",
+              cancelButtonText: "Cancel",
+              onTapCancel: () {
+                Navigator.of(context).pop(false);
+              },
+              onTapConfirm: () {
+                Navigator.of(context).pop(true);
+              },
+              textColor: Colors.grey.shade700,
+              panaraDialogType: v
+                  ? PanaraDialogType.success
+                  : PanaraDialogType.warning,
             );
+
             if (!mounted) return;
             if (confirm != true) {
-              // revert switch visually by reloading state
               if (!mounted) return;
               await _loadAuthState();
               return;

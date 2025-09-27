@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'edit_expense_page.dart';
 
@@ -95,25 +96,21 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   void confirmDelete(Map<String, dynamic> expense) {
     if (showTip) setState(() => showTip = false);
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Expense?'),
-        content: const Text('Are you sure you want to delete this expense?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              deleteExpense(expense['id']);
-              Navigator.pop(context);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    PanaraConfirmDialog.show(
+      context,
+      title: 'Delete Expense?',
+      message: 'Are you sure you want to delete this expense?',
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      onTapCancel: () {
+        Navigator.pop(context);
+      },
+      onTapConfirm: () {
+        deleteExpense(expense['id']);
+        Navigator.pop(context);
+      },
+      textColor: Colors.grey.shade700,
+      panaraDialogType: PanaraDialogType.error,
     );
   }
 
