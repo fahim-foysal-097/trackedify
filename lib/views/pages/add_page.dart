@@ -120,6 +120,9 @@ class _AddPageState extends State<AddPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
           title: const Text('New Category'),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+          ),
           content: SingleChildScrollView(
             child: Column(
               children: [
@@ -167,6 +170,11 @@ class _AddPageState extends State<AddPage> {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text('Select Color'),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadiusGeometry.all(
+                            Radius.circular(10),
+                          ),
+                        ),
                         content: SingleChildScrollView(
                           child: ColorPicker(
                             pickerColor: selectedColor,

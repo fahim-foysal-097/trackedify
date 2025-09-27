@@ -109,6 +109,9 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+        ),
         content: TextField(
           controller: ctl,
           obscureText: true,
@@ -215,6 +218,9 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Verify PIN'),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+        ),
         content: TextField(
           controller: pinCtl,
           keyboardType: TextInputType.number,
@@ -254,6 +260,9 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Set new recovery password'),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+        ),
         content: TextField(
           controller: recoveryCtl,
           obscureText: true,

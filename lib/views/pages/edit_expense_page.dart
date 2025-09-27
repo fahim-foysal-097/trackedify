@@ -187,6 +187,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
           title: const Text('New Category'),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -234,6 +237,11 @@ class _EditExpensePageState extends State<EditExpensePage> {
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text('Select Color'),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadiusGeometry.all(
+                            Radius.circular(10),
+                          ),
+                        ),
                         content: SingleChildScrollView(
                           child: ColorPicker(
                             pickerColor: selectedColor,
