@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -52,7 +52,8 @@ class DatabaseHelper {
               history_tip_shown INTEGER DEFAULT 0,
               add_tip_shown INTEGER DEFAULT 0,
               user_tip_shown INTEGER DEFAULT 0,
-              profile_pic TEXT
+              profile_pic TEXT,
+              voice_enabled INTEGER DEFAULT 1
             )
           ''');
 
@@ -111,6 +112,14 @@ class DatabaseHelper {
         if (oldVersion < 3) {
           try {
             await db.execute('ALTER TABLE expenses ADD COLUMN note TEXT');
+          } catch (_) {}
+        }
+
+        if (oldVersion < 4) {
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN voice_enabled INTEGER DEFAULT 1',
+            );
           } catch (_) {}
         }
       },
@@ -207,4 +216,54 @@ class DatabaseHelper {
   }
 
   Future<String> getDatabasePath() async => await _dbPath();
+
+  // -------------------------
+  // New helper methods for voice & expenses
+  // -------------------------
+
+  /// Return whether voice commands are enabled (true by default)
+  Future<bool> isVoiceEnabled() async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) return true;
+    final val = rows.first['voice_enabled'];
+    if (val == null) return true;
+    return (val as int) == 1;
+  }
+
+  /// Update voice preference for the first user row.
+  Future<void> setVoiceEnabled(bool enabled) async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) {
+      await db.insert('user_info', {
+        'username': 'User',
+        'voice_enabled': enabled ? 1 : 0,
+      });
+      return;
+    }
+    final id = rows.first['id'] as int;
+    await db.update(
+      'user_info',
+      {'voice_enabled': enabled ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Insert an expense.
+  Future<int> insertExpense({
+    required String category,
+    required double amount,
+    required String date,
+    String? note,
+  }) async {
+    final db = await database;
+    return db.insert('expenses', {
+      'category': category,
+      'amount': amount,
+      'date': date,
+      'note': note,
+    });
+  }
 }
