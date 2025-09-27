@@ -193,7 +193,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                                 "Get Started",
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                 ),
                               ),
                       ),
@@ -218,7 +218,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                                 "Import Data From DB",
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                 ),
                               ),
                       ),

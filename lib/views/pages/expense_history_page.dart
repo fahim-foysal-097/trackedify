@@ -342,8 +342,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             ),
                           ),
                           onPressed: () {
-                            deleteExpense(expense['id']);
                             Navigator.pop(context);
+                            confirmDelete(expense);
                           },
                           child: const Text(
                             'Delete',
@@ -381,7 +381,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 controller: _searchController,
                 onChanged: filterExpenses,
                 decoration: InputDecoration(
-                  hintText: "Search",
+                  hintText: "Search expenses",
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,

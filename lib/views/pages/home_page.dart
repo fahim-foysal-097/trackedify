@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
@@ -316,6 +317,10 @@ class _HomePageState extends State<HomePage> {
             itemBuilder: (context, index) {
               final expense = expenses[index];
               final cat = getCategory(expense['category']);
+              final hasNote = (expense['note'] ?? '')
+                  .toString()
+                  .trim()
+                  .isNotEmpty;
 
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 5, 16, 16),
@@ -331,6 +336,7 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Row(
                             children: [
@@ -346,6 +352,14 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              if (hasNote) ...[
+                                const SizedBox(width: 5),
+                                const Icon(
+                                  FontAwesomeIcons.solidNoteSticky,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ],
                             ],
                           ),
                           Column(
