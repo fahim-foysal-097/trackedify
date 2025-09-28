@@ -14,11 +14,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController _usernameController = TextEditingController();
   final AuthService _auth = AuthService();
-
-  int? userId;
-  String currentUsername = "";
 
   bool _loadingAuthState = true;
   bool _pinSet = false;
@@ -37,32 +33,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _notificationUtil = NotificationUtil(
       awesomeNotifications: AwesomeNotifications(),
     );
-    _loadUser();
     _loadAuthState();
     _loadVoicePref();
     _loadNotificationPref();
-  }
-
-  Future<void> _loadUser() async {
-    final db = await DatabaseHelper().database;
-    final result = await db.query('user_info');
-
-    if (!mounted) return;
-    if (result.isNotEmpty) {
-      setState(() {
-        userId = result.first['id'] as int?;
-        currentUsername = (result.first['username'] ?? 'Guest') as String;
-        _usernameController.text = currentUsername;
-      });
-    } else {
-      final id = await db.insert('user_info', {'username': 'Guest'});
-      if (!mounted) return;
-      setState(() {
-        userId = id;
-        currentUsername = 'Guest';
-        _usernameController.text = 'Guest';
-      });
-    }
   }
 
   Future<void> _loadAuthState() async {
@@ -90,35 +63,6 @@ class _SettingsPageState extends State<SettingsPage> {
       _notificationsEnabled = v;
       _loadingNotificationPref = false;
     });
-  }
-
-  Future<void> _saveUsername() async {
-    FocusScope.of(context).unfocus();
-    final db = await DatabaseHelper().database;
-    final newName = _usernameController.text.trim();
-    if (newName.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Username cannot be empty')));
-      return;
-    }
-    if (userId != null) {
-      await db.update(
-        'user_info',
-        {'username': newName},
-        where: 'id = ?',
-        whereArgs: [userId],
-      );
-    } else {
-      userId = await db.insert('user_info', {'username': newName});
-    }
-    if (!mounted) return;
-    setState(() => currentUsername = newName);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Username saved!')));
   }
 
   Future<String?> _promptForPin({required String title}) async {
@@ -313,12 +257,6 @@ class _SettingsPageState extends State<SettingsPage> {
     ).showSnackBar(const SnackBar(content: Text('Recovery password saved')));
   }
 
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    super.dispose();
-  }
-
   Widget _buildSecuritySection() {
     if (_loadingAuthState) {
       return const Center(child: CircularProgressIndicator());
@@ -482,8 +420,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       channelKey: AppStrings.scheduledChannelKey,
                       title: 'Spendle Reminder',
                       body: 'Don\'t forget to add your expenses today.',
-                      hour: 16,
-                      minute: 30,
+                      hour: 20,
+                      minute: 00,
                     );
 
                     if (!mounted) return;
@@ -515,49 +453,161 @@ class _SettingsPageState extends State<SettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              const Text(
-                'Change Your Username',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ListTile(
+                contentPadding: const EdgeInsets.fromLTRB(1, 1, 1, 1),
+                title: const Text(
+                  'Change Your Username',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                trailing: const Icon(Icons.chevron_right, size: 28),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ChangeUsernamePage(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  hintText: 'New Username',
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.person, color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: kToolbarHeight,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: _saveUsername,
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 25),
               _buildSecuritySection(),
               const SizedBox(height: 40),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class ChangeUsernamePage extends StatefulWidget {
+  const ChangeUsernamePage({super.key});
+
+  @override
+  State<ChangeUsernamePage> createState() => _ChangeUsernamePageState();
+}
+
+class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
+  final TextEditingController _usernameController = TextEditingController();
+
+  int? userId;
+  String currentUsername = "";
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final db = await DatabaseHelper().database;
+    final result = await db.query('user_info');
+
+    if (!mounted) return;
+    if (result.isNotEmpty) {
+      setState(() {
+        userId = result.first['id'] as int?;
+        currentUsername = (result.first['username'] ?? 'Guest') as String;
+        _usernameController.text = currentUsername;
+      });
+    } else {
+      final id = await db.insert('user_info', {'username': 'Guest'});
+      if (!mounted) return;
+      setState(() {
+        userId = id;
+        currentUsername = 'Guest';
+        _usernameController.text = 'Guest';
+      });
+    }
+    setState(() => _loading = false);
+  }
+
+  Future<void> _saveUsername() async {
+    FocusScope.of(context).unfocus();
+    final db = await DatabaseHelper().database;
+    final newName = _usernameController.text.trim();
+    if (newName.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Username cannot be empty')));
+      return;
+    }
+    if (userId != null) {
+      await db.update(
+        'user_info',
+        {'username': newName},
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+    } else {
+      userId = await db.insert('user_info', {'username': newName});
+    }
+    if (!mounted) return;
+    setState(() => currentUsername = newName);
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Username saved!')));
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Change Username'), centerTitle: true),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      hintText: 'New Username',
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: kToolbarHeight,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: _saveUsername,
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

@@ -37,8 +37,8 @@ Future<void> main() async {
           channelKey: AppStrings.scheduledChannelKey,
           title: 'Spendle Reminder',
           body: 'Don\'t forget to add your expenses today.',
-          hour: 16,
-          minute: 30,
+          hour: 20,
+          minute: 00,
         );
       } else {
         // user denied OS-level permission; do not schedule
@@ -58,10 +58,15 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // GlobalKey is used to access the NavigatorState from anywhere in the application
+  // This is crucial for navigating from background notification actions.
+  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey, // Assign the global key to the MaterialApp
       title: 'Spendle',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(

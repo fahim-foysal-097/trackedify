@@ -1,6 +1,8 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:spendle/main.dart';
 import 'package:spendle/shared/constants/constants.dart';
+import 'package:spendle/views/pages/add_page.dart';
 
 class NotificationUtil {
   final AwesomeNotifications awesomeNotifications;
@@ -50,7 +52,7 @@ class NotificationUtil {
     final schedule = NotificationCalendar(
       hour: hour,
       minute: minute,
-      second: 0,
+      second: 00,
       repeats: true,
       preciseAlarm: true,
     );
@@ -63,7 +65,7 @@ class NotificationUtil {
         body: body,
         notificationLayout: NotificationLayout.Default,
         color: Colors.blue,
-        backgroundColor: Colors.amber,
+        backgroundColor: Colors.blue,
         icon: AppStrings.defaultIcon,
       ),
       schedule: schedule,
@@ -113,5 +115,12 @@ class NotificationUtil {
   static Future<void> onDismissActionReceivedMethod(ReceivedAction _) async {}
 
   @pragma("vm:entry-point")
-  static Future<void> onActionReceivedMethod(ReceivedAction _) async {}
+  static Future<void> onActionReceivedMethod(ReceivedAction _) async {
+    // Navigating to the AddPage when any notification action is received
+    // TODO : Doesn't work if app is not in background
+    MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const AddPage()),
+      (route) => route.isFirst,
+    );
+  }
 }
