@@ -5,6 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
@@ -71,25 +73,45 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
+  /// Pick an image and copy it into app documents for stable storage.
   Future<void> pickProfilePicture() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (!mounted) return;
 
     if (pickedFile != null && userId != null) {
-      profilePicPath = pickedFile.path;
-      final db = await DatabaseHelper().database;
-      await db.update(
-        'user_info',
-        {'profile_pic': profilePicPath},
-        where: 'id = ?',
-        whereArgs: [userId],
-      );
-      if (!mounted) return;
-      setState(() {});
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final picsDir = Directory(p.join(appDir.path, 'profile_pics'));
+        if (!await picsDir.exists()) await picsDir.create(recursive: true);
+
+        final ext = p.extension(pickedFile.path);
+        final fileName = 'pfp_${DateTime.now().millisecondsSinceEpoch}$ext';
+        final savedPath = p.join(picsDir.path, fileName);
+
+        // copy picked file to app-local folder
+        final savedFile = await File(pickedFile.path).copy(savedPath);
+
+        profilePicPath = savedFile.path;
+        final db = await DatabaseHelper().database;
+        await db.update(
+          'user_info',
+          {'profile_pic': profilePicPath},
+          where: 'id = ?',
+          whereArgs: [userId],
+        );
+        if (!mounted) return;
+        setState(() {});
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save profile picture: $e')),
+        );
+      }
     }
   }
 
+  /// Delete stored profile picture (also delete the file if it exists and is in app folder)
   Future<void> deleteProfilePicture() async {
     if (userId == null) return;
 
@@ -111,16 +133,34 @@ class _UserPageState extends State<UserPage> {
 
     if (!mounted) return;
     if (confirm == true) {
-      profilePicPath = null;
-      final db = await DatabaseHelper().database;
-      await db.update(
-        'user_info',
-        {'profile_pic': null},
-        where: 'id = ?',
-        whereArgs: [userId],
-      );
-      if (!mounted) return;
-      setState(() {});
+      try {
+        // if file exists and looks like an app-local file, delete it
+        if (profilePicPath != null) {
+          final f = File(profilePicPath!);
+          if (await f.exists()) {
+            // attempt delete, ignore errors
+            try {
+              await f.delete();
+            } catch (_) {}
+          }
+        }
+
+        profilePicPath = null;
+        final db = await DatabaseHelper().database;
+        await db.update(
+          'user_info',
+          {'profile_pic': null},
+          where: 'id = ?',
+          whereArgs: [userId],
+        );
+        if (!mounted) return;
+        setState(() {});
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete profile picture: $e')),
+        );
+      }
     }
   }
 
@@ -296,8 +336,22 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
+  bool _profileImageExists() {
+    if (profilePicPath == null) return false;
+    try {
+      final f = File(profilePicPath!);
+      return f.existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _profileImageExists()
+        ? FileImage(File(profilePicPath!)) as ImageProvider
+        : const AssetImage('assets/img/pfp.jpg');
+
     return Scaffold(
       body: SingleChildScrollView(
         key: const PageStorageKey("UserScroll"),
@@ -332,11 +386,8 @@ class _UserPageState extends State<UserPage> {
                             ],
                           ),
                           child: CircleAvatar(
-                            radius: 120,
-                            backgroundImage: profilePicPath != null
-                                ? FileImage(File(profilePicPath!))
-                                : const AssetImage('assets/img/pfp.jpg')
-                                      as ImageProvider,
+                            radius: 80,
+                            backgroundImage: imageProvider,
                           ),
                         ),
                       ),
@@ -438,7 +489,6 @@ class _UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  // Wrap in void callbacks to keep parameter type VoidCallback
                   styledButton(
                     icon: FontAwesomeIcons.upload,
                     text: "Export Database",
