@@ -547,7 +547,8 @@ class _HomePageState extends State<HomePage> {
       PanaraInfoDialog.show(
         context,
         title: 'Could not parse',
-        message: 'Sorry, could not parse the expense command.',
+        message:
+            'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20". ',
         buttonText: "Okay",
         onTapDismiss: () {
           Navigator.of(context).pop();

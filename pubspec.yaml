@@ -54,6 +54,8 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   speech_to_text: ^7.3.0
   panara_dialogs: ^0.1.5
+  awesome_notifications: ^0.10.1
+  android_notification_icons: ^0.0.1
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +70,10 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+android_notification_icons:
+  image_path: "assets/icon/icon.png"
+  icon_name: "ic_notification" # optional
 
 # The following section is specific to Flutter packages.
 flutter:

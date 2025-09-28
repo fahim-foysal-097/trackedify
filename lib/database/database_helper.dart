@@ -53,7 +53,8 @@ class DatabaseHelper {
               add_tip_shown INTEGER DEFAULT 0,
               user_tip_shown INTEGER DEFAULT 0,
               profile_pic TEXT,
-              voice_enabled INTEGER DEFAULT 1
+              voice_enabled INTEGER DEFAULT 1,
+              notification_enabled INTEGER DEFAULT 1
             )
           ''');
 
@@ -70,6 +71,7 @@ class DatabaseHelper {
           await _insertDefaultCategories(txn);
         });
       },
+
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           try {
@@ -108,7 +110,6 @@ class DatabaseHelper {
           await _insertDefaultCategories(db);
         }
 
-        // add 'note' column to expenses table
         if (oldVersion < 3) {
           try {
             await db.execute('ALTER TABLE expenses ADD COLUMN note TEXT');
@@ -119,6 +120,11 @@ class DatabaseHelper {
           try {
             await db.execute(
               'ALTER TABLE user_info ADD COLUMN voice_enabled INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN notification_enabled INTEGER DEFAULT 1',
             );
           } catch (_) {}
         }
@@ -218,7 +224,7 @@ class DatabaseHelper {
   Future<String> getDatabasePath() async => await _dbPath();
 
   // -------------------------
-  // New helper methods for voice & expenses
+  // Helper methods for voice & expenses & notifications
   // -------------------------
 
   /// Return whether voice commands are enabled (true by default)
@@ -246,6 +252,36 @@ class DatabaseHelper {
     await db.update(
       'user_info',
       {'voice_enabled': enabled ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Return whether notifications are enabled (true by default)
+  Future<bool> isNotificationEnabled() async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) return true;
+    final val = rows.first['notification_enabled'];
+    if (val == null) return true;
+    return (val as int) == 1;
+  }
+
+  /// Update notification preference for the first user row.
+  Future<void> setNotificationEnabled(bool enabled) async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) {
+      await db.insert('user_info', {
+        'username': 'User',
+        'notification_enabled': enabled ? 1 : 0,
+      });
+      return;
+    }
+    final id = rows.first['id'] as int;
+    await db.update(
+      'user_info',
+      {'notification_enabled': enabled ? 1 : 0},
       where: 'id = ?',
       whereArgs: [id],
     );

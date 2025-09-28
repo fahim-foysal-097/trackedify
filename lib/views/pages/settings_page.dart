@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/services/auth_service.dart';
+import 'package:spendle/services/notification_service.dart';
+import 'package:spendle/shared/constants/constants.dart';
 import 'package:spendle/views/pages/set_pin_page.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -24,12 +26,21 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _voiceEnabled = true;
   bool _loadingVoicePref = true;
 
+  bool _notificationsEnabled = true;
+  bool _loadingNotificationPref = true;
+
+  late final NotificationUtil _notificationUtil;
+
   @override
   void initState() {
     super.initState();
+    _notificationUtil = NotificationUtil(
+      awesomeNotifications: AwesomeNotifications(),
+    );
     _loadUser();
     _loadAuthState();
     _loadVoicePref();
+    _loadNotificationPref();
   }
 
   Future<void> _loadUser() async {
@@ -69,6 +80,15 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _voiceEnabled = v;
       _loadingVoicePref = false;
+    });
+  }
+
+  Future<void> _loadNotificationPref() async {
+    final v = await DatabaseHelper().isNotificationEnabled();
+    if (!mounted) return;
+    setState(() {
+      _notificationsEnabled = v;
+      _loadingNotificationPref = false;
     });
   }
 
@@ -413,6 +433,72 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
+
+        const SizedBox(height: 20),
+
+        // Notification
+        const Text(
+          'Notifications',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        _loadingNotificationPref
+            ? const SizedBox(
+                height: 48,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : SwitchListTile(
+                title: const Text('Daily reminder at 8:00 PM'),
+                subtitle: const Text(
+                  'Receive a daily add to review your expenses',
+                ),
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: Colors.grey.shade400,
+                activeThumbColor: Colors.white,
+                activeTrackColor: Colors.lightBlue,
+                value: _notificationsEnabled,
+                onChanged: (v) async {
+                  await DatabaseHelper().setNotificationEnabled(v);
+                  if (!mounted) return;
+                  setState(() => _notificationsEnabled = v);
+
+                  if (v) {
+                    final granted = await _notificationUtil.requestPermission();
+                    if (!granted) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Notification permission denied'),
+                        ),
+                      );
+                      await DatabaseHelper().setNotificationEnabled(false);
+                      if (!mounted) return;
+                      setState(() => _notificationsEnabled = false);
+                      return;
+                    }
+
+                    await _notificationUtil.scheduleDailyAt(
+                      id: AppConstants.dailyReminderId,
+                      channelKey: AppStrings.scheduledChannelKey,
+                      title: 'Spendle Reminder',
+                      body: 'Don\'t forget to add your expenses today.',
+                      hour: 16,
+                      minute: 30,
+                    );
+
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Daily reminder enabled')),
+                    );
+                  } else {
+                    await _notificationUtil.cancelAllSchedules();
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Daily reminder disabled')),
+                    );
+                  }
+                },
+              ),
       ],
     );
   }
@@ -428,12 +514,6 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Lottie.asset(
-                  'assets/lotties/settings.json',
-                  height: 160,
-                ),
-              ),
               const SizedBox(height: 12),
               const Text(
                 'Change Your Username',
