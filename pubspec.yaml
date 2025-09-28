@@ -72,7 +72,7 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 android_notification_icons:
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/icon/notification.png"
   icon_name: "ic_notification" # optional
 
 # The following section is specific to Flutter packages.
