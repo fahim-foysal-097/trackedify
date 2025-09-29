@@ -1,4 +1,7 @@
-# Spendle
+# Spendle <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/Download-Website-blue?style=for-the-badge"></a>
+
+
+
 
 Spendle is a lightweight personal expense tracker designed to help you take control of your finances with ease.
 
@@ -17,6 +20,8 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 - App Locker
 - Voice Commands
 - Daily Reminder
+
+
 
 ## Screenshots
 
