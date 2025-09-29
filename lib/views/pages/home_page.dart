@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:spendle/services/update_service.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/shared/widgets/overview_widget.dart';
@@ -42,6 +43,11 @@ class _HomePageState extends State<HomePage> {
     loadExpenses();
     _initSpeech();
     _loadVoicePref();
+
+    // Check update after UI settles
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.checkForUpdate(context);
+    });
   }
 
   Future<void> _initSpeech() async {

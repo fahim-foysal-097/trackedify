@@ -56,6 +56,11 @@ dependencies:
   panara_dialogs: ^0.1.5
   awesome_notifications: ^0.10.1
   android_notification_icons: ^0.0.1
+  package_info_plus: ^9.0.0
+  http: ^1.5.0
+  permission_handler: ^12.0.1
+  open_filex: ^4.7.0
+  device_info_plus: ^12.1.0
 
 dev_dependencies:
   flutter_test:
@@ -73,7 +78,7 @@ dev_dependencies:
 
 android_notification_icons:
   image_path: "assets/icon/notification.png"
-  icon_name: "ic_notification" # optional
+  icon_name: "ic_notification"
 
 # The following section is specific to Flutter packages.
 flutter:
