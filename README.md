@@ -1,7 +1,4 @@
-# Spendle <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/Download-Website-blue?style=for-the-badge"></a>
-
-
-
+# Spendle <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/App-Download-blue?style=for-the-badge"></a>
 
 Spendle is a lightweight personal expense tracker designed to help you take control of your finances with ease.
 
@@ -21,20 +18,24 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 - Voice Commands
 - Daily Reminder
 
-
-
 ## Screenshots
 
 <p float="center">
     <img src="readme_assets/ss_home.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_pie.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_bar.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_add.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_calculator.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_all.jpg" alt="App Screenshot" width="200"/>
-    <img src="readme_assets/ss_edit.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_pie.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_monthly.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_bar.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_all.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_view.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_edit.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_lock.jpg" alt="App Screenshot" width="200"/>
 </p>
+
+## Download
+
+<a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/Go to Website-Download-blue?style=for-the-badge"></a>
 
 ## Test/Build
 
@@ -49,7 +50,7 @@ flutter run
 first run :
 
 ```bash
-flutter build apk --split-per-abi
+flutter build apk --split-per-abi --no-tree-shake-icons
 ```
 
 Then install compatible apk from build forlder.
