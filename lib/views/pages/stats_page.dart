@@ -1,8 +1,8 @@
 // stats_page.dart
 import 'package:flutter/material.dart';
-import 'package:spendle/views/stats/bar_chart.dart';
-import 'package:spendle/views/stats/monthly_overview.dart';
-import 'package:spendle/views/stats/pie_chart.dart';
+import 'package:spendle/views/pages/stats/bar_chart.dart';
+import 'package:spendle/views/pages/stats/monthly_overview.dart';
+import 'package:spendle/views/pages/stats/pie_chart.dart';
 
 class StatsPage extends StatelessWidget {
   const StatsPage({super.key});

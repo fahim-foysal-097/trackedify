@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:spendle/services/auth_service.dart';
 
 class SetPinPage extends StatefulWidget {
@@ -52,20 +53,21 @@ class _SetPinPageState extends State<SetPinPage> {
     }
 
     if (recovery.length < 6) {
-      setState(() => _error = 'Recovery pass should be at least 6 characters.');
+      setState(
+        () => _error = 'Recovery password should be at least 6 characters.',
+      );
       return;
     }
 
     setState(() => _saving = true);
 
-    // persist securely
+    // Save PIN securely
     await _auth.setPin(pin, recoveryPassword: recovery);
 
-    if (!mounted) return; // guard against using context after await
+    if (!mounted) return;
     setState(() => _saving = false);
 
     // inform caller of success
-    if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 
@@ -76,91 +78,99 @@ class _SetPinPageState extends State<SetPinPage> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(title: Text(title)),
-        body: Padding(
-          padding: const EdgeInsets.all(2),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _pinCtl,
-                      keyboardType: TextInputType.number,
-                      obscureText: !_showPin,
-                      decoration: InputDecoration(
-                        hintText: 'Enter new PIN',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showPin ? Icons.visibility_off : Icons.visibility,
+              TextField(
+                controller: _pinCtl,
+                keyboardType: TextInputType.number,
+                obscureText: !_showPin,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  hintText: widget.isChanging ? 'Enter new PIN' : 'Enter PIN',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _showPin ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () => setState(() => _showPin = !_showPin),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _confirmCtl,
+                keyboardType: TextInputType.number,
+                obscureText: !_showPin,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  hintText: 'Confirm PIN',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _recoveryCtl,
+                keyboardType: TextInputType.text,
+                obscureText: !_showPin,
+                decoration: const InputDecoration(
+                  hintText: 'Recovery password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+              ],
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: kToolbarHeight,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: _saving ? null : _save,
+                  child: _saving
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          widget.isChanging ? 'Change PIN' : 'Set PIN',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
                           ),
-                          onPressed: () => setState(() => _showPin = !_showPin),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _confirmCtl,
-                      keyboardType: TextInputType.number,
-                      obscureText: !_showPin,
-                      decoration: const InputDecoration(
-                        hintText: 'Confirm PIN',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _recoveryCtl,
-                      keyboardType: TextInputType.text,
-                      obscureText: !_showPin,
-                      decoration: const InputDecoration(
-                        hintText: 'Recovery password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                    ],
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      height: kToolbarHeight,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: _saving ? null : _save,
-                        child: _saving
-                            ? const CircularProgressIndicator()
-                            : Text(
-                                widget.isChanging ? 'Change PIN' : 'Set PIN',
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],

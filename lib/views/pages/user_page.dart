@@ -580,7 +580,7 @@ class _UserPageState extends State<UserPage> {
                   styledButton(
                     icon: FontAwesomeIcons.chrome,
                     text: "Visit Website",
-                    iconColor: Colors.orange,
+                    iconColor: Colors.deepPurple,
                     onPressed: () => _launchURL(
                       "https://fahim-foysal-097.github.io/spendle-website/",
                     ),
