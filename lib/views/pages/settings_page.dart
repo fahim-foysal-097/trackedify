@@ -97,50 +97,55 @@ class SettingsButton extends StatelessWidget {
     const double iconSize = 28.0;
     const double leftPadding = 12;
     const double rightPadding = 12;
-    const double topPadding = 4;
-    const double bottomPadding = 4;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        child: Container(
-          height: height,
-          padding: const EdgeInsets.only(
-            left: leftPadding,
-            right: rightPadding,
-            top: topPadding,
-            bottom: bottomPadding,
-          ),
-
-          child: Row(
-            children: [
-              Center(
-                child: Icon(icon, color: iconColor, size: iconSize),
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            child: Container(
+              height: height,
+              padding: const EdgeInsets.only(
+                left: leftPadding,
+                right: rightPadding,
               ),
 
-              const SizedBox(width: 10),
-
-              // Title text
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    // fontWeight: FontWeight.w300,
+              child: Row(
+                children: [
+                  Center(
+                    child: Icon(icon, color: iconColor, size: iconSize),
                   ),
-                ),
-              ),
 
-              // Trailing chevron pushed slightly toward the right by container right padding
-              Icon(Icons.chevron_right, size: 30, color: Colors.grey.shade600),
-            ],
+                  const SizedBox(width: 10),
+
+                  // Title text
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        // fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+
+                  // Trailing chevron pushed slightly toward the right by container right padding
+                  Icon(
+                    Icons.chevron_right,
+                    size: 30,
+                    color: Colors.grey.shade600,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 6),
+      ],
     );
   }
 }

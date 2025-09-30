@@ -56,7 +56,7 @@ class NavBarWidget extends StatelessWidget {
                     // right side items
                     _navItem(
                       icon: FontAwesomeIcons.chartSimple,
-                      label: 'Charts',
+                      label: 'Insights',
                       selected: selectedPage == 2,
                       selectedColor: selectedIconColor,
                       unselectedColor: unselectedIconColor,

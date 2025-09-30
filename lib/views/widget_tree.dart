@@ -3,6 +3,7 @@ import 'package:spendle/data/notifiers.dart';
 import 'package:spendle/shared/constants/constants.dart';
 import 'package:spendle/shared/widgets/navbar_widget.dart';
 import 'package:spendle/views/pages/home_page.dart';
+import 'package:spendle/views/pages/insights_page.dart';
 import 'package:spendle/views/pages/stats_page.dart';
 import 'package:spendle/views/pages/user_page.dart';
 import 'package:spendle/views/pages/add_page.dart';
@@ -26,13 +27,14 @@ class WidgetTree extends StatefulWidget {
 class _WidgetTreeState extends State<WidgetTree> {
   final homeKey = GlobalKey<HomePageState>();
   // final statsKey = GlobalKey<>();
+  final insightKey = GlobalKey<InsightsPageState>();
   final userKey = GlobalKey<UserPageState>();
 
   late final List<Widget> pages = [
     // global keys for the pages to refresh
     HomePage(key: homeKey),
     const StatsPage(),
-    const StatsPage(),
+    InsightsPage(key: insightKey),
     UserPage(key: userKey),
   ];
 
@@ -83,6 +85,7 @@ class _WidgetTreeState extends State<WidgetTree> {
               final idx = selectedPageNotifier.value;
               if (idx == 0) homeKey.currentState?.refresh();
               // if (idx == 1) statsKey.currentState?.refresh();
+              if (idx == 2) insightKey.currentState?.refresh();
               if (idx == 3) userKey.currentState?.refresh();
             });
           },
