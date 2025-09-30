@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,10 @@ class UpdateService {
 
   /// Optional GitHub API token for higher rate limit
   static const String? _githubToken = null; // null for none
+
+  /// Session guard: ensure automatic checks run only once per app session.
+  /// Manual checks (manualCheck == true) bypass this guard.
+  static bool _hasCheckedThisSession = false;
 
   /// Detect device ABI -> maps to GitHub release naming
   static Future<String> _getDeviceArch() async {
@@ -34,12 +39,32 @@ class UpdateService {
     }
   }
 
+  /// Expose a helper to check whether automatic check already ran this session.
+  /// (Useful for debugging / tests.)
+  static bool hasCheckedThisSession() => _hasCheckedThisSession;
+
+  /// Reset the session flag (rarely needed; useful for tests or developer flows)
+  static void resetSessionCheckFlag() {
+    _hasCheckedThisSession = false;
+  }
+
   /// Check GitHub latest release and compare with current app version
-  /// 'manualCheck' = true shows a "latest version" message if up-to-date
+  /// 'manualCheck' = true shows a "latest version" message if up-to-date and
+  /// bypasses the once-per-session guard.
   static Future<void> checkForUpdate(
     BuildContext context, {
     bool manualCheck = false,
   }) async {
+    // If this is an automatic call and we've already checked, skip.
+    if (!manualCheck && _hasCheckedThisSession) {
+      return;
+    }
+
+    // Mark as checked for the session if this was an automatic invocation.
+    if (!manualCheck) {
+      _hasCheckedThisSession = true;
+    }
+
     try {
       final info = await PackageInfo.fromPlatform();
       final currentVersion = info.version;
@@ -55,7 +80,12 @@ class UpdateService {
       };
 
       final res = await http.get(url, headers: headers);
-      if (res.statusCode != 200) return;
+      if (res.statusCode != 200) {
+        if (kDebugMode) {
+          debugPrint("GitHub API returned ${res.statusCode}: ${res.body}");
+        }
+        return;
+      }
 
       final data = jsonDecode(res.body);
       final tag = data["tag_name"];
@@ -84,7 +114,12 @@ class UpdateService {
         orElse: () => null,
       );
 
-      if (apkAsset == null) return;
+      if (apkAsset == null) {
+        if (kDebugMode) {
+          debugPrint("No APK asset found for ABI: $arch");
+        }
+        return;
+      }
       final apkUrl = apkAsset["browser_download_url"];
 
       if (!context.mounted) return;
@@ -102,13 +137,14 @@ class UpdateService {
         },
         panaraDialogType: PanaraDialogType.normal,
       );
-    } catch (e) {
-      debugPrint("Update check failed: $e");
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint("Update check failed: $e\n$st");
+      }
     }
   }
 
-  /// Download APK and show progress dialog with cancel button
-  /// Deletes the APK after installation
+  /// Download APK and show progress dialog with cancel button.
   static Future<void> _downloadAndInstall(
     String url,
     String version,
@@ -225,7 +261,6 @@ class UpdateService {
   /// Remove everything inside the app-specific external storage directory.
   /// Returns number of deleted files.
   /// This only operates on the directory returned by 'getExternalStorageDirectory()'.
-  /// Use from UI after confirming with the user.
   static Future<int> clearDownloadFolder() async {
     try {
       final dir = await getExternalStorageDirectory();
@@ -247,16 +282,11 @@ class UpdateService {
           } else if (entity is Directory) {
             // Attempt to delete empty directories later — ignore errors.
             try {
-              if (entity.existsSync()) {
-                // If directory is empty, delete it
-                final children = entity.listSync();
-                if (children.isEmpty) {
-                  await entity.delete();
-                }
+              final children = entity.listSync();
+              if (children.isEmpty) {
+                await entity.delete();
               }
-            } catch (_) {
-              // ignore
-            }
+            } catch (_) {}
           }
         } catch (_) {
           // ignore individual delete errors and continue
@@ -265,7 +295,9 @@ class UpdateService {
 
       return deletedCount;
     } catch (e) {
-      debugPrint('clearDownloadFolder failed: $e');
+      if (kDebugMode) {
+        debugPrint('clearDownloadFolder failed: $e');
+      }
       return 0;
     }
   }

@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
     _initSpeech();
     _loadVoicePref();
 
-    // Check update after UI settles
+    // Automatic update check after first frame (will run only once per app session)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       UpdateService.checkForUpdate(context);
     });
