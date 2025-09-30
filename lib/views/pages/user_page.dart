@@ -21,10 +21,10 @@ class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});
 
   @override
-  State<UserPage> createState() => _UserPageState();
+  State<UserPage> createState() => UserPageState();
 }
 
-class _UserPageState extends State<UserPage> {
+class UserPageState extends State<UserPage> {
   String username = "User";
   String? profilePicPath;
   bool showTip = false;
@@ -36,6 +36,10 @@ class _UserPageState extends State<UserPage> {
   @override
   void initState() {
     super.initState();
+    loadUserInfo();
+  }
+
+  void refresh() {
     loadUserInfo();
   }
 
@@ -459,10 +463,11 @@ class _UserPageState extends State<UserPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const SettingsPage(),
+                          builder: (context) => const SettingsPage(),
                         ),
-                      );
+                      ).then((_) {
+                        loadUserInfo();
+                      });
                     },
                   ),
                   styledButton(

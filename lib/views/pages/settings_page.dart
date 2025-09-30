@@ -15,7 +15,6 @@ class SettingsPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: const Text('Settings'), centerTitle: true),
         body: SingleChildScrollView(
-          // padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -95,7 +94,6 @@ class SettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double height = 48.0;
-    // const double iconCircleSize = 36.0;
     const double iconSize = 28.0;
     const double leftPadding = 12;
     const double rightPadding = 12;
@@ -105,7 +103,6 @@ class SettingsButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        // borderRadius: borderRadius,
         onTap: onTap,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,

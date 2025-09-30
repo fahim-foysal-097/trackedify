@@ -32,8 +32,8 @@ android {
         applicationId = "com.fahim.spendle"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.5.0"
+        versionCode = 9
+        versionName = "1.5.1"
     }
 
         signingConfigs {

@@ -18,3 +18,8 @@ class AppStrings {
 class AppConstants {
   static const int dailyReminderId = 1001;
 }
+
+// Floating Action Button Configs
+class FabConfig {
+  static const double fabDiameter = 64.0;
+}

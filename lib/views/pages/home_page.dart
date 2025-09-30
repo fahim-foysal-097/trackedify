@@ -8,7 +8,6 @@ import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/shared/widgets/overview_widget.dart';
 import 'package:spendle/shared/widgets/welcome_widget.dart';
-import 'package:spendle/views/pages/add_page.dart';
 import 'package:spendle/views/pages/expense_history_page.dart';
 import 'edit_expense_page.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -18,10 +17,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> expenses = [];
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
 
@@ -35,6 +34,11 @@ class _HomePageState extends State<HomePage> {
 
   // guard to avoid concurrent preference reloads
   bool _prefLoadInProgress = false;
+
+  void refresh() {
+    loadCategories();
+    loadExpenses();
+  }
 
   @override
   void initState() {
@@ -666,36 +670,6 @@ class _HomePageState extends State<HomePage> {
     });
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.lightBlue,
-        foregroundColor: Colors.white,
-        tooltip: 'Add Transaction',
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.secondary,
-                Theme.of(context).colorScheme.tertiary,
-              ],
-              transform: const GradientRotation(3.1416 / 4),
-            ),
-          ),
-          child: const Icon(Icons.add),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddPage()),
-          ).then((_) {
-            loadCategories(); // reload categories in case user added new
-            loadExpenses();
-          });
-        },
-      ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [

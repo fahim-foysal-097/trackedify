@@ -1,4 +1,3 @@
-// stats_page.dart
 import 'package:flutter/material.dart';
 import 'package:spendle/views/pages/stats/bar_chart.dart';
 import 'package:spendle/views/pages/stats/monthly_overview.dart';
