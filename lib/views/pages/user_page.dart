@@ -13,6 +13,8 @@ import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
+import 'package:spendle/services/update_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});
@@ -34,6 +36,13 @@ class _UserPageState extends State<UserPage> {
   void initState() {
     super.initState();
     loadUserInfo();
+  }
+
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $url');
+    }
   }
 
   Future<void> loadUserInfo() async {
@@ -490,7 +499,7 @@ class _UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
-                    icon: FontAwesomeIcons.upload,
+                    icon: FontAwesomeIcons.fileExport,
                     text: "Export Database",
                     iconColor: Colors.green,
                     onPressed: () {
@@ -499,7 +508,7 @@ class _UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
-                    icon: FontAwesomeIcons.download,
+                    icon: FontAwesomeIcons.fileImport,
                     text: "Import Database",
                     iconColor: Colors.deepPurple,
                     onPressed: () {
@@ -520,6 +529,66 @@ class _UserPageState extends State<UserPage> {
                         ),
                       );
                     },
+                  ),
+                  styledButton(
+                    icon: FontAwesomeIcons.download,
+                    text: "Check for Update",
+                    iconColor: Colors.blueAccent,
+                    onPressed: () async {
+                      if (!mounted) return;
+                      await UpdateService.checkForUpdate(
+                        context,
+                        manualCheck: true,
+                      );
+                    },
+                  ),
+                  styledButton(
+                    icon: FontAwesomeIcons.trashArrowUp,
+                    text: "Clear Downloaded Updates",
+                    iconColor: Colors.redAccent,
+                    onPressed: () async {
+                      if (!mounted) return;
+                      final confirmed = await PanaraConfirmDialog.show<bool>(
+                        context,
+                        title: "Clear downloads?",
+                        message:
+                            "This will delete all downloaded updates from the app's download folder. Continue?",
+                        confirmButtonText: "Clear",
+                        cancelButtonText: "Cancel",
+                        onTapCancel: () => Navigator.pop(context, false),
+                        onTapConfirm: () => Navigator.pop(context, true),
+                        panaraDialogType: PanaraDialogType.warning,
+                      );
+                      if (!mounted) return;
+                      if (confirmed != true) return;
+
+                      // run cleanup
+                      final deleted = await UpdateService.clearDownloadFolder();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Cleared $deleted file(s) from app download folder.",
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  styledButton(
+                    icon: FontAwesomeIcons.chrome,
+                    text: "Visit Website",
+                    iconColor: Colors.orange,
+                    onPressed: () => _launchURL(
+                      "https://fahim-foysal-097.github.io/spendle-website/",
+                    ),
+                  ),
+                  styledButton(
+                    icon: FontAwesomeIcons.bug,
+                    text: "Report Bugs",
+                    iconColor: Colors.red,
+                    onPressed: () => _launchURL(
+                      "https://github.com/fahim-foysal-097/Spendle/issues/new?template=bug_report.md",
+                    ),
                   ),
                 ],
               ),
