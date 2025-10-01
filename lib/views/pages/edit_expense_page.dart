@@ -164,7 +164,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime.now().subtract(const Duration(days: 1095)),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 700)),
     );
 
     if (picked != null) {

@@ -513,9 +513,9 @@ class _AddPageState extends State<AddPage> {
                       context: context,
                       initialDate: selectedDate,
                       firstDate: DateTime.now().subtract(
-                        const Duration(days: 700),
+                        const Duration(days: 1095),
                       ),
-                      lastDate: DateTime.now().add(const Duration(days: 10)),
+                      lastDate: DateTime.now().add(const Duration(days: 700)),
                     );
                     if (setDate != null) {
                       dateController.text = DateFormat(

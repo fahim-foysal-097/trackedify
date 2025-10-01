@@ -10,13 +10,6 @@ import 'package:spendle/views/pages/add_page.dart';
 import 'package:spendle/views/pages/onboarding_page.dart';
 import 'package:spendle/database/database_helper.dart';
 
-// List<Widget> pages = [
-//   const HomePage(),
-//   const StatsPage(),
-//   const StatsPage(),
-//   const UserPage(),
-// ];
-
 class WidgetTree extends StatefulWidget {
   const WidgetTree({super.key});
 
@@ -70,7 +63,7 @@ class _WidgetTreeState extends State<WidgetTree> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Container(
-        margin: const EdgeInsets.only(top: 20),
+        margin: const EdgeInsets.only(top: 25),
         width: FabConfig.fabDiameter,
         height: FabConfig.fabDiameter,
         decoration: const BoxDecoration(shape: BoxShape.circle),

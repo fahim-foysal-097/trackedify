@@ -44,6 +44,16 @@ class DatabaseHelper {
             )
           ''');
 
+          // --- Table: Categories ---
+          await txn.execute('''
+            CREATE TABLE categories (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL UNIQUE,
+              color INTEGER NOT NULL,
+              icon_code INTEGER NOT NULL
+            )
+          ''');
+
           // --- Table: User Info ---
           await txn.execute('''
             CREATE TABLE user_info (
@@ -55,16 +65,6 @@ class DatabaseHelper {
               profile_pic TEXT,
               voice_enabled INTEGER DEFAULT 1,
               notification_enabled INTEGER DEFAULT 1
-            )
-          ''');
-
-          // --- Table: Categories ---
-          await txn.execute('''
-            CREATE TABLE categories (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT NOT NULL UNIQUE,
-              color INTEGER NOT NULL,
-              icon_code INTEGER NOT NULL
             )
           ''');
 
