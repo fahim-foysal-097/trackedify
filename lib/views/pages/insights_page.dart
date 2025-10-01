@@ -1,10 +1,12 @@
+// lib/screens/insights_page.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/widgets/expense_bar_chart.dart';
-import 'package:spendle/shared/widgets/expense_line_chart.dart';
-import 'package:spendle/shared/widgets/expense_pie_chart.dart';
+import 'package:spendle/shared/widgets/expense_month_compare.dart.dart';
 import 'package:spendle/shared/widgets/expense_summary_card.dart';
 import 'package:spendle/shared/widgets/insights_cards.dart';
+import 'package:spendle/shared/widgets/expense_line_chart.dart';
+import 'package:spendle/shared/widgets/expense_bar_chart.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -21,6 +23,8 @@ class InsightsPageState extends State<InsightsPage> {
   List<Map<String, dynamic>> last30DaysExpenses = [];
   List<Map<String, dynamic>> last7DaysExpenses = [];
   Map<String, dynamic> insightsData = {};
+  List<String> availableMonths = []; // 'yyyy-MM' strings
+  List<Map<String, dynamic>> allExpenses = [];
 
   @override
   void initState() {
@@ -34,11 +38,13 @@ class InsightsPageState extends State<InsightsPage> {
 
   Future<void> fetchExpenses() async {
     final db = await dbHelper.database;
-    final List<Map<String, dynamic>> allExpenses = await db.query(
+    final List<Map<String, dynamic>> all = await db.query(
       'expenses',
       orderBy: 'date ASC',
     );
-    final categories = await db.query('categories');
+
+    // store all expenses locally for the month-compare widget to query
+    allExpenses = all;
 
     double total = 0;
     Map<String, Map<String, dynamic>> catMap = {};
@@ -50,25 +56,28 @@ class InsightsPageState extends State<InsightsPage> {
     double minExpense = double.infinity;
     Map<String, int> freqCategory = {};
 
-    // Build category color mapping
+    // fetch categories for colors
+    final categories = await db.query('categories');
     Map<String, Color> categoryColors = {};
     for (var c in categories) {
       categoryColors[c['name'] as String] = Color(
         c['color'] as int,
-      ).withValues(alpha: 0.9);
+      ).withValues(alpha: 1.0);
     }
 
-    for (var e in allExpenses) {
-      double amt = e['amount'] as double;
-      String cat = e['category'] as String;
-      DateTime dt = DateTime.parse(e['date']);
+    for (var e in all) {
+      final amt = (e['amount'] as num).toDouble();
+      final cat = e['category'] as String;
+      final dt = DateTime.parse(e['date'] as String);
 
       total += amt;
-
       if (catMap.containsKey(cat)) {
         catMap[cat]!['amount'] += amt;
       } else {
-        catMap[cat] = {'amount': amt, 'color': categoryColors[cat]};
+        catMap[cat] = {
+          'amount': amt,
+          'color': categoryColors[cat] ?? Colors.grey,
+        };
       }
 
       if (amt > maxExpense) maxExpense = amt;
@@ -92,6 +101,16 @@ class InsightsPageState extends State<InsightsPage> {
         ? "N/A"
         : freqCategory.entries.reduce((a, b) => a.value > b.value ? a : b).key;
 
+    // Build month list from allExpenses
+    final monthSet = <String>{};
+    for (var e in all) {
+      final dt = DateTime.parse(e['date'] as String);
+      final ym = DateFormat('yyyy-MM').format(dt);
+      monthSet.add(ym);
+    }
+    final months = monthSet.toList();
+    months.sort((a, b) => b.compareTo(a)); // newest first
+
     setState(() {
       totalExpense = total;
       categoryExpenses = catMap;
@@ -103,6 +122,7 @@ class InsightsPageState extends State<InsightsPage> {
         'mostFreqCategory': mostFreqCategory,
         'weeklyAvg': weeklyAvg,
       };
+      availableMonths = months;
     });
   }
 
@@ -110,11 +130,7 @@ class InsightsPageState extends State<InsightsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Insights"),
-        centerTitle: true,
-        // backgroundColor: Colors.blue,
-      ),
+      appBar: AppBar(title: const Text("Insights"), centerTitle: true),
       body: RefreshIndicator(
         onRefresh: fetchExpenses,
         child: SingleChildScrollView(
@@ -123,14 +139,17 @@ class InsightsPageState extends State<InsightsPage> {
           child: Column(
             children: [
               ExpenseSummaryCard(totalExpense: totalExpense),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               InsightsCards(insights: insightsData),
-              const SizedBox(height: 20),
-              ExpensePieChart(categoryExpenses: categoryExpenses),
               const SizedBox(height: 20),
               ExpenseLineChart(last30DaysExpenses: last30DaysExpenses),
               const SizedBox(height: 20),
               ExpenseBarChart(last7DaysExpenses: last7DaysExpenses),
+              const SizedBox(height: 20),
+              MonthCompareChart(
+                allExpenses: allExpenses,
+                availableMonths: availableMonths,
+              ),
             ],
           ),
         ),

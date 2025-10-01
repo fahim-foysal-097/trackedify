@@ -55,6 +55,12 @@ class ExpenseLineChart extends StatelessWidget {
                     leftTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
                     ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   lineBarsData: [
                     LineChartBarData(
@@ -65,10 +71,11 @@ class ExpenseLineChart extends StatelessWidget {
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.blue.withValues(alpha:  0.2),
+                        color: Colors.blue.withValues(alpha: 0.2),
                       ),
                     ),
                   ],
+                  lineTouchData: const LineTouchData(enabled: false),
                 ),
               ),
             ),
