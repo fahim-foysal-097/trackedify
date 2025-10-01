@@ -14,6 +14,7 @@ import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
 import 'package:spendle/views/pages/export_page.dart';
+import 'package:spendle/views/pages/import_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/services/update_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -528,6 +529,36 @@ class UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
+                    icon: FontAwesomeIcons.fileArrowDown,
+                    text: "Import Data",
+                    iconColor: Colors.green,
+                    onPressed: () {
+                      if (_isProcessingDb) return;
+                      PanaraConfirmDialog.show(
+                        context,
+                        title: "Import data from DB/JSON?",
+                        message:
+                            "This may replace all of your current data / append data (using JSON). Continue?",
+                        confirmButtonText: "Confirm",
+                        cancelButtonText: "Cancel",
+                        onTapCancel: () => Navigator.pop(context),
+                        onTapConfirm: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  const ImportPage(),
+                            ),
+                          ).then((_) {
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                          });
+                        },
+                        panaraDialogType: PanaraDialogType.error,
+                      );
+                    },
+                  ),
+                  styledButton(
                     icon: FontAwesomeIcons.fileExport,
                     text: "Export SQLite Database",
                     iconColor: Colors.green,
@@ -542,7 +573,22 @@ class UserPageState extends State<UserPage> {
                     iconColor: Colors.orange,
                     onPressed: () {
                       if (_isProcessingDb) return;
-                      importDb();
+                      PanaraConfirmDialog.show(
+                        context,
+                        title: "Import data from DB?",
+                        message:
+                            "This will replace all of your current data with imported data. Continue?",
+                        confirmButtonText: "Confirm",
+                        cancelButtonText: "Cancel",
+                        onTapCancel: () => Navigator.pop(context),
+                        onTapConfirm: () {
+                          importDb().then((_) {
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                          });
+                        },
+                        panaraDialogType: PanaraDialogType.error,
+                      );
                     },
                   ),
                   styledButton(

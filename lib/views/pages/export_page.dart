@@ -28,7 +28,6 @@ class _ExportPageState extends State<ExportPage> {
     _loadSummary();
   }
 
-  /// Local app exports folder (used as fallback and for listing recent exports)
   Future<Directory> _getExportDir() async {
     final documents = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(documents.path, 'exports'));
@@ -110,7 +109,7 @@ class _ExportPageState extends State<ExportPage> {
     } catch (e) {
       if (kDebugMode) {
         debugPrint(
-          'Save dialog failed: $e — falling back to app exports folder',
+          'Save dialog failed: $e - falling back to app exports folder',
         );
       }
       // Fallback: copy to app exports folder
@@ -122,7 +121,6 @@ class _ExportPageState extends State<ExportPage> {
     }
   }
 
-  /// Export DB file using SAF save dialog (sample code you provided)
   Future<void> _exportDb() async {
     if (_isProcessingDb || !mounted) return;
     setState(() => _isProcessingDb = true);
@@ -196,7 +194,8 @@ class _ExportPageState extends State<ExportPage> {
     }
   }
 
-  /// Export CSV: build CSV files into a temp file then let user pick destination
+  /// Export CSV: build CSV files into temp files then let user pick destination
+  /// NOTE: user_info CSV is intentionally NOT exported here.
   Future<void> _exportCsvToSaveDialog() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
@@ -213,8 +212,7 @@ class _ExportPageState extends State<ExportPage> {
 
       final db = await _dbHelper.database;
 
-      // Build combined CSV (or you can make separate files — here we create a single zip-like JSON+CSV choice)
-      // We will create 3 CSV files in temp, and call save dialog for each (user chooses location per file).
+      // We will create 2 CSV files in temp (expenses, categories), and call save dialog for each.
 
       // expenses
       final expenses = await db.query('expenses', orderBy: 'date ASC');
@@ -255,34 +253,9 @@ class _ExportPageState extends State<ExportPage> {
         sbCat.toString(),
       );
 
-      // user_info
-      final users = await db.query('user_info');
-      final sbUser = StringBuffer();
-      sbUser.writeln(
-        'id,username,history_tip_shown,add_tip_shown,user_tip_shown,profile_pic,voice_enabled,notification_enabled',
-      );
-      for (var row in users) {
-        sbUser.writeln(
-          [
-            _safeCsvCell(row['id']),
-            _safeCsvCell(row['username']),
-            _safeCsvCell(row['history_tip_shown']),
-            _safeCsvCell(row['add_tip_shown']),
-            _safeCsvCell(row['user_tip_shown']),
-            _safeCsvCell(row['profile_pic']),
-            _safeCsvCell(row['voice_enabled']),
-            _safeCsvCell(row['notification_enabled']),
-          ].join(','),
-        );
-      }
-      final tmpUser = await _createTempFile(
-        'user_info_${timestamp()}.csv',
-        sbUser.toString(),
-      );
-
       // let user save each file (one by one)
       final savedPaths = <String>[];
-      for (final tmp in [tmpExp, tmpCat, tmpUser]) {
+      for (final tmp in [tmpExp, tmpCat]) {
         final saved = await _saveFileWithDialogAndFallback(
           tmp,
           p.basename(tmp.path),
@@ -309,7 +282,7 @@ class _ExportPageState extends State<ExportPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'CSV export complete (${savedPaths.length} files saved)',
+              'CSV export complete (${savedPaths.length} file(s) saved)',
             ),
           ),
         );
@@ -381,6 +354,9 @@ class _ExportPageState extends State<ExportPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('JSON export saved: ${p.basename(saved)}')),
         );
+        if (kDebugMode) {
+          debugPrint("JSON export saved: ${p.basename(saved)}");
+        }
       }
     } catch (e) {
       if (dialogShown && mounted && Navigator.canPop(context)) {
@@ -399,6 +375,7 @@ class _ExportPageState extends State<ExportPage> {
   Future<void> _exportBothToSaveDialog() async {
     await _exportCsvToSaveDialog();
     await _exportJsonToSaveDialog();
+    await _exportDb();
   }
 
   Widget _buildHeader() {
@@ -462,8 +439,11 @@ class _ExportPageState extends State<ExportPage> {
             onPressed: _isExporting ? null : _exportBothToSaveDialog,
             icon: _isExporting
                 ? const SizedBox.shrink()
-                : const Icon(Icons.file_download),
-            label: Text(_isExporting ? 'Exporting...' : 'Export All'),
+                : const Icon(Icons.file_download, color: Colors.black87),
+            label: Text(
+              _isExporting ? 'Exporting...' : 'Export All',
+              style: const TextStyle(color: Colors.black87),
+            ),
           ),
         ],
       ),
@@ -506,6 +486,7 @@ class _ExportPageState extends State<ExportPage> {
         elevation: 0,
       ),
       body: RefreshIndicator(
+        color: Colors.blueAccent,
         onRefresh: () async {
           await _loadSummary();
         },
