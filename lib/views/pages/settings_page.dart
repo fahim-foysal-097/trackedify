@@ -133,7 +133,6 @@ class SettingsButton extends StatelessWidget {
                     ),
                   ),
 
-                  // Trailing chevron pushed slightly toward the right by container right padding
                   Icon(
                     Icons.chevron_right,
                     size: 30,

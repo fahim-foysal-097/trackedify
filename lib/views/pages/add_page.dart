@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -614,9 +615,13 @@ class _AddPageState extends State<AddPage> {
                         note: noteText,
                       );
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Expense saved!')),
-                      );
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(content: Text('Expense saved!')),
+                      // );
+
+                      if (kDebugMode) {
+                        debugPrint('Expense saved!');
+                      }
 
                       Navigator.pop(context);
                       setState(() => selectedCategoryName = null);

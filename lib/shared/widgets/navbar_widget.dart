@@ -19,7 +19,7 @@ class NavBarWidget extends StatelessWidget {
       valueListenable: selectedPageNotifier,
       builder: (context, selectedPage, child) {
         return Container(
-          margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: BottomAppBar(
             elevation: 6,
             color: Colors.transparent,

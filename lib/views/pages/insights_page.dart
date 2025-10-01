@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -191,6 +193,8 @@ class InsightsPageState extends State<InsightsPage> {
                 allExpenses: allExpenses,
                 availableMonths: availableMonths,
               ),
+              const SizedBox(height: 20),
+              YearlyTrendChart(allExpenses: allExpenses),
             ],
           ),
         ),
@@ -318,7 +322,7 @@ class InsightsCards extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildCard(
-                title: "Spending Trend",
+                title: "Trend",
                 valueText: percentLabel,
                 // color: red when spending increased vs previous month (bad), green when decreased (good)
                 color: percent >= 0 ? Colors.red : Colors.green,
@@ -432,7 +436,7 @@ class ExpenseLineChart extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 230,
+              height: 240,
               child: LineChart(
                 LineChartData(
                   minY: 0,
@@ -503,7 +507,14 @@ class ExpenseLineChart extends StatelessWidget {
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.deepPurpleAccent.withValues(alpha: 0.2),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.deepPurpleAccent.withValues(alpha: 0.5),
+                            Colors.deepPurpleAccent.withValues(alpha: 0.2),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
                       ),
                     ),
                   ],
@@ -593,7 +604,7 @@ class ExpenseBarChart extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 230,
+              height: 240,
               child: BarChart(
                 BarChartData(
                   maxY: computedTop + intervalY,
@@ -784,7 +795,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-              Lottie.asset('assets/lotties/chart.json', height: 300),
+              Lottie.asset('assets/lotties/chart.json', height: 250),
             ],
           ),
         ),
@@ -1015,7 +1026,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
     return Column(
       children: [
         SizedBox(
-          height: 230,
+          height: 240,
           child: LineChart(
             LineChartData(
               minY: 0,
@@ -1081,7 +1092,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                   isStrokeJoinRound: true,
                   isStrokeCapRound: true,
                   color: Colors.blue,
-                  barWidth: 2,
+                  barWidth: 2.5,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
@@ -1096,7 +1107,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                   isStrokeJoinRound: true,
                   isStrokeCapRound: true,
                   color: Colors.amber,
-                  barWidth: 2,
+                  barWidth: 2.5,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
                     show: true,
@@ -1178,7 +1189,357 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
               color: color,
             ),
           ),
+          const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+}
+
+// -------------------- YEARLY TREND --------------------
+//
+// Shows 12-month totals for a chosen year (defaults to current year).
+// Accepts allExpenses list where each row has 'date' (ISO string) and 'amount'.
+
+/// YearlyTrendChart
+/// - allExpenses: list of rows with at least 'date' (ISO string) and 'amount' (num)
+class YearlyTrendChart extends StatefulWidget {
+  final List<Map<String, dynamic>> allExpenses;
+  const YearlyTrendChart({super.key, required this.allExpenses});
+
+  @override
+  State<YearlyTrendChart> createState() => _YearlyTrendChartState();
+}
+
+class _YearlyTrendChartState extends State<YearlyTrendChart> {
+  late int selectedYear;
+  late List<int> availableYears; // sorted descending
+
+  @override
+  void initState() {
+    super.initState();
+    _initYears();
+  }
+
+  void _initYears() {
+    final now = DateTime.now();
+    final years = <int>{};
+    for (var e in widget.allExpenses) {
+      try {
+        final dt = DateTime.parse(e['date'] as String);
+        years.add(dt.year);
+      } catch (_) {}
+    }
+    // Always include current year even if empty
+    years.add(now.year);
+
+    availableYears = years.toList()..sort((a, b) => b.compareTo(a));
+    selectedYear = now.year;
+    if (availableYears.isNotEmpty && !availableYears.contains(selectedYear)) {
+      selectedYear = availableYears.first;
+    }
+  }
+
+  Map<int, double> _monthlyTotalsForYear(int year) {
+    final totals = {for (int i = 1; i <= 12; i++) i: 0.0};
+    for (var e in widget.allExpenses) {
+      try {
+        final dt = DateTime.parse(e['date'] as String);
+        if (dt.year == year) {
+          totals[dt.month] =
+              (totals[dt.month] ?? 0) + (e['amount'] as num).toDouble();
+        }
+      } catch (_) {}
+    }
+    return totals;
+  }
+
+  @override
+  void didUpdateWidget(YearlyTrendChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(oldWidget.allExpenses, widget.allExpenses)) {
+      _initYears();
+      setState(() {});
+    }
+  }
+
+  // A curated month color map (primary color per month).
+  static const Map<int, Color> _monthPrimaryColor = {
+    1: Color(0xFFB3E5FC),
+    2: Color(0xFFE53935),
+    3: Color(0xFF2E7D32),
+    4: Color(0xFFF4F59B),
+    5: Color(0xFFF6E6FF),
+    6: Color(0xFFFFCC80),
+    7: Color(0xFFFF8A65),
+    8: Color(0xFFD84315),
+    9: Color(0xFF8D6E63),
+    10: Color(0xFF4B0082),
+    11: Color(0xFF795548),
+    12: Color(0xFF2E7D32),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    // Recompute totals each build (cheap)
+    final monthlyTotals = _monthlyTotalsForYear(selectedYear);
+
+    // Empty state handling: if selected year has no positive data -> show friendly card
+    final bool hasYearData = monthlyTotals.values.any((v) => v > 0.0);
+
+    final monthLabels = List.generate(
+      12,
+      (i) => DateFormat('MMM').format(DateTime(0, i + 1)),
+    );
+
+    final formatter = NumberFormat.currency(symbol: "\$");
+
+    if (!hasYearData) {
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: Colors.red,
+        elevation: 6,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Yearly Trend',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  DropdownButton<int>(
+                    iconEnabledColor: Colors.white,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    value: selectedYear,
+                    items: availableYears.map((y) {
+                      return DropdownMenuItem(
+                        value: y,
+                        child: Text(
+                          y.toString(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          selectedYear = v;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Column(
+                  children: [
+                    Lottie.asset("assets/lotties/list.json", height: 200),
+                    Text(
+                      'No expenses recorded for ${selectedYear.toString()}.',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Add some expenses or choose another year to view the yearly trend.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Colors.white60),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // compute maxY and intervals
+    final maxY = monthlyTotals.values.fold<double>(
+      0.0,
+      (p, e) => e > p ? e : p,
+    );
+    final computedTop = (maxY <= 0) ? 50.0 : maxY;
+    final intervalY = ((computedTop / 5).ceilToDouble() <= 0)
+        ? 1.0
+        : (computedTop / 5).ceilToDouble();
+
+    // Build bar groups for 12 months
+    final barGroups = List.generate(12, (i) {
+      final monthIndex = i + 1;
+      final monthValue = monthlyTotals[monthIndex] ?? 0.0;
+      final primary = _monthPrimaryColor[monthIndex] ?? Colors.blueGrey;
+
+      // if monthValue is zero, render lighter color so user sees empties gently
+      final barColor = (monthValue <= 0.0)
+          ? primary.withValues(alpha: 0.25)
+          : primary;
+
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: monthValue,
+            color: barColor,
+            width: 18,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+            // add a subtle rod border using the accent color if there is data
+            rodStackItems: [],
+          ),
+        ],
+      );
+    });
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // header + year selector
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Yearly Trend',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  value: selectedYear,
+                  items: availableYears.map((y) {
+                    return DropdownMenuItem(
+                      value: y,
+                      child: Text(y.toString()),
+                    );
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setState(() {
+                        selectedYear = v;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Chart area
+            SizedBox(
+              height: 260,
+              child: BarChart(
+                BarChartData(
+                  maxY: computedTop + intervalY,
+                  gridData: FlGridData(
+                    show: true,
+                    horizontalInterval: intervalY,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.grey.withValues(alpha: 0.22),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= monthLabels.length) {
+                            return const SizedBox();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Transform.rotate(
+                              angle: -pi / 3.4,
+                              child: Text(
+                                monthLabels[idx],
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ),
+                          );
+                        },
+                        interval: 1,
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 46,
+                        interval: intervalY,
+                        getTitlesWidget: (value, meta) => Text(
+                          '\$${value.toInt()}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: barGroups,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipColor: (group) => Colors.black87,
+                      tooltipPadding: const EdgeInsets.all(8),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final monthIdx = group.x.toInt();
+                        final month = monthLabels[monthIdx];
+                        final value = rod.toY;
+                        return BarTooltipItem(
+                          '$month\n${formatter.format(value)}',
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Total (${selectedYear.toString()})',
+                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+                Text(
+                  formatter.format(
+                    monthlyTotals.values.fold(0.0, (p, e) => p + e),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

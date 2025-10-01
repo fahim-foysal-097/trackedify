@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -151,11 +152,15 @@ class _EditExpensePageState extends State<EditExpensePage> {
       whereArgs: [widget.expense['id']],
     );
 
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Expense updated')));
+    // if (mounted) {
+    //   Navigator.pop(context);
+    //   ScaffoldMessenger.of(
+    //     context,
+    //   ).showSnackBar(const SnackBar(content: Text('Expense updated')));
+    // }
+
+    if (kDebugMode) {
+      debugPrint('Expense updated');
     }
   }
 
@@ -357,7 +362,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                           filled: true,
                           fillColor: Colors.white,
                           prefixIcon: const Icon(
-                            FontAwesomeIcons.list,
+                            FontAwesomeIcons.tags,
                             size: 18,
                             color: Colors.grey,
                           ),
@@ -398,7 +403,10 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     const SizedBox(width: 8),
                     IconButton(
                       onPressed: addCategoryDialog,
-                      icon: const Icon(Icons.add_circle, color: Colors.blue),
+                      icon: const Icon(
+                        FontAwesomeIcons.plus,
+                        color: Colors.blue,
+                      ),
                     ),
                   ],
                 ),
@@ -418,7 +426,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
-                      FontAwesomeIcons.dollarSign,
+                      FontAwesomeIcons.moneyCheckDollar,
                       size: 18,
                       color: Colors.grey,
                     ),
@@ -440,7 +448,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     filled: true,
                     fillColor: Colors.white,
                     prefixIcon: const Icon(
-                      FontAwesomeIcons.clock,
+                      FontAwesomeIcons.solidClock,
                       size: 18,
                       color: Colors.grey,
                     ),

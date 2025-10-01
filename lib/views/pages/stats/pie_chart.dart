@@ -147,9 +147,6 @@ class _MyPieChartState extends State<MyPieChart> {
     }).toList();
 
     // --- Insights computation ---
-    final sortedByTotal = categoryTotals.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final topByTotal = sortedByTotal.take(3).toList();
 
     final sortedByCount = categoryCounts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -302,51 +299,6 @@ class _MyPieChartState extends State<MyPieChart> {
                 ),
                 const SizedBox(height: 8),
 
-                _buildInsightCard(
-                  title: 'Top categories (by total spend)',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: topByTotal.map((e) {
-                      final percent = totalExpense > 0
-                          ? (e.value / totalExpense) * 100
-                          : 0.0;
-                      final cat = categoryMap[e.key];
-                      return ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          radius: 14,
-                          backgroundColor: (cat != null
-                              ? cat['color'] as Color
-                              : Colors.grey),
-                          child: Icon(
-                            cat != null
-                                ? cat['icon'] as IconData
-                                : Icons.category,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Text(
-                          e.key,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${percent.toStringAsFixed(1)}% of total',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: Text(
-                          '\$${e.value.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-
                 const SizedBox(height: 8),
 
                 _buildInsightCard(
@@ -461,16 +413,6 @@ class _MyPieChartState extends State<MyPieChart> {
                   ),
 
                 const SizedBox(height: 12),
-
-                Text(
-                  _buildTakeawayText(
-                    sortedByTotal,
-                    sortedByCount,
-                    totalExpense,
-                  ),
-                  style: TextStyle(fontSize: 13, color: Colors.grey[800]),
-                ),
-                const SizedBox(height: 18),
               ],
             ),
           ),
@@ -511,23 +453,5 @@ class _MyPieChartState extends State<MyPieChart> {
         Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
     );
-  }
-
-  String _buildTakeawayText(
-    List<MapEntry<String, double>> sortedByTotal,
-    List<MapEntry<String, int>> sortedByCount,
-    double totalExpense,
-  ) {
-    if (sortedByTotal.isEmpty) return '';
-    final top = sortedByTotal.first;
-    final topPct = totalExpense > 0 ? (top.value / totalExpense) * 100 : 0.0;
-    final frequent = sortedByCount.isNotEmpty ? sortedByCount.first : null;
-    final frequentPart = frequent != null
-        ? 'Most transactions: ${frequent.key} (${frequent.value}).'
-        : '';
-    final biggest = largestExpenseCategory != null
-        ? 'Largest single expense: ${largestExpenseCategory!} \$${largestSingleExpense.toStringAsFixed(2)}.'
-        : '';
-    return 'Top spende: ${top.key} — \$${top.value.toStringAsFixed(2)} (${topPct.toStringAsFixed(1)}% of total). \n$biggest \n$frequentPart';
   }
 }

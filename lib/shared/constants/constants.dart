@@ -21,5 +21,5 @@ class AppConstants {
 
 // Floating Action Button Configs
 class FabConfig {
-  static const double fabDiameter = 64.0;
+  static const double fabDiameter = 60.0;
 }

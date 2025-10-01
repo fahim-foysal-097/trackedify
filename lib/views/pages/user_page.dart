@@ -240,9 +240,12 @@ class UserPageState extends State<UserPage> {
 
       if (savedPath == null) {
         // user cancelled the save dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Export cancelled.")));
+        // ScaffoldMessenger.of(
+        //   context,
+        // ).showSnackBar(const SnackBar(content: Text("Export cancelled.")));
+        if (kDebugMode) {
+          debugPrint('Export cancelled.');
+        }
       } else {
         // savedPath might be a content:// URI (Android SAF) or a file path.
         final bool isContentUri = savedPath.startsWith('content://');
@@ -251,7 +254,7 @@ class UserPageState extends State<UserPage> {
           SnackBar(
             content: Text(
               isContentUri
-                  ? 'Database exported successfully (SAF URI). You can open it from your Files app.'
+                  ? 'Database exported successfully (SAF URI).'
                   : 'Database exported to: $savedPath',
             ),
           ),
@@ -290,9 +293,12 @@ class UserPageState extends State<UserPage> {
 
       if (result == null || result.files.single.path == null) {
         // user cancelled file picker
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
+        // ScaffoldMessenger.of(
+        //   context,
+        // ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
+        if (kDebugMode) {
+          debugPrint('Import cancelled.');
+        }
         return;
       }
 
@@ -458,6 +464,7 @@ class UserPageState extends State<UserPage> {
                   styledButton(
                     icon: FontAwesomeIcons.gear,
                     text: "Settings",
+                    iconColor: Colors.black54,
                     onPressed: () {
                       if (!mounted) return;
                       Navigator.push(
@@ -525,20 +532,6 @@ class UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
-                    icon: FontAwesomeIcons.circleInfo,
-                    text: "About",
-                    iconColor: Colors.orange,
-                    onPressed: () {
-                      if (!mounted) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (BuildContext context) => const AboutPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  styledButton(
                     icon: FontAwesomeIcons.download,
                     text: "Check for Update",
                     iconColor: Colors.blueAccent,
@@ -597,6 +590,20 @@ class UserPageState extends State<UserPage> {
                     onPressed: () => _launchURL(
                       "https://github.com/fahim-foysal-097/Spendle/issues/new?template=bug_report.md",
                     ),
+                  ),
+                  styledButton(
+                    icon: FontAwesomeIcons.circleInfo,
+                    text: "About",
+                    iconColor: Colors.lightBlue,
+                    onPressed: () {
+                      if (!mounted) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => const AboutPage(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
