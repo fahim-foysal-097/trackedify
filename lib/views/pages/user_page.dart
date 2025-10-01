@@ -13,6 +13,7 @@ import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
+import 'package:spendle/views/pages/export_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/services/update_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -220,7 +221,7 @@ class UserPageState extends State<UserPage> {
           '${now.day.toString().padLeft(2, '0')}-T-'
           '${now.hour.toString().padLeft(2, '0')}-'
           '${now.minute.toString().padLeft(2, '0')}';
-      final defaultFileName = 'expense_backup_$timestamp.db';
+      final defaultFileName = 'expense_back_$timestamp.db';
 
       // Use SAF save dialog to let user pick destination (works on Android 11+)
       final params = SaveFileDialogParams(
@@ -514,8 +515,21 @@ class UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
+                    icon: FontAwesomeIcons.fileArrowUp,
+                    text: "Export Data",
+                    iconColor: Colors.deepPurple,
+                    onPressed: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => const ExportPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  styledButton(
                     icon: FontAwesomeIcons.fileExport,
-                    text: "Export Database",
+                    text: "Export SQLite Database",
                     iconColor: Colors.green,
                     onPressed: () {
                       if (_isProcessingDb) return;
@@ -524,8 +538,8 @@ class UserPageState extends State<UserPage> {
                   ),
                   styledButton(
                     icon: FontAwesomeIcons.fileImport,
-                    text: "Import Database",
-                    iconColor: Colors.deepPurple,
+                    text: "Import SQLite Database",
+                    iconColor: Colors.orange,
                     onPressed: () {
                       if (_isProcessingDb) return;
                       importDb();
@@ -576,6 +590,14 @@ class UserPageState extends State<UserPage> {
                     },
                   ),
                   styledButton(
+                    icon: FontAwesomeIcons.solidNoteSticky,
+                    text: "Release Notes",
+                    iconColor: Colors.green,
+                    onPressed: () => _launchURL(
+                      "https://fahim-foysal-097.github.io/spendle-website/releases.html",
+                    ),
+                  ),
+                  styledButton(
                     icon: FontAwesomeIcons.chrome,
                     text: "Visit Website",
                     iconColor: Colors.deepPurple,
@@ -596,7 +618,6 @@ class UserPageState extends State<UserPage> {
                     text: "About",
                     iconColor: Colors.lightBlue,
                     onPressed: () {
-                      if (!mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(

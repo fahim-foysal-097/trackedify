@@ -1,0 +1,685 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:spendle/database/database_helper.dart';
+
+class ExportPage extends StatefulWidget {
+  const ExportPage({super.key});
+
+  @override
+  State<ExportPage> createState() => _ExportPageState();
+}
+
+class _ExportPageState extends State<ExportPage> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  bool _isExporting = false;
+  bool _isProcessingDb = false;
+  int _expenseCount = 0;
+  int _categoryCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSummary();
+  }
+
+  /// Local app exports folder (used as fallback and for listing recent exports)
+  Future<Directory> _getExportDir() async {
+    final documents = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(documents.path, 'exports'));
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return dir;
+  }
+
+  Future<void> _loadSummary() async {
+    final db = await _dbHelper.database;
+    final expenses = await db.query('expenses');
+    final categories = await db.query('categories');
+
+    if (mounted) {
+      setState(() {
+        _expenseCount = expenses.length;
+        _categoryCount = categories.length;
+      });
+    }
+  }
+
+  String timestamp() {
+    final now = DateTime.now();
+    final timestamp =
+        '${now.year.toString()}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}-T-'
+        '${now.hour.toString().padLeft(2, '0')}-'
+        '${now.minute.toString().padLeft(2, '0')}';
+    return timestamp;
+  }
+
+  String _safeCsvCell(Object? o) {
+    final s = o == null ? '' : o.toString();
+    if (s.contains(',') || s.contains('"') || s.contains('\n')) {
+      final escaped = s.replaceAll('"', '""');
+      return '"$escaped"';
+    }
+    return s;
+  }
+
+  Future<File> _writeStringToFileInAppExports(
+    String filename,
+    String content,
+  ) async {
+    final dir = await _getExportDir();
+    final file = File(p.join(dir.path, filename));
+    await file.writeAsString(content, flush: true);
+    return file;
+  }
+
+  /// Create a temporary file (in cache) and return its File object
+  Future<File> _createTempFile(String fileName, String content) async {
+    final tmpDir = await getTemporaryDirectory();
+    final tmpFile = File(p.join(tmpDir.path, fileName));
+    await tmpFile.writeAsString(content, flush: true);
+    return tmpFile;
+  }
+
+  /// Save a source file via platform save dialog (SAF on Android 11+).
+  /// If dialog not available or user cancels, falls back to copying to app exports folder.
+  Future<String?> _saveFileWithDialogAndFallback(
+    File sourceFile,
+    String defaultFileName,
+  ) async {
+    // Show platform save dialog using flutter_file_dialog
+    try {
+      final params = SaveFileDialogParams(
+        sourceFilePath: sourceFile.path,
+        fileName: defaultFileName,
+      );
+      final savedPath = await FlutterFileDialog.saveFile(params: params);
+      if (savedPath == null) {
+        // User cancelled. Return null to caller.
+        return null;
+      }
+      return savedPath;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          'Save dialog failed: $e — falling back to app exports folder',
+        );
+      }
+      // Fallback: copy to app exports folder
+      final fallbackFile = await _writeStringToFileInAppExports(
+        defaultFileName,
+        await sourceFile.readAsString(),
+      );
+      return fallbackFile.path;
+    }
+  }
+
+  /// Export DB file using SAF save dialog (sample code you provided)
+  Future<void> _exportDb() async {
+    if (_isProcessingDb || !mounted) return;
+    setState(() => _isProcessingDb = true);
+
+    bool dialogShown = false;
+    try {
+      // show progress indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      dialogShown = true;
+
+      final dbPath = await DatabaseHelper().getDatabasePath();
+      final dbFile = File(dbPath);
+
+      if (!await dbFile.exists()) {
+        if (dialogShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          dialogShown = false;
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Database file not found.")),
+        );
+        return;
+      }
+
+      final defaultFileName = 'expense_bak_${timestamp()}.db';
+
+      final savedPath = await _saveFileWithDialogAndFallback(
+        dbFile,
+        defaultFileName,
+      );
+
+      // close spinner
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+
+      if (!mounted) return;
+
+      if (savedPath == null) {
+        if (kDebugMode) debugPrint('Export cancelled.');
+      } else {
+        final bool isContentUri = savedPath.startsWith('content://');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isContentUri
+                  ? 'Database exported successfully (SAF URI).'
+                  : 'Database exported to: $savedPath',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
+    } finally {
+      if (mounted) setState(() => _isProcessingDb = false);
+    }
+  }
+
+  /// Export CSV: build CSV files into a temp file then let user pick destination
+  Future<void> _exportCsvToSaveDialog() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
+    bool dialogShown = false;
+    try {
+      // show spinner
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      dialogShown = true;
+
+      final db = await _dbHelper.database;
+
+      // Build combined CSV (or you can make separate files — here we create a single zip-like JSON+CSV choice)
+      // We will create 3 CSV files in temp, and call save dialog for each (user chooses location per file).
+
+      // expenses
+      final expenses = await db.query('expenses', orderBy: 'date ASC');
+      final sbExp = StringBuffer();
+      sbExp.writeln('id,category,amount,date,note');
+      for (var row in expenses) {
+        sbExp.writeln(
+          [
+            _safeCsvCell(row['id']),
+            _safeCsvCell(row['category']),
+            _safeCsvCell(row['amount']),
+            _safeCsvCell(row['date']),
+            _safeCsvCell(row['note']),
+          ].join(','),
+        );
+      }
+      final tmpExp = await _createTempFile(
+        'expenses_${timestamp()}.csv',
+        sbExp.toString(),
+      );
+
+      // categories
+      final categories = await db.query('categories', orderBy: 'id ASC');
+      final sbCat = StringBuffer();
+      sbCat.writeln('id,name,color,icon_code');
+      for (var row in categories) {
+        sbCat.writeln(
+          [
+            _safeCsvCell(row['id']),
+            _safeCsvCell(row['name']),
+            _safeCsvCell(row['color']),
+            _safeCsvCell(row['icon_code']),
+          ].join(','),
+        );
+      }
+      final tmpCat = await _createTempFile(
+        'categories_${timestamp()}.csv',
+        sbCat.toString(),
+      );
+
+      // user_info
+      final users = await db.query('user_info');
+      final sbUser = StringBuffer();
+      sbUser.writeln(
+        'id,username,history_tip_shown,add_tip_shown,user_tip_shown,profile_pic,voice_enabled,notification_enabled',
+      );
+      for (var row in users) {
+        sbUser.writeln(
+          [
+            _safeCsvCell(row['id']),
+            _safeCsvCell(row['username']),
+            _safeCsvCell(row['history_tip_shown']),
+            _safeCsvCell(row['add_tip_shown']),
+            _safeCsvCell(row['user_tip_shown']),
+            _safeCsvCell(row['profile_pic']),
+            _safeCsvCell(row['voice_enabled']),
+            _safeCsvCell(row['notification_enabled']),
+          ].join(','),
+        );
+      }
+      final tmpUser = await _createTempFile(
+        'user_info_${timestamp()}.csv',
+        sbUser.toString(),
+      );
+
+      // let user save each file (one by one)
+      final savedPaths = <String>[];
+      for (final tmp in [tmpExp, tmpCat, tmpUser]) {
+        final saved = await _saveFileWithDialogAndFallback(
+          tmp,
+          p.basename(tmp.path),
+        );
+        if (saved != null) savedPaths.add(saved);
+        // attempt to delete temp file
+        try {
+          await tmp.delete();
+        } catch (_) {}
+      }
+
+      // close spinner
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+
+      if (!mounted) return;
+
+      if (savedPaths.isEmpty) {
+        // user cancelled all
+        if (kDebugMode) debugPrint('CSV export cancelled');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'CSV export complete (${savedPaths.length} files saved)',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('CSV export failed: $e')));
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  /// Export JSON: create temp JSON file and allow user to choose destination
+  Future<void> _exportJsonToSaveDialog() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
+    bool dialogShown = false;
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      dialogShown = true;
+
+      final db = await _dbHelper.database;
+      final expenses = await db.query('expenses', orderBy: 'date ASC');
+      final categories = await db.query('categories', orderBy: 'id ASC');
+      final users = await db.query('user_info');
+
+      final payload = {
+        'exported_at': DateTime.now().toIso8601String(),
+        'expenses': expenses,
+        'categories': categories,
+        'user_info': users,
+      };
+
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(payload);
+      final tmp = await _createTempFile(
+        'export_json_${timestamp()}.json',
+        jsonStr,
+      );
+
+      final saved = await _saveFileWithDialogAndFallback(
+        tmp,
+        p.basename(tmp.path),
+      );
+      try {
+        await tmp.delete();
+      } catch (_) {}
+
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+
+      if (!mounted) return;
+
+      if (saved == null) {
+        if (kDebugMode) debugPrint('JSON export cancelled');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('JSON export saved: ${p.basename(saved)}')),
+        );
+      }
+    } catch (e) {
+      if (dialogShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        dialogShown = false;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('JSON export failed: $e')));
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _exportBothToSaveDialog() async {
+    await _exportCsvToSaveDialog();
+    await _exportJsonToSaveDialog();
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4A90E2), Color(0xFF6C5CE7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            offset: Offset(0, 6),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const Icon(
+              Icons.download_rounded,
+              size: 36,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Export data',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text('CSV/JSON/DB', style: TextStyle(color: Colors.white70)),
+              ],
+            ),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blueGrey,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: _isExporting ? null : _exportBothToSaveDialog,
+            icon: _isExporting
+                ? const SizedBox.shrink()
+                : const Icon(Icons.file_download),
+            label: Text(_isExporting ? 'Exporting...' : 'Export All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatTile(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: color,
+            radius: 18,
+            child: Text(label[0], style: const TextStyle(color: Colors.white)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Export / Backup'),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadSummary();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 16),
+
+              // Quick stats row
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatTile(
+                      'Expenses',
+                      '$_expenseCount',
+                      Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatTile(
+                      'Categories',
+                      '$_categoryCount',
+                      Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Export controls card
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurpleAccent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Export options',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Choose a format to export.'),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _isExporting
+                                  ? null
+                                  : _exportCsvToSaveDialog,
+                              icon: const Icon(
+                                Icons.table_chart_outlined,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'Export CSV',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _isExporting
+                                  ? null
+                                  : _exportJsonToSaveDialog,
+                              icon: const Icon(Icons.code, color: Colors.white),
+                              label: const Text(
+                                'Export JSON',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: _isProcessingDb ? null : _exportDb,
+                        icon: const Icon(Icons.storage, color: Colors.white),
+                        label: Text(
+                          _isProcessingDb
+                              ? 'Exporting DB...'
+                              : 'Export Database (.db)',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: (_isExporting || _isProcessingDb)
+                            ? null
+                            : _exportBothToSaveDialog,
+                        icon: const Icon(
+                          Icons.archive_outlined,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Export Both (CSV + JSON)',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurpleAccent,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_isExporting || _isProcessingDb)
+                        const Row(
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            SizedBox(width: 10),
+                            Text('Export in progress...'),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
