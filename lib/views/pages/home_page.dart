@@ -733,86 +733,108 @@ class HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            itemCount: expenses.length,
-            itemBuilder: (context, index) {
-              final expense = expenses[index];
-              final cat = getCategory(expense['category']);
-              final hasNote = (expense['note'] ?? '')
-                  .toString()
-                  .trim()
-                  .isNotEmpty;
+          expenses.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 50),
+                      Icon(
+                        Icons.receipt_long,
+                        size: 64,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No expenses to show',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const ClampingScrollPhysics(),
+                  itemCount: expenses.length,
+                  itemBuilder: (context, index) {
+                    final expense = expenses[index];
+                    final cat = getCategory(expense['category']);
+                    final hasNote = (expense['note'] ?? '')
+                        .toString()
+                        .trim()
+                        .isNotEmpty;
 
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 5, 16, 16),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => _showNoteSheet(expense),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: cat['color'],
-                                child: Icon(cat['icon'], color: Colors.white),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                expense['category'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 5, 16, 16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _showNoteSheet(expense),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: cat['color'],
+                                      child: Icon(
+                                        cat['icon'],
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      expense['category'],
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (hasNote) ...[
+                                      const SizedBox(width: 5),
+                                      const Icon(
+                                        FontAwesomeIcons.solidNoteSticky,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                              ),
-                              if (hasNote) ...[
-                                const SizedBox(width: 5),
-                                const Icon(
-                                  FontAwesomeIcons.solidNoteSticky,
-                                  size: 16,
-                                  color: Colors.grey,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      "-\$${_formatAmount(expense['amount'])}",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      expense['date'],
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
-                            ],
+                            ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "-\$${_formatAmount(expense['amount'])}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                expense['date'],
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ],
       ),
     );

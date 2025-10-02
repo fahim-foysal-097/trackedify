@@ -18,6 +18,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
   final TextEditingController _searchController = TextEditingController();
 
+  // Multi-select state
+  bool selectionMode = false;
+  Set<int> selectedExpenses = {};
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +97,29 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     }
   }
 
+  Future<void> deleteMultipleExpenses(Set<int> ids) async {
+    final db = await DatabaseHelper().database;
+    final int deletedCount = ids.length;
+    // delete each id (simple approach—keep as-is to match your DB helper)
+    for (var id in ids) {
+      await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
+    }
+
+    // clear selection AFTER we've captured the count and finished DB ops
+    setState(() {
+      selectionMode = false;
+      selectedExpenses.clear();
+    });
+
+    await loadExpenses();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$deletedCount expense(s) deleted')),
+      );
+    }
+  }
+
   void confirmDelete(Map<String, dynamic> expense) {
     if (showTip) setState(() => showTip = false);
 
@@ -107,6 +134,27 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       },
       onTapConfirm: () {
         deleteExpense(expense['id']);
+        Navigator.pop(context);
+      },
+      textColor: Colors.grey.shade700,
+      panaraDialogType: PanaraDialogType.error,
+    );
+  }
+
+  void confirmDeleteMultiple(Set<int> ids) {
+    final idsCopy = Set<int>.from(ids);
+
+    PanaraConfirmDialog.show(
+      context,
+      title: 'Delete Selected Expenses?',
+      message:
+          'Are you sure you want to delete ${idsCopy.length} selected expenses?',
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      onTapCancel: () => Navigator.pop(context),
+      onTapConfirm: () {
+        // pass the copied set
+        deleteMultipleExpenses(idsCopy);
         Navigator.pop(context);
       },
       textColor: Colors.grey.shade700,
@@ -359,153 +407,274 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     );
   }
 
+  void toggleSelection(int id) {
+    setState(() {
+      if (selectedExpenses.contains(id)) {
+        selectedExpenses.remove(id);
+      } else {
+        selectedExpenses.add(id);
+      }
+      if (selectedExpenses.isEmpty) selectionMode = false;
+    });
+  }
+
+  /// Return the IDs of currently visible expenses (filtered view).
+  Set<int> _visibleExpenseIds() {
+    return filteredExpenses.map<int>((e) => (e['id'] as int)).toSet();
+  }
+
+  /// Toggles select all for currently visible (filtered) items.
+  void toggleSelectAll() {
+    final visible = _visibleExpenseIds();
+    setState(() {
+      if (visible.isEmpty) return;
+      // if everything visible already selected -> clear
+      final allSelected = visible.difference(selectedExpenses).isEmpty;
+      if (allSelected) {
+        selectedExpenses.removeAll(visible);
+        if (selectedExpenses.isEmpty) selectionMode = false;
+      } else {
+        selectedExpenses.addAll(visible);
+        selectionMode = true;
+      }
+    });
+  }
+
+  void showTipsDialog() {
+    // small list of tips for the user
+    const tips =
+        '''Long-press an item to enter multi-select.Use the Select All (top-right) to select visible items.Swipe right to edit, swipe left to delete.Tap an item to view details and note.''';
+
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message: tips,
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.normal,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Using PopScope to intercept system/back pops when selectionMode is active.
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "Expense History",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-          ),
-          centerTitle: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(70),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: filterExpenses,
-                decoration: InputDecoration(
-                  hintText: "Search expenses",
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 0,
-                  ),
-                  border: OutlineInputBorder(
+      child: PopScope<Object?>(
+        canPop: !selectionMode,
+        onPopInvokedWithResult: (didPop, result) {
+          // If selection mode is active and a pop was attempted, clear selection instead of popping.
+          if (selectionMode) {
+            setState(() {
+              selectionMode = false;
+              selectedExpenses.clear();
+            });
+            return;
+          }
+          // If pop wasn't performed by the system for some reason, try popping manually.
+          if (!didPop) Navigator.of(context).maybePop();
+        },
+        child: Scaffold(
+          backgroundColor: Colors.grey.shade100,
+          appBar: AppBar(
+            elevation: selectionMode ? 2 : 4,
+            backgroundColor: selectionMode
+                ? Colors.blue.shade700
+                : Colors.white,
+            foregroundColor: selectionMode ? Colors.white : Colors.black87,
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              transitionBuilder: (child, anim) {
+                return FadeTransition(opacity: anim, child: child);
+              },
+              child: selectionMode
+                  ? Text(
+                      '${selectedExpenses.length} selected',
+                      key: const ValueKey('selected-title'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    )
+                  : const Text(
+                      "Expense History",
+                      key: ValueKey('normal-title'),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+            ),
+            centerTitle: true,
+            actions: selectionMode
+                ? [
+                    // Select All / Visible items
+                    IconButton(
+                      tooltip: 'Select all visible',
+                      icon: const Icon(Icons.select_all),
+                      onPressed: toggleSelectAll,
+                      color: Colors.white,
+                    ),
+                    // Clear selection (quick)
+                    IconButton(
+                      tooltip: 'Clear selection',
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          selectionMode = false;
+                          selectedExpenses.clear();
+                        });
+                      },
+                      color: Colors.white,
+                    ),
+                  ]
+                : [
+                    // Tips icon in normal mode
+                    IconButton(
+                      tooltip: 'Tips',
+                      icon: const Icon(Icons.lightbulb_outline),
+                      onPressed: showTipsDialog,
+                    ),
+                  ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(72),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Container(
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: filterExpenses,
+                    textInputAction: TextInputAction.search,
+                    decoration: const InputDecoration(
+                      hintText: "Search expenses",
+                      prefixIcon: Icon(Icons.search),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        body: filteredExpenses.isEmpty
-            ? const Center(
-                child: Text(
-                  'No expenses to show',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                itemCount: filteredExpenses.length + (showTip ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (showTip && index == 1) {
-                    // Tip in "callout" style
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Card(
-                        color: Colors.lightBlue.shade50,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: ListTile(
-                          leading: const Icon(
-                            Icons.lightbulb,
-                            color: Colors.blue,
+          body: filteredExpenses.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.receipt_long,
+                        size: 64,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No expenses to show',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                  itemCount: filteredExpenses.length + (showTip ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (showTip && index == 1) {
+                      // Tip in "callout" style
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Card(
+                          color: Colors.lightBlue.shade50,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          title: const Text(
-                            "Tip: Swipe left to delete, swipe right to edit and tap to view note!",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.lightbulb,
+                              color: Colors.blue,
+                            ),
+                            title: const Text(
+                              "Tip: Swipe left to delete, swipe right to edit and tap to view note!",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.close, color: Colors.grey),
+                              onPressed: () => setState(() => showTip = false),
                             ),
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.grey),
-                            onPressed: () => setState(() => showTip = false),
-                          ),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    }
 
-                  final adjustedIndex = showTip && index > 1
-                      ? index - 1
-                      : index;
-                  final expense = filteredExpenses[adjustedIndex];
-                  final cat = getCategory(expense['category'] ?? '');
+                    final adjustedIndex = showTip && index > 1
+                        ? index - 1
+                        : index;
+                    final expense = filteredExpenses[adjustedIndex];
+                    final cat = getCategory(expense['category'] ?? '');
 
-                  final noteText = (expense['note'] ?? '').toString();
+                    final noteText = (expense['note'] ?? '').toString();
+                    final isSelected = selectedExpenses.contains(expense['id']);
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Dismissible(
-                      key: Key(expense['id'].toString()),
-                      background: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 20),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(Icons.edit, color: Colors.white),
-                            SizedBox(width: 10),
-                            Text("Edit", style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
+                    final itemChild = Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue.shade50 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      secondaryBackground: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Delete",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            SizedBox(width: 10),
-                            Icon(Icons.delete, color: Colors.white),
-                          ],
-                        ),
-                      ),
-                      confirmDismiss: (direction) async {
-                        if (direction == DismissDirection.startToEnd) {
-                          openEdit(expense);
-                          return false;
-                        } else if (direction == DismissDirection.endToStart) {
-                          confirmDelete(expense);
-                          return false;
-                        }
-                        return false;
-                      },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          border: Border.all(
+                            color: Colors.transparent,
+                            width: 2,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
                           onTap: () {
-                            _showExpenseDrawer(expense);
+                            if (selectionMode) {
+                              toggleSelection(expense['id']);
+                            } else {
+                              _showExpenseDrawer(expense);
+                            }
                           },
-                          leading: CircleAvatar(
-                            backgroundColor: cat['color'],
-                            child: Icon(cat['icon'], color: Colors.white),
-                          ),
+                          onLongPress: () {
+                            setState(() {
+                              selectionMode = true;
+                              toggleSelection(expense['id']);
+                            });
+                          },
+                          leading: selectionMode
+                              ? Checkbox(
+                                  activeColor: Colors.blue,
+                                  focusColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  value: isSelected,
+                                  onChanged: (_) =>
+                                      toggleSelection(expense['id']),
+                                )
+                              : CircleAvatar(
+                                  backgroundColor: cat['color'],
+                                  child: Icon(cat['icon'], color: Colors.white),
+                                ),
                           title: Text(
                             expense['category'] ?? '',
                             style: const TextStyle(
@@ -521,7 +690,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 style: const TextStyle(color: Colors.grey),
                               ),
                               if (noteText.isNotEmpty) ...[
-                                // const SizedBox(height: 6),
                                 GestureDetector(
                                   onTap: () => _showExpenseDrawer(expense),
                                   child: Row(
@@ -551,7 +719,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             ],
                           ),
                           trailing: Text(
-                            "-\$${(expense['amount'] is num) ? (expense['amount'] as num).toDouble().toStringAsFixed(2) : double.tryParse(expense['amount'].toString())?.toStringAsFixed(2) ?? expense['amount'].toString()}",
+                            "-\$${_formatAmount(expense['amount'])}",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -559,10 +727,100 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           ),
                         ),
                       ),
+                    );
+
+                    if (selectionMode) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: itemChild,
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Dismissible(
+                        key: Key(expense['id'].toString()),
+                        background: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Icon(Icons.edit, color: Colors.white),
+                              SizedBox(width: 10),
+                              Text(
+                                "Edit",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        secondaryBackground: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              SizedBox(width: 10),
+                              Icon(Icons.delete, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            openEdit(expense);
+                            return false;
+                          } else if (direction == DismissDirection.endToStart) {
+                            confirmDelete(expense);
+                            return false;
+                          }
+                          return false;
+                        },
+                        child: itemChild,
+                      ),
+                    );
+                  },
+                ),
+          // Floating action delete button when in selection mode (animated)
+          floatingActionButton: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: selectionMode
+                ? FloatingActionButton.extended(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                },
-              ),
+                    key: const ValueKey('delete-fab'),
+                    onPressed: selectedExpenses.isEmpty
+                        ? null
+                        : () => confirmDeleteMultiple(
+                            Set<int>.from(selectedExpenses),
+                          ),
+                    icon: const Icon(Icons.delete, color: Colors.white),
+                    label: Text(
+                      'Delete (${selectedExpenses.length})',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: selectedExpenses.isEmpty
+                        ? Colors.grey
+                        : Colors.red,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // move FAB to the bottom-right
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        ),
       ),
     );
   }
