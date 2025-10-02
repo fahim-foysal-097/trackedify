@@ -619,7 +619,7 @@ class _AboutPageState extends State<AboutPage> {
               // Small footer
               Center(
                 child: Text(
-                  'Spendle — Built with care',
+                  'Spendle - Built with care',
                   style: TextStyle(color: Colors.grey.shade600),
                 ),
               ),

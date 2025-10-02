@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:spendle/views/pages/create_category_page.dart';
 
 class EditExpensePage extends StatefulWidget {
   final Map<String, dynamic> expense;
@@ -28,40 +28,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
   final DateFormat displayFormat = DateFormat('dd/MM/yyyy');
   final DateFormat dbFormat = DateFormat('yyyy-MM-dd');
-
-  // same icon options as AddPage (expanded)
-  final List<IconData> iconOptions = [
-    Icons.fastfood,
-    Icons.directions_bus,
-    Icons.shopping_cart,
-    Icons.movie_outlined,
-    Icons.videogame_asset,
-    Icons.lightbulb_outline,
-    Icons.health_and_safety,
-    Icons.school_outlined,
-    Icons.local_grocery_store,
-    Icons.flight_takeoff,
-    Icons.local_gas_station,
-    Icons.subscriptions,
-    Icons.card_giftcard,
-    Icons.sports_soccer,
-    Icons.pets,
-    Icons.account_balance,
-    Icons.home_outlined,
-    Icons.trending_up,
-    Icons.power,
-    Icons.security,
-    Icons.local_cafe,
-    Icons.local_bar,
-    Icons.local_pharmacy,
-    Icons.sports_basketball,
-    Icons.book,
-    Icons.music_note,
-    Icons.camera_alt,
-    Icons.phone_android,
-    Icons.computer,
-    Icons.more_horiz,
-  ];
 
   @override
   void initState() {
@@ -180,143 +146,15 @@ class _EditExpensePageState extends State<EditExpensePage> {
     }
   }
 
-  // --- Add category dialog (icon grid + color picker) ---
-  Future<void> addCategoryDialog() async {
-    String name = '';
-    Color selectedColor = Colors.blue;
-    IconData selectedIcon = Icons.more_horiz;
-    final TextEditingController nameController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          title: const Text('New Category'),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(hintText: "Category Name"),
-                ),
-                const SizedBox(height: 12),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Pick Icon"),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: iconOptions.map((icon) {
-                    final isSel = selectedIcon == icon;
-                    return GestureDetector(
-                      onTap: () {
-                        setStateDialog(() {
-                          selectedIcon = icon;
-                        });
-                      },
-                      child: CircleAvatar(
-                        backgroundColor: isSel
-                            ? Colors.blue
-                            : Colors.grey.withAlpha(220),
-                        child: Icon(icon, color: Colors.white),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 12),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Pick Color"),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    Color pickedColor = selectedColor;
-                    await showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Select Color'),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.all(
-                            Radius.circular(10),
-                          ),
-                        ),
-                        content: SingleChildScrollView(
-                          child: ColorPicker(
-                            pickerColor: selectedColor,
-                            onColorChanged: (color) => pickedColor = color,
-                            enableAlpha: false,
-                            displayThumbColor: true,
-                            pickerAreaHeightPercent: 0.8,
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setStateDialog(() {
-                                selectedColor = pickedColor;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Select'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: selectedColor,
-                    radius: 24,
-                    child: const Icon(Icons.edit, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                name = nameController.text.trim();
-                Navigator.pop(context);
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-      ),
+  Future<void> addCustomCategory() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateCategoryPage()),
     );
 
-    if (name.isNotEmpty) {
-      final db = await DatabaseHelper().database;
-      await db.insert('categories', {
-        'name': name,
-        'color': selectedColor.toARGB32(),
-        'icon_code': selectedIcon.codePoint,
-      });
+    // refresh categories if a category was added
+    if (result == true) {
       await loadCategories();
-      // select the newly created category
-      setState(() {
-        selectedCategoryName = name;
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Category "$name" added!')));
     }
   }
 
@@ -402,7 +240,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: addCategoryDialog,
+                      onPressed: addCustomCategory,
                       icon: const Icon(
                         FontAwesomeIcons.plus,
                         color: Colors.blue,

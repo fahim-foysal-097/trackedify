@@ -4,11 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/Logic/add_expense.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/views/pages/calculator.dart';
+import 'package:spendle/views/pages/create_category_page.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -29,42 +29,9 @@ class _AddPageState extends State<AddPage> {
   // -------- Tips --------
   bool showTips = false;
   List<String> tips = [
-    "💡 Tip: You can create your own categories!",
-    "💡 Tip: Long press a category to delete it.",
-    "💡 Tip: Tap a category to select it.",
-  ];
-
-  final List<IconData> iconOptions = [
-    Icons.fastfood,
-    Icons.directions_bus,
-    Icons.shopping_cart,
-    Icons.movie_outlined,
-    Icons.videogame_asset,
-    Icons.lightbulb_outline,
-    Icons.health_and_safety,
-    Icons.school_outlined,
-    Icons.local_grocery_store,
-    Icons.flight_takeoff,
-    Icons.local_gas_station,
-    Icons.subscriptions,
-    Icons.card_giftcard,
-    Icons.sports_soccer,
-    Icons.pets,
-    Icons.account_balance,
-    Icons.home_outlined,
-    Icons.trending_up,
-    Icons.power,
-    Icons.security,
-    Icons.local_cafe,
-    Icons.local_bar,
-    Icons.local_pharmacy,
-    Icons.sports_basketball,
-    Icons.book,
-    Icons.music_note,
-    Icons.camera_alt,
-    Icons.phone_android,
-    Icons.computer,
-    Icons.more_horiz,
+    "You can create your own categories!",
+    "Long press a category to delete it.",
+    "Tap a category to select it.",
   ];
 
   @override
@@ -111,135 +78,14 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> addCustomCategory() async {
-    String name = '';
-    Color selectedColor = Colors.blue;
-    IconData selectedIcon = Icons.more_horiz;
-    TextEditingController nameController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          title: const Text('New Category'),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    hintText: "Category Name",
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text("Pick Icon"),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: iconOptions.map((icon) {
-                    return GestureDetector(
-                      onTap: () {
-                        setStateDialog(() {
-                          selectedIcon = icon;
-                        });
-                      },
-                      child: CircleAvatar(
-                        backgroundColor: selectedIcon == icon
-                            ? Colors.blue
-                            : Colors.black54,
-                        child: Icon(icon, color: Colors.white),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                const Text("Pick Color"),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () async {
-                    Color pickedColor = selectedColor;
-                    await showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Select Color'),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.all(
-                            Radius.circular(10),
-                          ),
-                        ),
-                        content: SingleChildScrollView(
-                          child: ColorPicker(
-                            pickerColor: selectedColor,
-                            onColorChanged: (color) => pickedColor = color,
-                            enableAlpha: false,
-                            displayThumbColor: true,
-                            pickerAreaHeightPercent: 0.8,
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setStateDialog(() {
-                                selectedColor = pickedColor;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Select'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: selectedColor,
-                    radius: 24,
-                    child: const Icon(Icons.edit, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                name = nameController.text.trim();
-                Navigator.pop(context);
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-      ),
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateCategoryPage()),
     );
 
-    if (name.isNotEmpty) {
-      await DatabaseHelper().addCategory(
-        name,
-        selectedColor.toARGB32(),
-        selectedIcon.codePoint,
-      );
+    // refresh categories if a category was added
+    if (result == true) {
       await loadCategories();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Category "$name" added!')));
     }
   }
 
@@ -317,7 +163,7 @@ class _AddPageState extends State<AddPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Lottie.asset('assets/lotties/wallet.json', height: 300),
+                Lottie.asset('assets/lotties/wallet.json', height: 270),
                 const Text(
                   "Add Expenses",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
@@ -327,35 +173,70 @@ class _AddPageState extends State<AddPage> {
                 // ------------------ TIPS ------------------
                 if (showTips && tips.isNotEmpty)
                   SizedBox(
-                    height: 60,
+                    height: 70,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: tips.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() => tips.removeAt(index));
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
+                        final tip = tips[index];
+                        return SizedBox(
+                          width: 300,
+                          child: Card(
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.lightBlue.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.lightBlueAccent.shade200,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
                               ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                tips[index],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.lightbulb,
+                                      color: Color(0xFF6C5CE7),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      tip,
+                                      style: const TextStyle(fontSize: 14),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() => tips.removeAt(index));
+                                      if (tips.isEmpty) {
+                                        setState(() => showTips = false);
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
