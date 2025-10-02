@@ -135,10 +135,12 @@ class _ExportPageState extends State<ExportPage> {
       );
       dialogShown = true;
 
+      // get source DB path via public helper
       final dbPath = await DatabaseHelper().getDatabasePath();
       final dbFile = File(dbPath);
 
       if (!await dbFile.exists()) {
+        // close spinner if shown
         if (dialogShown && mounted && Navigator.canPop(context)) {
           Navigator.pop(context);
           dialogShown = false;
@@ -181,6 +183,7 @@ class _ExportPageState extends State<ExportPage> {
         );
       }
     } catch (e) {
+      // ensure dialog is closed on error
       if (dialogShown && mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
         dialogShown = false;
@@ -202,6 +205,14 @@ class _ExportPageState extends State<ExportPage> {
 
     bool dialogShown = false;
     try {
+      // Prevent exporting if there are no expenses
+      if (_expenseCount == 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+        return;
+      }
+
       // show spinner
       showDialog(
         context: context,
@@ -308,6 +319,14 @@ class _ExportPageState extends State<ExportPage> {
 
     bool dialogShown = false;
     try {
+      // Prevent exporting if there are no expenses
+      if (_expenseCount == 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+        return;
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -373,12 +392,20 @@ class _ExportPageState extends State<ExportPage> {
   }
 
   Future<void> _exportBothToSaveDialog() async {
+    if (_expenseCount == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+      return;
+    }
     await _exportCsvToSaveDialog();
     await _exportJsonToSaveDialog();
     await _exportDb();
   }
 
   Widget _buildHeader() {
+    final bool disableAllExports =
+        _expenseCount == 0 || _isExporting || _isProcessingDb;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -430,19 +457,24 @@ class _ExportPageState extends State<ExportPage> {
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: disableAllExports ? Colors.grey : Colors.white,
               foregroundColor: Colors.blueGrey,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: _isExporting ? null : _exportBothToSaveDialog,
+            onPressed: disableAllExports ? null : _exportBothToSaveDialog,
             icon: _isExporting
                 ? const SizedBox.shrink()
-                : const Icon(Icons.file_download, color: Colors.black87),
+                : Icon(
+                    Icons.file_download,
+                    color: disableAllExports ? Colors.white70 : Colors.black87,
+                  ),
             label: Text(
               _isExporting ? 'Exporting...' : 'Export All',
-              style: const TextStyle(color: Colors.black87),
+              style: TextStyle(
+                color: disableAllExports ? Colors.white70 : Colors.black87,
+              ),
             ),
           ),
         ],
@@ -479,6 +511,9 @@ class _ExportPageState extends State<ExportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool disableExports =
+        _expenseCount == 0 || _isExporting || _isProcessingDb;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Export / Backup'),
@@ -554,19 +589,27 @@ class _ExportPageState extends State<ExportPage> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _isExporting
+                              onPressed: disableExports
                                   ? null
                                   : _exportCsvToSaveDialog,
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.table_chart_outlined,
-                                color: Colors.white,
+                                color: disableExports
+                                    ? Colors.black45
+                                    : Colors.white,
                               ),
-                              label: const Text(
+                              label: Text(
                                 'Export CSV',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(
+                                  color: disableExports
+                                      ? Colors.black45
+                                      : Colors.white,
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
+                                backgroundColor: disableExports
+                                    ? Colors.grey
+                                    : Colors.deepPurple,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
@@ -579,16 +622,27 @@ class _ExportPageState extends State<ExportPage> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _isExporting
+                              onPressed: disableExports
                                   ? null
                                   : _exportJsonToSaveDialog,
-                              icon: const Icon(Icons.code, color: Colors.white),
-                              label: const Text(
+                              icon: Icon(
+                                Icons.code,
+                                color: disableExports
+                                    ? Colors.black45
+                                    : Colors.white,
+                              ),
+                              label: Text(
                                 'Export JSON',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(
+                                  color: disableExports
+                                      ? Colors.black45
+                                      : Colors.white,
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
+                                backgroundColor: disableExports
+                                    ? Colors.grey
+                                    : Colors.teal,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
@@ -602,16 +656,52 @@ class _ExportPageState extends State<ExportPage> {
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton.icon(
-                        onPressed: _isProcessingDb ? null : _exportDb,
-                        icon: const Icon(Icons.storage, color: Colors.white),
+                        onPressed: (disableExports) ? null : _exportDb,
+                        icon: Icon(
+                          Icons.storage,
+                          color: disableExports ? Colors.black45 : Colors.white,
+                        ),
                         label: Text(
                           _isProcessingDb
                               ? 'Exporting DB...'
                               : 'Export Database (.db)',
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: disableExports
+                                ? Colors.black45
+                                : Colors.white,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
+                          backgroundColor: disableExports
+                              ? Colors.grey
+                              : Colors.indigo,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: (disableExports)
+                            ? null
+                            : _exportBothToSaveDialog,
+                        icon: Icon(
+                          Icons.archive_outlined,
+                          color: disableExports ? Colors.black45 : Colors.white,
+                        ),
+                        label: Text(
+                          'Export Both (CSV + JSON)',
+                          style: TextStyle(
+                            color: disableExports
+                                ? Colors.black45
+                                : Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: disableExports
+                              ? Colors.grey
+                              : Colors.deepPurpleAccent,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -619,26 +709,14 @@ class _ExportPageState extends State<ExportPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        onPressed: (_isExporting || _isProcessingDb)
-                            ? null
-                            : _exportBothToSaveDialog,
-                        icon: const Icon(
-                          Icons.archive_outlined,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          'Export Both (CSV + JSON)',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurpleAccent,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      if (_expenseCount == 0)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'No expenses found - add at least one expense to enable exporting.',
+                            style: TextStyle(color: Colors.redAccent),
                           ),
                         ),
-                      ),
                       const SizedBox(height: 8),
                       if (_isExporting || _isProcessingDb)
                         const Row(

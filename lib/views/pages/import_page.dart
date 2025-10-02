@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 class ImportPage extends StatefulWidget {
   const ImportPage({super.key});
@@ -40,12 +41,58 @@ class _ImportPageState extends State<ImportPage> {
     }
   }
 
+  /// Quick header-based check whether file looks like SQLite.
+  bool _looksLikeSqlite(File f) {
+    try {
+      final raf = f.openSync(mode: FileMode.read);
+      final header = raf.readSync(16);
+      raf.closeSync();
+      final headerStr = String.fromCharCodes(header);
+      return headerStr.startsWith('SQLite format 3');
+    } catch (e) {
+      if (kDebugMode) debugPrint('SQLite header check failed: $e');
+      return false;
+    }
+  }
+
+  /// More thorough validation: try to open DB read-only and ensure at least
+  /// one of the expected tables exists.
+  Future<bool> _validateDbFile(String path) async {
+    final importFile = File(path);
+    if (!await importFile.exists()) return false;
+
+    // Fast header check first
+    if (!_looksLikeSqlite(importFile)) {
+      if (kDebugMode) debugPrint('File does not have SQLite header');
+      return false;
+    }
+
+    // Attempt to open read-only and check for required tables
+    Database? tmpDb;
+    try {
+      tmpDb = await openDatabase(path, readOnly: true);
+      final rows = await tmpDb.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('expenses','categories','user_info')",
+      );
+      await tmpDb.close();
+      return rows.isNotEmpty;
+    } catch (e) {
+      if (kDebugMode) debugPrint('DB validation failed opening file: $e');
+      try {
+        if (tmpDb != null) await tmpDb.close();
+      } catch (_) {}
+      return false;
+    }
+  }
+
+  // Import DB (.db)
   Future<bool> _importDb() async {
     if (_isProcessing || !mounted) return false;
     setState(() => _isProcessing = true);
 
     bool spinnerShown = false;
     try {
+      // let user pick .db file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['db'],
@@ -68,7 +115,7 @@ class _ImportPageState extends State<ImportPage> {
         return false;
       }
 
-      // Show spinner
+      // show spinner while validating and importing
       if (!mounted) return false;
       showDialog(
         context: context,
@@ -77,16 +124,53 @@ class _ImportPageState extends State<ImportPage> {
       );
       spinnerShown = true;
 
+      // Validate the file first (header + schema check)
+      final isValid = await _validateDbFile(importPath);
+      if (!isValid) {
+        if (spinnerShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          spinnerShown = false;
+        }
+        if (!mounted) return false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Selected file is not a valid Spendle database or is corrupted. Import cancelled.',
+            ),
+          ),
+        );
+        return false;
+      }
+
       // calling helper to copy/import DB
-      await _dbHelper.importDatabase(importPath);
+      try {
+        await _dbHelper.importDatabase(importPath);
+      } catch (e) {
+        // helper threw - treat as failure
+        if (spinnerShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          spinnerShown = false;
+        }
+        if (!mounted) return false;
+        if (kDebugMode) debugPrint('Helper importDatabase threw: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
+        return false;
+      }
 
       // close any open db handle inside helper
-      await _dbHelper.closeDatabase();
+      try {
+        await _dbHelper.closeDatabase();
+      } catch (e) {
+        if (kDebugMode) debugPrint('closeDatabase after import failed: $e');
+      }
 
       // refresh counts
       await _loadSummary();
 
       if (!mounted) return true;
+      // close spinner
       if (spinnerShown && Navigator.canPop(context)) {
         Navigator.pop(context);
         spinnerShown = false;
@@ -101,11 +185,11 @@ class _ImportPageState extends State<ImportPage> {
         Navigator.pop(context);
         spinnerShown = false;
       }
+
       if (!mounted) return false;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
-      if (kDebugMode) debugPrint('DB import failed: $e');
       return false;
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -378,7 +462,7 @@ class _ImportPageState extends State<ImportPage> {
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('No'),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Yes'),
             ),

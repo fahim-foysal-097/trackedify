@@ -1,23 +1,20 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/constants/styled_button.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
-import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/views/pages/about_page.dart';
 import 'package:spendle/views/pages/export_page.dart';
 import 'package:spendle/views/pages/import_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/services/update_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});
@@ -31,18 +28,29 @@ class UserPageState extends State<UserPage> {
   String? profilePicPath;
   bool showTip = false;
   int? userId;
-
-  // prevent concurrent import/export
-  bool _isProcessingDb = false;
+  String appVersion = "";
 
   @override
   void initState() {
     super.initState();
     loadUserInfo();
+    loadAppVersion();
   }
 
   void refresh() {
     loadUserInfo();
+  }
+
+  Future<void> loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() {
+        appVersion = info.version;
+      });
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to read package info: $e');
+    }
   }
 
   Future<void> _launchURL(String url) async {
@@ -182,184 +190,6 @@ class UserPageState extends State<UserPage> {
     }
   }
 
-  // Export DB - user picks directory
-  Future<void> exportDb() async {
-    if (_isProcessingDb || !mounted) return;
-    setState(() => _isProcessingDb = true);
-
-    bool dialogShown = false;
-    try {
-      // show progress indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-      dialogShown = true;
-
-      // get source DB path via public helper
-      final dbPath = await DatabaseHelper().getDatabasePath();
-      final dbFile = File(dbPath);
-
-      if (!await dbFile.exists()) {
-        // close spinner if shown
-        if (dialogShown && mounted && Navigator.canPop(context)) {
-          Navigator.pop(context);
-          dialogShown = false;
-        }
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Database file not found.")),
-        );
-        return;
-      }
-
-      // default filename
-      final now = DateTime.now();
-      final timestamp =
-          '${now.year.toString()}-'
-          '${now.month.toString().padLeft(2, '0')}-'
-          '${now.day.toString().padLeft(2, '0')}-T-'
-          '${now.hour.toString().padLeft(2, '0')}-'
-          '${now.minute.toString().padLeft(2, '0')}';
-      final defaultFileName = 'expense_back_$timestamp.db';
-
-      // Use SAF save dialog to let user pick destination (works on Android 11+)
-      final params = SaveFileDialogParams(
-        sourceFilePath: dbFile.path,
-        fileName: defaultFileName,
-      );
-
-      final savedPath = await FlutterFileDialog.saveFile(params: params);
-
-      // close spinner
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
-      }
-
-      if (!mounted) return;
-
-      if (savedPath == null) {
-        // user cancelled the save dialog
-        // ScaffoldMessenger.of(
-        //   context,
-        // ).showSnackBar(const SnackBar(content: Text("Export cancelled.")));
-        if (kDebugMode) {
-          debugPrint('Export cancelled.');
-        }
-      } else {
-        // savedPath might be a content:// URI (Android SAF) or a file path.
-        final bool isContentUri = savedPath.startsWith('content://');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isContentUri
-                  ? 'Database exported successfully (SAF URI).'
-                  : 'Database exported to: $savedPath',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      // ensure dialog is closed on error
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
-      }
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
-    } finally {
-      if (mounted) setState(() => _isProcessingDb = false);
-    }
-  }
-
-  // Import DB - user picks file
-  Future<void> importDb() async {
-    if (_isProcessingDb || !mounted) return;
-    setState(() => _isProcessingDb = true);
-
-    bool dialogShown = false;
-    try {
-      // let user pick .db file
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['db'],
-      );
-
-      if (!mounted) return;
-
-      if (result == null || result.files.single.path == null) {
-        // user cancelled file picker
-        // ScaffoldMessenger.of(
-        //   context,
-        // ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
-        if (kDebugMode) {
-          debugPrint('Import cancelled.');
-        }
-        return;
-      }
-
-      // show progress indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-      dialogShown = true;
-
-      final importPath = result.files.single.path!;
-      final importFile = File(importPath);
-
-      if (!await importFile.exists()) {
-        if (dialogShown && mounted && Navigator.canPop(context)) {
-          Navigator.pop(context);
-          dialogShown = false;
-        }
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Selected file does not exist.")),
-        );
-        return;
-      }
-
-      // do the import
-      await DatabaseHelper().importDatabase(importPath);
-
-      // close DB if needed, then reload
-      await DatabaseHelper().closeDatabase();
-      await loadUserInfo();
-
-      if (!mounted) return;
-      // close spinner
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Database imported successfully!")),
-      );
-    } catch (e) {
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
-      }
-    } finally {
-      if (mounted) setState(() => _isProcessingDb = false);
-    }
-  }
-
   bool _profileImageExists() {
     if (profilePicPath == null) return false;
     try {
@@ -376,114 +206,233 @@ class UserPageState extends State<UserPage> {
         ? FileImage(File(profilePicPath!)) as ImageProvider
         : const AssetImage('assets/img/pfp.jpg');
 
+    // Color palette
+    const gradientEnd = Color(0xFF6C5CE7);
+    const gradientStart = Color(0xFF00B4D8);
+
+    // Fixed tile height (pixels) - adjust for taller/shorter buttons.
+    const double tileHeight = 64.0;
+
     return Scaffold(
       body: SingleChildScrollView(
         key: const PageStorageKey("UserScroll"),
         child: Column(
           children: [
-            Stack(
-              children: [
-                const CurvedboxWidget3(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 150, 0, 0),
-                  child: Column(
-                    children: [
-                      GestureDetector(
-                        onTap: pickProfilePicture,
-                        onLongPress: deleteProfilePicture,
-                        child: Container(
-                          alignment: Alignment.center,
-                          height: 170,
+            // Top gradient header with curved bottom
+            Container(
+              height: 240,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [gradientStart, gradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(36),
+                  bottomRight: Radius.circular(36),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradientStart.withValues(alpha: 0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Small header row
+                  Positioned(
+                    top: 50,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 40),
+                        Text(
+                          'Profile',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                          onPressed: () {
+                            if (!mounted) return;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsPage(),
+                              ),
+                            ).then((_) => loadUserInfo());
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Avatar overlapping the header
+                  Positioned(
+                    bottom: -100,
+                    left: 0,
+                    right: 0,
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: pickProfilePicture,
+                          onLongPress: deleteProfilePicture,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.18),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 72,
+                              backgroundImage: imageProvider,
+                              backgroundColor: Colors.grey.shade200,
+                              child: Align(
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  margin: const EdgeInsets.only(
+                                    right: 4,
+                                    bottom: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Icon(
+                                      Icons.edit,
+                                      size: 16,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          username,
+                          style: KTextstyle.headerBlackText.copyWith(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 100),
+
+            // Tip card (preserve logic)
+            if (showTip)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color.fromARGB(
-                                  255,
-                                  71,
-                                  90,
-                                  100,
-                                ).withValues(alpha: 0.2),
-                                spreadRadius: 2,
-                                blurRadius: 4,
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 6,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: CircleAvatar(
-                            radius: 80,
-                            backgroundImage: imageProvider,
+                          child: const Icon(
+                            Icons.lightbulb,
+                            color: Color(0xFF6C5CE7),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (showTip)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Card(
-                            color: Colors.lightBlue.shade50,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListTile(
-                              leading: const Icon(
-                                Icons.lightbulb,
-                                color: Colors.blue,
-                              ),
-                              title: const Text(
-                                "Tip: Tap to change profile picture and long press to delete!",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () =>
-                                    setState(() => showTip = false),
-                              ),
-                            ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            "Tip: Tap to change profile picture and long press to delete!",
+                            style: TextStyle(fontSize: 15),
                           ),
                         ),
-                    ],
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.grey),
+                          onPressed: () => setState(() => showTip = false),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              alignment: Alignment.center,
-              child: Text(username, style: KTextstyle.headerBlackText),
-            ),
+              ),
+
+            // Buttons grid (modern pill cards) with fixed tile height
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: GridView(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: tileHeight, // fixed height for each tile
+                ),
                 children: [
-                  styledButton(
+                  _buildActionTile(
                     icon: FontAwesomeIcons.gear,
-                    text: "Settings",
-                    iconColor: Colors.black54,
-                    onPressed: () {
+                    label: 'Settings',
+                    accent: Colors.blueAccent,
+                    onTap: () {
                       if (!mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const SettingsPage(),
                         ),
-                      ).then((_) {
-                        loadUserInfo();
-                      });
+                      ).then((_) => loadUserInfo());
                     },
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.trash,
-                    text: "Wipe Data",
-                    iconColor: Colors.redAccent,
-                    onPressed: () {
+                    label: 'Wipe Data',
+                    accent: Colors.redAccent,
+                    onTap: () {
                       if (!mounted) return;
                       PanaraConfirmDialog.show(
                         context,
@@ -515,11 +464,12 @@ class UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  styledButton(
-                    icon: FontAwesomeIcons.fileArrowUp,
-                    text: "Export Data",
-                    iconColor: Colors.deepPurple,
-                    onPressed: () async {
+
+                  _buildActionTile(
+                    icon: FontAwesomeIcons.fileImport,
+                    label: 'Export',
+                    accent: Colors.deepPurple,
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -528,17 +478,18 @@ class UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  styledButton(
-                    icon: FontAwesomeIcons.fileArrowDown,
-                    text: "Import Data",
-                    iconColor: Colors.green,
-                    onPressed: () {
-                      if (_isProcessingDb) return;
+
+                  _buildActionTile(
+                    icon: FontAwesomeIcons.fileExport,
+                    label: 'Import',
+                    accent: Colors.green,
+                    onTap: () {
                       PanaraConfirmDialog.show(
                         context,
                         title: "Import data from DB/JSON?",
                         message:
                             "This may replace all of your current data / append data (using JSON). Continue?",
+                        textColor: Colors.black54,
                         confirmButtonText: "Confirm",
                         cancelButtonText: "Cancel",
                         onTapCancel: () => Navigator.pop(context),
@@ -558,44 +509,12 @@ class UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  styledButton(
-                    icon: FontAwesomeIcons.fileExport,
-                    text: "Export SQLite Database",
-                    iconColor: Colors.green,
-                    onPressed: () {
-                      if (_isProcessingDb) return;
-                      exportDb();
-                    },
-                  ),
-                  styledButton(
-                    icon: FontAwesomeIcons.fileImport,
-                    text: "Import SQLite Database",
-                    iconColor: Colors.orange,
-                    onPressed: () {
-                      if (_isProcessingDb) return;
-                      PanaraConfirmDialog.show(
-                        context,
-                        title: "Import data from DB?",
-                        message:
-                            "This will replace all of your current data with imported data. Continue?",
-                        confirmButtonText: "Confirm",
-                        cancelButtonText: "Cancel",
-                        onTapCancel: () => Navigator.pop(context),
-                        onTapConfirm: () {
-                          importDb().then((_) {
-                            if (!context.mounted) return;
-                            Navigator.pop(context);
-                          });
-                        },
-                        panaraDialogType: PanaraDialogType.error,
-                      );
-                    },
-                  ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.download,
-                    text: "Check for Update",
-                    iconColor: Colors.blueAccent,
-                    onPressed: () async {
+                    label: 'Check Update',
+                    accent: Colors.blueAccent,
+                    onTap: () async {
                       if (!mounted) return;
                       await UpdateService.checkForUpdate(
                         context,
@@ -603,17 +522,19 @@ class UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.trashArrowUp,
-                    text: "Clear Downloaded Updates",
-                    iconColor: Colors.redAccent,
-                    onPressed: () async {
+                    label: 'Clear Downloads',
+                    accent: Colors.redAccent,
+                    onTap: () async {
                       if (!mounted) return;
                       final confirmed = await PanaraConfirmDialog.show<bool>(
                         context,
                         title: "Clear downloads?",
                         message:
                             "This will delete all downloaded updates from the app's download folder. Continue?",
+                        textColor: Colors.black54,
                         confirmButtonText: "Clear",
                         cancelButtonText: "Cancel",
                         onTapCancel: () => Navigator.pop(context, false),
@@ -635,35 +556,39 @@ class UserPageState extends State<UserPage> {
                       );
                     },
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.solidNoteSticky,
-                    text: "Release Notes",
-                    iconColor: Colors.green,
-                    onPressed: () => _launchURL(
+                    label: 'Release Notes',
+                    accent: Colors.green,
+                    onTap: () => _launchURL(
                       "https://fahim-foysal-097.github.io/spendle-website/releases.html",
                     ),
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.chrome,
-                    text: "Visit Website",
-                    iconColor: Colors.deepPurple,
-                    onPressed: () => _launchURL(
+                    label: 'Website',
+                    accent: Colors.deepPurple,
+                    onTap: () => _launchURL(
                       "https://fahim-foysal-097.github.io/spendle-website/",
                     ),
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.bug,
-                    text: "Report Bugs",
-                    iconColor: Colors.red,
-                    onPressed: () => _launchURL(
+                    label: 'Report Bug',
+                    accent: Colors.red,
+                    onTap: () => _launchURL(
                       "https://github.com/fahim-foysal-097/Spendle/issues/new?template=bug_report.md",
                     ),
                   ),
-                  styledButton(
+
+                  _buildActionTile(
                     icon: FontAwesomeIcons.circleInfo,
-                    text: "About",
-                    iconColor: Colors.lightBlue,
-                    onPressed: () {
+                    label: 'About',
+                    accent: Colors.lightBlue,
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -675,7 +600,76 @@ class UserPageState extends State<UserPage> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 28),
+
+            // small footer
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    appVersion.isNotEmpty ? 'Spendle v$appVersion' : 'Spendle',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required Color accent,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          // vertical padding kept small because tile height is fixed by grid mainAxisExtent
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: Colors.grey.shade400),
+            ],
+          ),
         ),
       ),
     );

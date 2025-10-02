@@ -8,6 +8,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
   static const _repoOwner = "fahim-foysal-097";
@@ -48,6 +49,39 @@ class UpdateService {
     _hasCheckedThisSession = false;
   }
 
+  /// Compare two semantic-ish version strings.
+  /// Returns:
+  ///  - 1 if a > b
+  ///  - 0 if a == b
+  ///  - -1 if a < b
+  /// Non-numeric parts are treated as 0.
+  static int _compareVersions(String a, String b) {
+    if (a == b) return 0;
+    final aParts = a.split(RegExp(r'[-+]'))[0].split('.');
+    final bParts = b.split(RegExp(r'[-+]'))[0].split('.');
+
+    final len = aParts.length > bParts.length ? aParts.length : bParts.length;
+    for (var i = 0; i < len; i++) {
+      final ai = i < aParts.length ? int.tryParse(aParts[i]) ?? 0 : 0;
+      final bi = i < bParts.length ? int.tryParse(bParts[i]) ?? 0 : 0;
+      if (ai > bi) return 1;
+      if (ai < bi) return -1;
+    }
+    return 0;
+  }
+
+  /// Open release page in external browser (best-effort).
+  static Future<void> _openReleasePage(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (kDebugMode) debugPrint('Could not launch $url');
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to open release page: $e');
+    }
+  }
+
   /// Check GitHub latest release and compare with current app version
   /// 'manualCheck' = true shows a "latest version" message if up-to-date and
   /// bypasses the once-per-session guard.
@@ -84,22 +118,65 @@ class UpdateService {
         if (kDebugMode) {
           debugPrint("GitHub API returned ${res.statusCode}: ${res.body}");
         }
+        // On manual checks, inform user we could not reach GitHub
+        if (manualCheck && context.mounted) {
+          PanaraInfoDialog.show(
+            context,
+            title: "Update Check Failed",
+            message:
+                "Couldn't check for updates (GitHub returned ${res.statusCode}).",
+            textColor: Colors.black54,
+            buttonText: "OK",
+            onTapDismiss: () => Navigator.of(context).pop(),
+            panaraDialogType: PanaraDialogType.error,
+          );
+        }
         return;
       }
 
       final data = jsonDecode(res.body);
-      final tag = data["tag_name"];
-      final assets = data["assets"] as List;
+      if (data == null || data is! Map) {
+        if (kDebugMode) {
+          debugPrint("Unexpected GitHub API payload: ${res.body}");
+        }
+        return;
+      }
 
-      final latestVersion = tag.replaceFirst("v", "");
+      final tag = (data["tag_name"] as String?) ?? "";
+      final assets = (data["assets"] as List?) ?? [];
+      final releaseHtmlUrl =
+          (data["html_url"] as String?) ??
+          'https://github.com/$_repoOwner/$_repoName/releases/latest';
 
-      if (latestVersion == currentVersion) {
+      if (tag.isEmpty) {
+        if (kDebugMode) debugPrint("No tag_name in latest release payload.");
+        if (manualCheck && context.mounted) {
+          PanaraInfoDialog.show(
+            context,
+            title: "No Release Found",
+            message: "Couldn't get the latest release information.",
+            textColor: Colors.black54,
+            buttonText: "OK",
+            onTapDismiss: () => Navigator.of(context).pop(),
+            panaraDialogType: PanaraDialogType.error,
+          );
+        }
+        return;
+      }
+
+      final latestVersion = tag.replaceFirst("v", "").trim();
+
+      // Compare versions semantically
+      final cmp = _compareVersions(latestVersion, currentVersion);
+
+      if (cmp == 0) {
         if (manualCheck && context.mounted) {
           // Show user message only if this was a manual check
           PanaraInfoDialog.show(
             context,
             title: "Up to Date",
             message: "You are on the latest version (v$currentVersion)",
+            textColor: Colors.black54,
             buttonText: "OK",
             onTapDismiss: () => Navigator.of(context).pop(),
             panaraDialogType: PanaraDialogType.success,
@@ -108,26 +185,83 @@ class UpdateService {
         return;
       }
 
-      final arch = await _getDeviceArch();
-      final apkAsset = assets.firstWhere(
-        (a) => (a["name"] as String).contains(arch),
-        orElse: () => null,
-      );
-
-      if (apkAsset == null) {
-        if (kDebugMode) {
-          debugPrint("No APK asset found for ABI: $arch");
+      if (cmp < 0) {
+        // latestVersion < currentVersion  => user has a newer app build than GitHub's latest
+        if (manualCheck && context.mounted) {
+          PanaraInfoDialog.show(
+            context,
+            title: "You are ahead of releases",
+            message:
+                "Your installed version is v$currentVersion which is newer than the latest GitHub release (v$latestVersion). This can happen if the release was removed or you installed a pre-release build. No update is available.",
+            textColor: Colors.black54,
+            buttonText: "OK",
+            onTapDismiss: () => Navigator.of(context).pop(),
+            panaraDialogType: PanaraDialogType.normal,
+          );
+        } else {
+          if (kDebugMode) {
+            debugPrint(
+              "Installed version (v$currentVersion) is newer than GitHub latest (v$latestVersion). Skipping update.",
+            );
+          }
         }
         return;
       }
-      final apkUrl = apkAsset["browser_download_url"];
+
+      // cmp > 0 -> latest > current -> proceed to find APK asset
+      final arch = await _getDeviceArch();
+
+      // find apk asset that contains the arch string in its name
+      dynamic apkAsset;
+      try {
+        apkAsset = assets.firstWhere(
+          (a) => (a?["name"] as String? ?? "").contains(arch),
+          orElse: () => null,
+        );
+      } catch (_) {
+        apkAsset = null;
+      }
+
+      if (apkAsset == null) {
+        if (kDebugMode) {
+          debugPrint(
+            "No APK asset found for ABI: $arch on release v$latestVersion",
+          );
+        }
+        if (manualCheck && context.mounted) {
+          PanaraInfoDialog.show(
+            context,
+            title: "Update Available (no installer)",
+            message:
+                "A new version v$latestVersion is available, but no installer matching your device ABI ($arch) was found for automatic download. Please check the release page on GitHub.",
+            textColor: Colors.black54,
+            buttonText: "Open Release Page",
+            onTapDismiss: () {
+              Navigator.of(context).pop();
+              _openReleasePage(releaseHtmlUrl);
+            },
+            panaraDialogType: PanaraDialogType.normal,
+          );
+        }
+        return;
+      }
+
+      final apkUrl = apkAsset["browser_download_url"] as String?;
+
+      if (apkUrl == null || apkUrl.isEmpty) {
+        if (kDebugMode) {
+          debugPrint("APK asset has no download URL for v$latestVersion");
+        }
+        return;
+      }
 
       if (!context.mounted) return;
       PanaraConfirmDialog.show(
         context,
         title: "Update Available",
         message:
-            "A new version v$latestVersion is available. Do you want to update?",
+            "A new version v$latestVersion is available (you are on v$currentVersion). Do you want to update?",
+        textColor: Colors.black54,
         confirmButtonText: "Update",
         cancelButtonText: "Later",
         onTapCancel: () => Navigator.of(context).pop(),
@@ -140,6 +274,17 @@ class UpdateService {
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint("Update check failed: $e\n$st");
+      }
+      if (manualCheck && context.mounted) {
+        PanaraInfoDialog.show(
+          context,
+          title: "Update Check Failed",
+          message: "An error occurred while checking for updates.",
+          textColor: Colors.black54,
+          buttonText: "OK",
+          onTapDismiss: () => Navigator.of(context).pop(),
+          panaraDialogType: PanaraDialogType.error,
+        );
       }
     }
   }

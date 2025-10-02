@@ -159,6 +159,7 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: selectedMonth,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 10,
@@ -240,13 +241,12 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: selectedMonth,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 10,
                         horizontal: 12,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -274,7 +274,7 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               height: 200,
               child: LineChart(
