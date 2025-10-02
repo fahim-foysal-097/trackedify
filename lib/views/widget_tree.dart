@@ -19,14 +19,14 @@ class WidgetTree extends StatefulWidget {
 
 class _WidgetTreeState extends State<WidgetTree> {
   final homeKey = GlobalKey<HomePageState>();
-  // final statsKey = GlobalKey<>();
+  final statsKey = GlobalKey<StatsPageState>();
   final insightKey = GlobalKey<InsightsPageState>();
   final userKey = GlobalKey<UserPageState>();
 
   late final List<Widget> pages = [
     // global keys for the pages to refresh
     HomePage(key: homeKey),
-    const StatsPage(),
+    StatsPage(key: statsKey),
     InsightsPage(key: insightKey),
     UserPage(key: userKey),
   ];
@@ -77,7 +77,7 @@ class _WidgetTreeState extends State<WidgetTree> {
               // After coming back, refresh the current page
               final idx = selectedPageNotifier.value;
               if (idx == 0) homeKey.currentState?.refresh();
-              // if (idx == 1) statsKey.currentState?.refresh();
+              if (idx == 1) statsKey.currentState?.refreshAll();
               if (idx == 2) insightKey.currentState?.refresh();
               if (idx == 3) userKey.currentState?.refresh();
             });

@@ -2,15 +2,16 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:intl/intl.dart';
 
 class MyPieChart extends StatefulWidget {
   const MyPieChart({super.key});
 
   @override
-  State<MyPieChart> createState() => _MyPieChartState();
+  State<MyPieChart> createState() => MyPieChartState();
 }
 
-class _MyPieChartState extends State<MyPieChart> {
+class MyPieChartState extends State<MyPieChart> {
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
   Map<String, double> categoryTotals = {};
   Map<String, int> categoryCounts = {};
@@ -20,6 +21,19 @@ class _MyPieChartState extends State<MyPieChart> {
   int totalTransactions = 0;
   double largestSingleExpense = 0.0;
   String? largestExpenseCategory;
+  double totalThisMonth = 0.0;
+  double totalLastMonth = 0.0;
+  Map<String, int> dayOfWeekCounts = {};
+  Set<String> uniqueDates = <String>{};
+  double smallestExpense = double.infinity;
+  String? smallestExpenseCategory;
+  String? mostActiveDay;
+  int mostActiveDayCount = 0;
+  double avgDailySpend = 0.0;
+  double trendPercentage = 0.0;
+  IconData trendIcon = Icons.trending_flat;
+  Color trendColor = Colors.grey;
+  String trendText = 'Stable';
 
   @override
   void initState() {
@@ -51,6 +65,21 @@ class _MyPieChartState extends State<MyPieChart> {
     int txCount = 0;
     double maxExpense = 0.0;
     String? maxExpenseCat;
+    DateTime now = DateTime.now();
+    int currentMonth = now.month;
+    int currentYear = now.year;
+    int lastMonthNum = currentMonth - 1;
+    int lastYear = currentYear;
+    if (lastMonthNum == 0) {
+      lastMonthNum = 12;
+      lastYear--;
+    }
+    double totalThis = 0.0;
+    double totalLast = 0.0;
+    Map<String, int> dowCounts = {};
+    Set<String> uDates = <String>{};
+    double minExpense = double.infinity;
+    String? minExpenseCat;
 
     for (var row in data) {
       final categoryName = row['category'] as String;
@@ -64,6 +93,63 @@ class _MyPieChartState extends State<MyPieChart> {
         maxExpense = amount;
         maxExpenseCat = categoryName;
       }
+      if (amount < minExpense) {
+        minExpense = amount;
+        minExpenseCat = categoryName;
+      }
+
+      final expenseDateStr = row['date'] as String;
+      final expenseDate = DateTime.parse(expenseDateStr);
+      final dow = DateFormat('EEEE').format(expenseDate);
+      dowCounts[dow] = (dowCounts[dow] ?? 0) + 1;
+      final dateKey = expenseDate.toIso8601String().split('T')[0];
+      uDates.add(dateKey);
+
+      if (expenseDate.month == currentMonth &&
+          expenseDate.year == currentYear) {
+        totalThis += amount;
+      }
+      if (expenseDate.month == lastMonthNum && expenseDate.year == lastYear) {
+        totalLast += amount;
+      }
+    }
+
+    int numUniqueDays = uDates.length;
+    double avgDaily = numUniqueDays > 0
+        ? (totals.values.fold<double>(0, (s, v) => s + v) / numUniqueDays)
+        : 0.0;
+
+    String? mActiveDay;
+    int mActiveCount = 0;
+    if (dowCounts.isNotEmpty) {
+      final maxEntry = dowCounts.entries.reduce(
+        (a, b) => a.value > b.value ? a : b,
+      );
+      mActiveDay = maxEntry.key;
+      mActiveCount = maxEntry.value;
+    } else {
+      mActiveDay = 'None';
+      mActiveCount = 0;
+    }
+
+    double trendPct = totalLast > 0
+        ? ((totalThis - totalLast) / totalLast * 100)
+        : 0;
+    String tText = totalThis > totalLast
+        ? 'Up ${trendPct.toStringAsFixed(0)}%'
+        : (totalThis < totalLast
+              ? 'Down ${(-trendPct).toStringAsFixed(0)}%'
+              : 'Stable');
+    IconData tIcon = totalThis > totalLast
+        ? Icons.trending_up
+        : (totalThis < totalLast ? Icons.trending_down : Icons.trending_flat);
+    Color tColor = totalThis > totalLast
+        ? Colors.green
+        : (totalThis < totalLast ? Colors.red : Colors.grey);
+
+    if (minExpense == double.infinity) {
+      minExpense = 0.0;
+      minExpenseCat = 'None';
     }
 
     if (mounted) {
@@ -73,6 +159,19 @@ class _MyPieChartState extends State<MyPieChart> {
         totalTransactions = txCount;
         largestSingleExpense = maxExpense;
         largestExpenseCategory = maxExpenseCat;
+        totalThisMonth = totalThis;
+        totalLastMonth = totalLast;
+        dayOfWeekCounts = dowCounts;
+        uniqueDates = uDates;
+        smallestExpense = minExpense;
+        smallestExpenseCategory = minExpenseCat;
+        mostActiveDay = mActiveDay;
+        mostActiveDayCount = mActiveCount;
+        avgDailySpend = avgDaily;
+        trendPercentage = trendPct;
+        trendIcon = tIcon;
+        trendColor = tColor;
+        trendText = tText;
       });
     }
   }
@@ -115,6 +214,24 @@ class _MyPieChartState extends State<MyPieChart> {
     final totalTx = totalTransactions == 0 ? 1 : totalTransactions;
     final averageExpense = totalExpense / totalTx;
 
+    // Top by count
+    final sortedByCount = categoryCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topByCount = sortedByCount.take(3).toList();
+    String mostFreqCat = topByCount.isNotEmpty ? topByCount.first.key : 'None';
+    int freqCount = topByCount.isNotEmpty ? topByCount.first.value : 0;
+
+    // Top by spend
+    final sortedBySpend = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    String? topCategory = sortedBySpend.isNotEmpty
+        ? sortedBySpend.first.key
+        : null;
+    double topAmount = sortedBySpend.isNotEmpty ? sortedBySpend.first.value : 0;
+    double topPercentage = totalExpense > 0
+        ? (topAmount / totalExpense * 100)
+        : 0;
+
     // sizing constants
     const chartHeight = 320.0;
     const baseRadius = 78.0;
@@ -141,24 +258,92 @@ class _MyPieChartState extends State<MyPieChart> {
           color: Colors.white,
         ),
         borderSide: isTouched
-            ? const BorderSide(color: Colors.black38, width: 2)
+            ? BorderSide(color: Colors.black.withValues(alpha: 0.12), width: 2)
             : BorderSide.none,
       );
     }).toList();
 
-    // --- Insights computation ---
-
-    final sortedByCount = categoryCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final topByCount = sortedByCount.take(3).toList();
-
-    final largeShareCategories =
-        categoryTotals.entries
-            .where(
-              (e) => totalExpense > 0 ? e.value / totalExpense >= 0.20 : false,
-            )
-            .toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
+    // Stat cards
+    List<Widget> statCards = [
+      _buildStatCard(
+        icon: Icons.numbers,
+        title: 'Total Spent',
+        value: '\$${totalExpense.toStringAsFixed(2)}',
+        color: Colors.green,
+      ),
+      _buildStatCard(
+        icon: Icons.receipt_long,
+        title: 'Transactions',
+        value: totalTransactions.toString(),
+        color: Colors.blue,
+      ),
+      _buildStatCard(
+        icon: Icons.trending_up,
+        title: 'Avg per Tx',
+        value: '\$${averageExpense.toStringAsFixed(2)}',
+        color: Colors.orange,
+      ),
+      _buildStatCard(
+        icon: Icons.calendar_today,
+        title: 'This Month',
+        value: '\$${totalThisMonth.toStringAsFixed(2)}',
+        color: Colors.purple,
+      ),
+      _buildStatCard(
+        icon: Icons.date_range,
+        title: 'Avg Daily',
+        value: '\$${avgDailySpend.toStringAsFixed(2)}',
+        color: Colors.cyan,
+      ),
+      _buildStatCard(
+        icon: Icons.warning_rounded,
+        title: 'Largest',
+        value: largestExpenseCategory ?? 'None',
+        subValue: '\$${largestSingleExpense.toStringAsFixed(2)}',
+        color: Colors.red,
+      ),
+      _buildStatCard(
+        icon: Icons.savings,
+        title: 'Smallest',
+        value: smallestExpenseCategory ?? 'None',
+        subValue: '\$${smallestExpense.toStringAsFixed(2)}',
+        color: Colors.lightGreen,
+      ),
+      _buildStatCard(
+        icon: Icons.event,
+        title: 'Busiest Day',
+        value: '$mostActiveDay',
+        subValue: '($mostActiveDayCount tx)',
+        color: Colors.indigo,
+      ),
+      _buildStatCard(
+        icon: trendIcon,
+        title: 'Monthly Trend',
+        value: trendText,
+        color: trendColor,
+      ),
+      _buildStatCard(
+        icon: Icons.tag,
+        title: 'Top Category',
+        value: topCategory ?? 'None',
+        subValue:
+            '\$${topAmount.toStringAsFixed(2)} (${topPercentage.toStringAsFixed(0)}%)',
+        color: Colors.teal,
+      ),
+      _buildStatCard(
+        icon: Icons.cached_rounded,
+        title: 'Most Frequent',
+        value: mostFreqCat,
+        subValue: '$freqCount tx',
+        color: Colors.amber,
+      ),
+      _buildStatCard(
+        icon: Icons.layers,
+        title: 'Unique Categories',
+        value: categoryTotals.length.toString(),
+        color: Colors.pink,
+      ),
+    ];
 
     // Make the whole widget scrollable if the content is tall (fixes overflow).
     return SingleChildScrollView(
@@ -166,6 +351,12 @@ class _MyPieChartState extends State<MyPieChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Center(
+            child: Text(
+              'Expenses by Category',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
           // Pie chart area (fixed height to avoid unbounded height)
           SizedBox(
             height: chartHeight,
@@ -225,194 +416,98 @@ class _MyPieChartState extends State<MyPieChart> {
           const SizedBox(height: 12),
 
           // Legend: wrap so it uses available width and doesn't force height
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: entries.asMap().entries.map((entry) {
-              final index = entry.key;
-              final data = entry.value;
-              final cat =
-                  categoryMap[data.key] ??
-                  {'color': Colors.grey, 'icon': Icons.category};
-              final isSelected = touchedIndex == index;
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: entries.asMap().entries.map((entry) {
+                final index = entry.key;
+                final data = entry.value;
+                final cat =
+                    categoryMap[data.key] ??
+                    {'color': Colors.grey, 'icon': Icons.category};
+                final isSelected = touchedIndex == index;
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    touchedIndex = isSelected ? null : index;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Colors.grey.shade100
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: cat['color'] as Color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(width: 2, color: Colors.black26)
-                              : null,
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      touchedIndex = isSelected ? null : index;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.amberAccent.withValues(alpha: 0.3)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: cat['color'] as Color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(width: 2, color: Colors.black26)
+                                : null,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${data.key} (\$${data.value.toStringAsFixed(2)})',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.normal,
-                          color: isSelected ? Colors.black87 : Colors.grey[800],
+                        const SizedBox(width: 8),
+                        Text(
+                          '${data.key} (\$${data.value.toStringAsFixed(2)})',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.black87
+                                : Colors.grey[800],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 24),
 
-          // Insights cards (these can be long; let them flow inside the SingleChildScrollView)
+          // Insights cards grid
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Insights',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-
-                const SizedBox(height: 8),
-
-                _buildInsightCard(
-                  title: 'Most frequent categories (by transactions)',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: topByCount.map((e) {
-                      final totalForCat = categoryTotals[e.key] ?? 0.0;
-                      final avgPerTx = e.value == 0
-                          ? 0.0
-                          : totalForCat / e.value;
-                      final cat = categoryMap[e.key];
-                      return ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          radius: 14,
-                          backgroundColor: (cat != null
-                              ? cat['color'] as Color
-                              : Colors.grey),
-                          child: Icon(
-                            cat != null
-                                ? cat['icon'] as IconData
-                                : Icons.category,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Text(
-                          e.key,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${e.value} transactions • avg \$${avgPerTx.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: Text(
-                          '\$${totalForCat.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      );
-                    }).toList(),
+                const Center(
+                  child: Text(
+                    'Quick Insights',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                _buildInsightCard(
-                  title: 'Quick stats',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _smallStatColumn('Transactions', '$totalTx'),
-                      _smallStatColumn(
-                        'Avg per tx',
-                        '\$${averageExpense.toStringAsFixed(2)}',
-                      ),
-                      _smallStatColumn(
-                        'Largest',
-                        '\$${largestSingleExpense.toStringAsFixed(2)}',
-                      ),
-                    ],
+                const SizedBox(height: 20),
+                GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
+                  children: statCards,
                 ),
-
-                const SizedBox(height: 8),
-
-                if (largeShareCategories.isNotEmpty)
-                  _buildInsightCard(
-                    title: 'Big contributors (≥ 20% of total)',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: largeShareCategories.map((e) {
-                        final pct = totalExpense > 0
-                            ? (e.value / totalExpense) * 100
-                            : 0.0;
-                        final cat = categoryMap[e.key];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 10,
-                                backgroundColor: (cat != null
-                                    ? cat['color'] as Color
-                                    : Colors.grey),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${e.key} — \$${e.value.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                              Text('${pct.toStringAsFixed(1)}%'),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  )
-                else
-                  _buildInsightCard(
-                    title: 'Big contributors (≥ 20% of total)',
-                    child: const Text(
-                      'No single category takes 20% or more of total spending.',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ),
-
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -421,37 +516,66 @@ class _MyPieChartState extends State<MyPieChart> {
     );
   }
 
-  // Small reusable card for insights
-  Widget _buildInsightCard({required String title, required Widget child}) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  Widget _buildStatCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    String? subValue,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+        padding: const EdgeInsets.all(12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            child,
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (subValue != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subValue,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
+            ],
           ],
         ),
       ),
-    );
-  }
-
-  Widget _smallStatColumn(String title, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ],
     );
   }
 }

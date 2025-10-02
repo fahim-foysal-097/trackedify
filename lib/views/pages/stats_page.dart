@@ -3,8 +3,32 @@ import 'package:spendle/views/pages/stats/bar_chart.dart';
 import 'package:spendle/views/pages/stats/monthly_overview.dart';
 import 'package:spendle/views/pages/stats/pie_chart.dart';
 
-class StatsPage extends StatelessWidget {
+class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
+
+  @override
+  State<StatsPage> createState() => StatsPageState();
+}
+
+class StatsPageState extends State<StatsPage> {
+  final GlobalKey<MyPieChartState> _pieKey = GlobalKey<MyPieChartState>();
+  final GlobalKey<MonthlyOverviewTabState> _monthlyKey =
+      GlobalKey<MonthlyOverviewTabState>();
+  final GlobalKey<MyBarChartState> _barKey = GlobalKey<MyBarChartState>();
+
+  Future<void> refreshAll() async {
+    final futures = <Future<void>>[];
+    if (_pieKey.currentState != null) {
+      futures.add(_pieKey.currentState!.loadCategoriesAndExpenses());
+    }
+    if (_monthlyKey.currentState != null) {
+      futures.add(_monthlyKey.currentState!.loadMonthlyData());
+    }
+    if (_barKey.currentState != null) {
+      futures.add(_barKey.currentState!.loadExpenses());
+    }
+    await Future.wait(futures);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,18 +53,24 @@ class StatsPage extends StatelessWidget {
           children: [
             // --- All Time tab ---
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(4.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [SizedBox(height: 20), MyPieChart()],
+                  return RefreshIndicator(
+                    onRefresh: refreshAll,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 20),
+                            MyPieChart(key: _pieKey),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -53,14 +83,20 @@ class StatsPage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: const Column(
-                        children: [SizedBox(height: 8), MonthlyOverviewTab()],
+                  return RefreshIndicator(
+                    onRefresh: refreshAll,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            MonthlyOverviewTab(key: _monthlyKey),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -73,14 +109,20 @@ class StatsPage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: const Column(
-                        children: [SizedBox(height: 8), MyBarChart()],
+                  return RefreshIndicator(
+                    onRefresh: refreshAll,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            MyBarChart(key: _barKey),
+                          ],
+                        ),
                       ),
                     ),
                   );

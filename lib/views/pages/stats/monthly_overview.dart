@@ -7,10 +7,10 @@ class MonthlyOverviewTab extends StatefulWidget {
   const MonthlyOverviewTab({super.key});
 
   @override
-  State<MonthlyOverviewTab> createState() => _MonthlyOverviewTabState();
+  State<MonthlyOverviewTab> createState() => MonthlyOverviewTabState();
 }
 
-class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
+class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   List<Map<String, dynamic>> monthlyData = [];
   // keep grouped raw expenses by month to compute daily totals quickly
   Map<String, List<Map<String, dynamic>>> groupedByMonth = {};
@@ -392,53 +392,75 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
-          colors: [Colors.blue.shade400, Colors.blue.shade600],
+          colors: [Colors.purple.shade400, Colors.indigo.shade600],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
-            offset: const Offset(2, 4),
+            color: Colors.purple.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Month
-            Text(
-              formatMonth(month),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Total
-            Text(
-              "Total: \$${total.toStringAsFixed(2)}",
-              style: const TextStyle(fontSize: 16, color: Colors.white70),
+            // Month header with icon
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  formatMonth(month),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
-            // Top Categories
-            const Text(
-              "Top 3 Categories:",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: Colors.white,
-              ),
+            // Total with icon
+            Row(
+              children: [
+                const Icon(Icons.attach_money, color: Colors.white70, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  "Total: \$${total.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
+
+            // Top Categories header
+            const Row(
+              children: [
+                Icon(Icons.pie_chart, color: Colors.white70, size: 18),
+                SizedBox(width: 6),
+                Text(
+                  "Top 3 Categories",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             ...topCats.map<Widget>((catEntry) {
               // catEntry is MapEntry<String,double>
               final category = catEntry.key.toString();
@@ -446,46 +468,71 @@ class _MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               final percent = total > 0 ? (value / total) : 0.0;
 
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          category,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          "\$${value.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: percent.clamp(0.0, 1.0),
-                        minHeight: 8,
-                        backgroundColor: Colors.white24,
-                        valueColor: (percent * 100 <= 50)
-                            ? const AlwaysStoppedAnimation<Color>(
-                                Colors.limeAccent,
-                              )
-                            : const AlwaysStoppedAnimation<Color>(
-                                Colors.amberAccent,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
                               ),
+                            ),
+                          ),
+                          Text(
+                            "\$${value.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: percent.clamp(0.0, 1.0),
+                                minHeight: 6,
+                                backgroundColor: Colors.white24,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  percent * 100 <= 50
+                                      ? Colors.limeAccent.withValues(alpha: 0.9)
+                                      : Colors.amberAccent.withValues(
+                                          alpha: 0.9,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "${(percent * 100).toStringAsFixed(1)}%",
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),

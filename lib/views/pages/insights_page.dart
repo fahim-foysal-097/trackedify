@@ -217,7 +217,7 @@ class ExpenseSummaryCard extends StatelessWidget {
         gradient: const LinearGradient(
           colors: [Colors.blue, Colors.lightBlueAccent],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 6),
         ],
@@ -344,7 +344,7 @@ class InsightsCards extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [color.withValues(alpha: 0.8), color]),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(color: Colors.black26, offset: Offset(0, 4), blurRadius: 6),
         ],
@@ -384,7 +384,7 @@ class ExpenseLineChart extends StatelessWidget {
     if (last30DaysExpenses.isEmpty) {
       return Card(
         color: Colors.red,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 6,
         child: const Padding(
           padding: EdgeInsets.all(16),
