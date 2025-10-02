@@ -582,7 +582,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.only(right: 6, left: 6),
       child: Column(
         children: [
           const SizedBox(height: 12),

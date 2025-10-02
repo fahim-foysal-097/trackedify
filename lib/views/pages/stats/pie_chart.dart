@@ -499,8 +499,10 @@ class MyPieChartState extends State<MyPieChart> {
                 GridView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: (MediaQuery.of(context).size.width >= 680)
+                        ? 4
+                        : 2,
                     childAspectRatio: 1.2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,

@@ -210,10 +210,7 @@ class MyBarChartState extends State<MyBarChart> {
         children: [
           // Last 7 days insights row
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.all(4),
             child: Row(
               children: [
                 // Total (7 days)
@@ -347,7 +344,7 @@ class MyBarChartState extends State<MyBarChart> {
 
           // Additional insights cards grid
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -361,8 +358,10 @@ class MyBarChartState extends State<MyBarChart> {
                 GridView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: (MediaQuery.of(context).size.width >= 680)
+                        ? 4
+                        : 2,
                     childAspectRatio: 1.2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -423,7 +422,7 @@ class MyBarChartState extends State<MyBarChart> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

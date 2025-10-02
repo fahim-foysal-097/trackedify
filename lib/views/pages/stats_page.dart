@@ -80,7 +80,7 @@ class StatsPageState extends State<StatsPage> {
 
             // --- Monthly tab ---
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(4.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
@@ -106,7 +106,12 @@ class StatsPageState extends State<StatsPage> {
 
             // --- Last 7 Days tab ---
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(
+                left: 10.0,
+                right: 10.0,
+                bottom: 4.0,
+                top: 4.0,
+              ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
