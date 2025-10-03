@@ -2,7 +2,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:spendle/main.dart';
 import 'package:spendle/shared/constants/constants.dart';
-import 'package:spendle/views/pages/add_page.dart';
+import 'package:spendle/views/pages/add_expense_page.dart';
 
 class NotificationUtil {
   final AwesomeNotifications awesomeNotifications;
