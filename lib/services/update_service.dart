@@ -279,7 +279,8 @@ class UpdateService {
         PanaraInfoDialog.show(
           context,
           title: "Update Check Failed",
-          message: "An error occurred while checking for updates.",
+          message:
+              "An error occurred while checking for updates. Check your Internet connection and try again.",
           textColor: Colors.black54,
           buttonText: "OK",
           onTapDismiss: () => Navigator.of(context).pop(),

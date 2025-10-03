@@ -258,7 +258,8 @@ class _AboutPageState extends State<AboutPage> {
       if (kDebugMode) debugPrint('fetch release failed: $e');
       if (!mounted) return;
       setState(() {
-        _releaseFetchError = 'Could not fetch latest release notes.';
+        _releaseFetchError =
+            'Could not fetch latest release notes. Chech your internet connection.';
       });
     } finally {
       setState(() => _loadingRelease = false);
@@ -296,8 +297,8 @@ class _AboutPageState extends State<AboutPage> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color.fromARGB(255, 68, 109, 197),
-                      Color.fromARGB(255, 76, 92, 230),
+                      Color.fromARGB(255, 66, 112, 211),
+                      Color.fromARGB(255, 58, 76, 238),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -414,7 +415,10 @@ class _AboutPageState extends State<AboutPage> {
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6C5CE7), Color(0xFF00B4D8)],
+                    colors: [
+                      Color(0xFF6C5CE7),
+                      Color.fromARGB(255, 38, 81, 223),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -494,12 +498,14 @@ class _AboutPageState extends State<AboutPage> {
                               ),
                             ),
                             if (_latestDate != null) ...[
-                              const SizedBox(width: 8),
-                              const Text(
-                                '•',
-                                style: TextStyle(color: Colors.white70),
+                              IconButton(
+                                onPressed: () => _launchURL(_releasePageUrl),
+                                icon: const Icon(
+                                  Icons.open_in_new_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
-                              const SizedBox(width: 8),
                               Text(
                                 _latestDate!,
                                 style: const TextStyle(
@@ -526,7 +532,7 @@ class _AboutPageState extends State<AboutPage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.green,
+                                  color: t.background,
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(

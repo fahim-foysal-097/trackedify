@@ -19,58 +19,69 @@ class NavBarWidget extends StatelessWidget {
       valueListenable: selectedPageNotifier,
       builder: (context, selectedPage, child) {
         return Container(
-          margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+          margin: const EdgeInsets.fromLTRB(6, 0, 6, 1),
           child: BottomAppBar(
+            height: 68,
+            padding: const EdgeInsets.only(
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            ),
             elevation: 6,
             color: Colors.transparent,
             shape: const CircularNotchedRectangle(),
             notchMargin: 8,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                height: 64,
-                color: bg,
-                child: Row(
-                  children: [
-                    // left side items
-                    _navItem(
-                      icon: FontAwesomeIcons.solidHouse,
-                      label: 'Home',
-                      selected: selectedPage == 0,
-                      selectedColor: selectedIconColor,
-                      unselectedColor: unselectedIconColor,
-                      onTap: () => selectedPageNotifier.value = 0,
-                    ),
-                    _navItem(
-                      icon: FontAwesomeIcons.chartPie,
-                      label: 'Stats',
-                      selected: selectedPage == 1,
-                      selectedColor: selectedIconColor,
-                      unselectedColor: unselectedIconColor,
-                      onTap: () => selectedPageNotifier.value = 1,
-                    ),
+            child: Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  height: 64,
+                  color: bg,
+                  child: Row(
+                    children: [
+                      // left side items
+                      _navItem(
+                        icon: FontAwesomeIcons.solidHouse,
+                        label: 'Home',
+                        selected: selectedPage == 0,
+                        selectedColor: selectedIconColor,
+                        unselectedColor: unselectedIconColor,
+                        onTap: () => selectedPageNotifier.value = 0,
+                      ),
+                      _navItem(
+                        icon: FontAwesomeIcons.chartPie,
+                        label: 'Stats',
+                        selected: selectedPage == 1,
+                        selectedColor: selectedIconColor,
+                        unselectedColor: unselectedIconColor,
+                        onTap: () => selectedPageNotifier.value = 1,
+                      ),
 
-                    // spacer for FAB / middle gap
-                    const SizedBox(width: gapWidth),
+                      // spacer for FAB / middle gap
+                      const SizedBox(width: gapWidth),
 
-                    // right side items
-                    _navItem(
-                      icon: FontAwesomeIcons.chartSimple,
-                      label: 'Insights',
-                      selected: selectedPage == 2,
-                      selectedColor: selectedIconColor,
-                      unselectedColor: unselectedIconColor,
-                      onTap: () => selectedPageNotifier.value = 2,
-                    ),
-                    _navItem(
-                      icon: FontAwesomeIcons.solidUser,
-                      label: 'User',
-                      selected: selectedPage == 3,
-                      selectedColor: selectedIconColor,
-                      unselectedColor: unselectedIconColor,
-                      onTap: () => selectedPageNotifier.value = 3,
-                    ),
-                  ],
+                      // right side items
+                      _navItem(
+                        icon: FontAwesomeIcons.chartSimple,
+                        label: 'Insights',
+                        selected: selectedPage == 2,
+                        selectedColor: selectedIconColor,
+                        unselectedColor: unselectedIconColor,
+                        onTap: () => selectedPageNotifier.value = 2,
+                      ),
+                      _navItem(
+                        icon: FontAwesomeIcons.solidUser,
+                        label: 'User',
+                        selected: selectedPage == 3,
+                        selectedColor: selectedIconColor,
+                        unselectedColor: unselectedIconColor,
+                        onTap: () => selectedPageNotifier.value = 3,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

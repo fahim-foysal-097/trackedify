@@ -504,7 +504,7 @@ class ExpenseLineChart extends StatelessWidget {
                       isStrokeCapRound: true,
                       color: Colors.deepPurpleAccent,
                       barWidth: 3,
-                      dotData: const FlDotData(show: false),
+                      dotData: const FlDotData(show: false), // ? show dots
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(

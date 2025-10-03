@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:spendle/database/database_helper.dart';
 
+// TODO : CHANGE THE CHART
+
 class MonthlyOverviewTab extends StatefulWidget {
   const MonthlyOverviewTab({super.key});
 
@@ -165,8 +167,6 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         vertical: 10,
                         horizontal: 12,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,

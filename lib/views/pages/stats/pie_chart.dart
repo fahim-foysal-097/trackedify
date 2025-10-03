@@ -402,7 +402,7 @@ class MyPieChartState extends State<MyPieChart> {
                     Text(
                       '\$${totalExpense.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
