@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -162,7 +163,7 @@ class _AboutPageState extends State<AboutPage> {
           if (label.isEmpty) continue;
 
           final lc = classAttr.toLowerCase();
-          Color bg = const Color(0xFF6C5CE7);
+          Color bg = const Color(0xFF4F46E5);
           Color text = Colors.white;
 
           if (lc.contains('bg-primary')) {
@@ -210,7 +211,7 @@ class _AboutPageState extends State<AboutPage> {
           parsedTags.add(
             _ReleaseTag(
               label: label,
-              background: const Color(0xFF6C5CE7),
+              background: const Color(0xFF4F46E5),
               foreground: Colors.white,
             ),
           );
@@ -259,7 +260,7 @@ class _AboutPageState extends State<AboutPage> {
       if (!mounted) return;
       setState(() {
         _releaseFetchError =
-            'Could not fetch latest release notes. Chech your internet connection.';
+            'Could not fetch latest release notes. Check your internet connection.';
       });
     } finally {
       setState(() => _loadingRelease = false);
@@ -280,11 +281,16 @@ class _AboutPageState extends State<AboutPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('About'),
-        centerTitle: true,
         elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          tooltip: "Back",
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: RefreshIndicator(
-        color: Colors.blue,
+        color: Colors.blueAccent,
         onRefresh: _fetchLatestRelease,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -292,13 +298,12 @@ class _AboutPageState extends State<AboutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // App Info Card (subtle gradient)
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color.fromARGB(255, 66, 112, 211),
-                      Color.fromARGB(255, 58, 76, 238),
+                      Color.fromARGB(255, 51, 127, 240),
+                      Color.fromARGB(255, 20, 87, 196),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -334,7 +339,10 @@ class _AboutPageState extends State<AboutPage> {
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () {},
-                          icon: const Icon(FontAwesomeIcons.v, size: 14),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.codeBranch,
+                            size: 14,
+                          ),
                           label: Text(
                             _version.isNotEmpty ? _version : "?",
                             style: const TextStyle(color: Colors.white),
@@ -348,7 +356,7 @@ class _AboutPageState extends State<AboutPage> {
                               foregroundColor: Colors.white,
                             ),
                             onPressed: () {},
-                            icon: const Icon(
+                            icon: const FaIcon(
                               FontAwesomeIcons.hashtag,
                               size: 14,
                             ),
@@ -409,15 +417,15 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-              // Latest release card area with modern gradient
+              // Latest release card area with new gradient
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF6C5CE7),
-                      Color.fromARGB(255, 38, 81, 223),
+                      Color.fromARGB(255, 12, 130, 226),
+                      Color.fromARGB(255, 120, 93, 238),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -425,7 +433,7 @@ class _AboutPageState extends State<AboutPage> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6C5CE7).withValues(alpha: 0.20),
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.20),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -456,8 +464,7 @@ class _AboutPageState extends State<AboutPage> {
                           const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                            child: CupertinoActivityIndicator(
                               color: Colors.white,
                             ),
                           ),
@@ -487,33 +494,39 @@ class _AboutPageState extends State<AboutPage> {
                     ] else ...[
                       if (_latestTitle != null)
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              _latestTitle!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                            Row(
+                              children: [
+                                Text(
+                                  _latestTitle!,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (_latestDate != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Text(
+                                      _latestDate!,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: () => _launchURL(_releasePageUrl),
+                              icon: const Icon(
+                                Icons.open_in_new_rounded,
                                 color: Colors.white,
-                                fontSize: 16,
+                                size: 20,
                               ),
                             ),
-                            if (_latestDate != null) ...[
-                              IconButton(
-                                onPressed: () => _launchURL(_releasePageUrl),
-                                icon: const Icon(
-                                  Icons.open_in_new_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              Text(
-                                _latestDate!,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       const SizedBox(height: 12),
@@ -546,8 +559,8 @@ class _AboutPageState extends State<AboutPage> {
                                 ),
                                 child: Text(
                                   t.label,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: t.foreground,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -616,6 +629,68 @@ class _AboutPageState extends State<AboutPage> {
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Credits section with new gradient
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF047857), Color(0xFF34D399)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF047857).withValues(alpha: 0.20),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 14,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.white),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Credits',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const ListTile(
+                      leading: Icon(Icons.person, color: Colors.white70),
+                      title: Text(
+                        'Creator: Fahim Foysal',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.link, color: Colors.white70),
+                      title: const Text(
+                        'GitHub',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      trailing: const Icon(
+                        Icons.open_in_new,
+                        color: Colors.white70,
+                      ),
+                      onTap: () =>
+                          _launchURL('https://github.com/fahim-foysal-097'),
+                    ),
                   ],
                 ),
               ),

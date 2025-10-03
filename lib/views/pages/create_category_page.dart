@@ -413,10 +413,12 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         appBar: AppBar(
           elevation: 0,
           centerTitle: true,
-          backgroundColor: Colors.transparent,
           title: const Text("Create New Category"),
           leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.black87),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.black87,
+            ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
