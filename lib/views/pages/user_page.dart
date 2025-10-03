@@ -9,8 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/views/pages/about_page.dart';
-import 'package:spendle/views/pages/export_page.dart';
-import 'package:spendle/views/pages/import_page.dart';
+import 'package:spendle/views/pages/settings/export_page.dart';
+import 'package:spendle/views/pages/settings/import_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/services/update_service.dart';
 import 'package:spendle/views/widget_tree.dart';
@@ -201,6 +201,21 @@ class UserPageState extends State<UserPage> {
     }
   }
 
+  void showTipsDialog() {
+    const tips =
+        '''Tap the profile picture to edit and long-press to delete. Use the buttons below to export/import data, check for updates, and more. Also delete temporary downloaded updates to save space.''';
+
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message: tips,
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.normal,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageProvider = _profileImageExists()
@@ -261,16 +276,11 @@ class UserPageState extends State<UserPage> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.settings, color: Colors.white),
-                          onPressed: () {
-                            if (!mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SettingsPage(),
-                              ),
-                            ).then((_) => loadUserInfo());
-                          },
+                          icon: const Icon(
+                            Icons.lightbulb,
+                            color: Colors.white,
+                          ),
+                          onPressed: showTipsDialog,
                         ),
                       ],
                     ),
@@ -540,7 +550,7 @@ class UserPageState extends State<UserPage> {
                         context,
                         title: "Clear downloads?",
                         message:
-                            "This will delete all downloaded updates from the app's download folder. Continue?",
+                            "This will delete all temporary downloaded updates. Continue?",
                         textColor: Colors.black54,
                         confirmButtonText: "Clear",
                         cancelButtonText: "Cancel",

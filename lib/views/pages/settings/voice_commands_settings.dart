@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 
 class VoiceCommandsSettings extends StatefulWidget {
@@ -10,7 +12,8 @@ class VoiceCommandsSettings extends StatefulWidget {
 
 class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
   bool _voiceEnabled = true;
-  bool _loadingVoicePref = true;
+  bool _loading = true;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -23,60 +26,130 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
     if (!mounted) return;
     setState(() {
       _voiceEnabled = v;
-      _loadingVoicePref = false;
+      _loading = false;
     });
+  }
+
+  Future<void> _toggleVoice(bool v) async {
+    setState(() => _saving = true);
+    await DatabaseHelper().setVoiceEnabled(v);
+    if (!mounted) return;
+    setState(() {
+      _voiceEnabled = v;
+      _saving = false;
+    });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(v ? 'Voice commands enabled' : 'Voice commands disabled'),
+      ),
+    );
+  }
+
+  void _showTipsDialog() {
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message:
+          'You can use voice to add expenses. Say for example: "Add food 20" or "Shopping 500". If it fails, check microphone permission and language settings.',
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      panaraDialogType: PanaraDialogType.normal,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Voice Settings'), centerTitle: true),
-      body: _loadingVoicePref
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      appBar: AppBar(
+        title: const Text('Voice Commands'),
+        centerTitle: false,
+        leading: IconButton(
+          tooltip: "Back",
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actionsPadding: const EdgeInsets.only(right: 6),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: _showTipsDialog,
+          ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CupertinoActivityIndicator())
+          : Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF6F8FF), Color(0xFFFFFFFF)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
                 children: [
-                  const SizedBox(height: 20),
                   const Text(
                     'Voice Commands',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 8),
-                  _loadingVoicePref
-                      ? const SizedBox(
-                          height: 48,
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : SwitchListTile(
-                          title: const Text('Enable voice commands'),
-                          inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: Colors.grey.shade400,
-                          activeThumbColor: Colors.white,
-                          activeTrackColor: Colors.lightBlue,
-                          subtitle: const Text(
-                            'Use voice to add expenses (e.g., "add food 20 or shopping 500")',
+                  const SizedBox(height: 12),
+                  Card(
+                    color: Colors.green.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          value: _voiceEnabled,
-                          onChanged: (v) async {
-                            // persist in DB
-                            await DatabaseHelper().setVoiceEnabled(v);
-                            if (!mounted) return;
-                            setState(() => _voiceEnabled = v);
-
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  v
-                                      ? 'Voice commands enabled'
-                                      : 'Voice commands disabled',
-                                ),
-                              ),
-                            );
-                          },
+                          child: const Icon(Icons.mic, color: Colors.green),
                         ),
+                        title: const Text(
+                          'Enable voice commands',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Use voice to add expenses (e.g., "add food 20")',
+                        ),
+                        trailing: _saving
+                            ? const SizedBox(
+                                width: 46,
+                                height: 30,
+                                child: Center(
+                                  child: CupertinoActivityIndicator(),
+                                ),
+                              )
+                            : CupertinoSwitch(
+                                value: _voiceEnabled,
+                                activeTrackColor: Colors.green,
+                                onChanged: (v) async {
+                                  await _toggleVoice(v);
+                                },
+                              ),
+                        onTap: () async {
+                          await _toggleVoice(!_voiceEnabled);
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
