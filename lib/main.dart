@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:spendle/services/notification_service.dart';
 import 'package:spendle/shared/constants/constants.dart';
 import 'package:spendle/views/widget_tree.dart';
@@ -9,6 +10,8 @@ import 'package:spendle/database/database_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Initialize Awesome Notifications and schedule if DB enables it.
   final notifUtil = NotificationUtil(
