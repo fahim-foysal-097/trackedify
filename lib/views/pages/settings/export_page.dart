@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
@@ -26,6 +28,21 @@ class _ExportPageState extends State<ExportPage> {
   void initState() {
     super.initState();
     _loadSummary();
+  }
+
+  void showTipsDialog() {
+    const tips =
+        '''You can export / backup you data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON.''';
+
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message: tips,
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.normal,
+    );
   }
 
   Future<Directory> _getExportDir() async {
@@ -131,7 +148,7 @@ class _ExportPageState extends State<ExportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       dialogShown = true;
 
@@ -217,7 +234,7 @@ class _ExportPageState extends State<ExportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       dialogShown = true;
 
@@ -330,7 +347,7 @@ class _ExportPageState extends State<ExportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       dialogShown = true;
 
@@ -517,8 +534,21 @@ class _ExportPageState extends State<ExportPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Export / Backup'),
-        centerTitle: true,
         elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          tooltip: "Back",
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actionsPadding: const EdgeInsets.only(right: 6),
+        actions: [
+          IconButton(
+            tooltip: 'Tips',
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: showTipsDialog,
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: Colors.blueAccent,
@@ -724,7 +754,7 @@ class _ExportPageState extends State<ExportPage> {
                             SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CupertinoActivityIndicator(),
                             ),
                             SizedBox(width: 10),
                             Text('Export in progress...'),

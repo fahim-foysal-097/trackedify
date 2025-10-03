@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spendle/services/auth_service.dart';
@@ -218,9 +219,8 @@ class _LockScreenState extends State<LockScreen> {
                                     ? const SizedBox(
                                         width: 24,
                                         height: 24,
-                                        child: CircularProgressIndicator(
+                                        child: CupertinoActivityIndicator(
                                           color: Colors.white,
-                                          strokeWidth: 2,
                                         ),
                                       )
                                     : const Text(

@@ -441,7 +441,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   void showTipsDialog() {
-    // small list of tips for the user
     const tips =
         '''Long-press an item to enter multi-select. Use the Select All (top-right) to select visible items. Swipe right to edit, swipe left to delete. Tap an item to view details and note.''';
 
@@ -503,7 +502,13 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       ),
                     ),
             ),
-            centerTitle: true,
+            centerTitle: false,
+            leading: IconButton(
+              tooltip: "Back",
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actionsPadding: const EdgeInsets.only(right: 6),
             actions: selectionMode
                 ? [
                     // Select All / Visible items

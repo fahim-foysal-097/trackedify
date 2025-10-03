@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 
@@ -86,9 +87,17 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Username'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Change Username'),
+        centerTitle: false,
+        leading: IconButton(
+          tooltip: "Back",
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator())
           : Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -101,7 +110,7 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                       hintText: 'New Username',
                       filled: true,
                       fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.person, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.edit, color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,

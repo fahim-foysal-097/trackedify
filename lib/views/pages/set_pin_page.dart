@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spendle/services/auth_service.dart';
@@ -77,7 +78,15 @@ class _SetPinPageState extends State<SetPinPage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: Text(title)),
+        appBar: AppBar(
+          title: Text(title),
+          centerTitle: false,
+          leading: IconButton(
+            tooltip: "Back",
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -163,7 +172,7 @@ class _SetPinPageState extends State<SetPinPage> {
                   ),
                   onPressed: _saving ? null : _save,
                   child: _saving
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CupertinoActivityIndicator(color: Colors.white)
                       : Text(
                           widget.isChanging ? 'Change PIN' : 'Set PIN',
                           style: const TextStyle(

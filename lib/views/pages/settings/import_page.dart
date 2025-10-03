@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -24,6 +26,21 @@ class _ImportPageState extends State<ImportPage> {
   void initState() {
     super.initState();
     _loadSummary();
+  }
+
+  void showTipsDialog() {
+    const tips =
+        '''You can import / restore you data from valid JSON and SQLite database. Importing from DB will replace all data. You can replace / append new data by importing valid JSON.''';
+
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message: tips,
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.normal,
+    );
   }
 
   Future<void> _loadSummary() async {
@@ -120,7 +137,7 @@ class _ImportPageState extends State<ImportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       spinnerShown = true;
 
@@ -268,7 +285,7 @@ class _ImportPageState extends State<ImportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       spinnerShown = true;
 
@@ -642,7 +659,7 @@ class _ImportPageState extends State<ImportPage> {
                   SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CupertinoActivityIndicator(),
                   ),
                   SizedBox(width: 10),
                   Text('Import in progress...'),
@@ -701,8 +718,21 @@ class _ImportPageState extends State<ImportPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Import / Restore'),
-        centerTitle: true,
         elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          tooltip: "Back",
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actionsPadding: const EdgeInsets.only(right: 6),
+        actions: [
+          IconButton(
+            tooltip: 'Tips',
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: showTipsDialog,
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: Colors.blueAccent,

@@ -54,7 +54,6 @@ class HomePageState extends State<HomePage> {
 
     // Automatic update check after first frame (will run only once per app session)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      overviewKey.currentState?.refresh();
       UpdateService.checkForUpdate(context);
     });
   }
@@ -65,9 +64,7 @@ class HomePageState extends State<HomePage> {
       final avail = await _speech!.initialize(
         onStatus: (status) {
           if (!mounted) return;
-          if (status == 'done' ||
-              status == 'notListening' ||
-              status == 'notListening') {
+          if (status == 'done' || status == 'notListening') {
             if (_isListening) {
               setState(() {
                 _isListening = false;
@@ -75,7 +72,12 @@ class HomePageState extends State<HomePage> {
             }
           }
         },
-        onError: (err) {},
+        onError: (err) {
+          if (!mounted) return;
+          setState(() {
+            _isListening = false;
+          });
+        },
       );
       if (!mounted) return;
       setState(() {
@@ -371,19 +373,14 @@ class HomePageState extends State<HomePage> {
 
     try {
       await _speech!.listen(
-        onResult: (result) async {
-          if (!mounted) return;
-          setState(() {
-            _lastWords = result.recognizedWords;
-          });
+        onResult: (result) {
+          _lastWords = result.recognizedWords;
           if (result.finalResult) {
             // stop listening and perform action
-            try {
-              await _speech!.stop();
-            } catch (_) {}
+            _speech!.stop(); // No need for await here to avoid blocking
             if (!mounted) return;
             setState(() => _isListening = false);
-            await _handleVoiceCommand(_lastWords);
+            _handleVoiceCommand(_lastWords);
           }
         },
         listenFor: const Duration(seconds: 12),

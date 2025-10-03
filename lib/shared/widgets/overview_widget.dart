@@ -1,4 +1,3 @@
-// overview_widget.dart
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 
@@ -93,7 +92,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
     // Constants for responsive sizing
     const double baseWidth = 420; // design width
     const double maxCardWidth = 640; // max width on large screens
-    const double horizontalPadding = 20; // outside padding
+    const double horizontalPadding = 24; // outside padding
 
     return FutureBuilder<Map<String, dynamic>>(
       future: _future,
@@ -159,7 +158,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
                         ],
                       ),
                       child: Padding(
-                        padding: EdgeInsets.all(16 * scaleFactor),
+                        padding: EdgeInsets.all(18 * scaleFactor),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -173,7 +172,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
                                 SizedBox(width: 12 * scaleFactor),
                                 Expanded(
                                   child: Text(
-                                    'Your Overview',
+                                    'Expense Overview',
                                     style: TextStyle(
                                       fontSize: 18 * scaleFactor,
                                       color: Colors.white,

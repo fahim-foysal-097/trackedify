@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -81,7 +82,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
       dialogShown = true;
 
@@ -190,7 +191,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                         ),
                         onPressed: isSaving ? null : saveUsername,
                         child: isSaving
-                            ? const CircularProgressIndicator(
+                            ? const CupertinoActivityIndicator(
                                 color: Colors.white,
                               )
                             : const Text(
@@ -215,7 +216,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
                         ),
                         onPressed: isImporting ? null : importDb,
                         child: isImporting
-                            ? const CircularProgressIndicator(
+                            ? const CupertinoActivityIndicator(
                                 color: Colors.white,
                               )
                             : const Text(

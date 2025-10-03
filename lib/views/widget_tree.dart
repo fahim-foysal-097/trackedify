@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +10,7 @@ import 'package:spendle/views/pages/home_page.dart';
 import 'package:spendle/views/pages/insights_page.dart';
 import 'package:spendle/views/pages/stats_page.dart';
 import 'package:spendle/views/pages/user_page.dart';
-import 'package:spendle/views/pages/add_page.dart';
+import 'package:spendle/views/pages/add_expense_page.dart';
 import 'package:spendle/views/pages/onboarding_page.dart';
 import 'package:spendle/database/database_helper.dart';
 
@@ -140,7 +140,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CupertinoActivityIndicator()));
     }
 
     if (!hasUser) return const OnboardingPage();
