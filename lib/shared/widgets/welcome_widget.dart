@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:spendle/shared/constants/text_constant.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/database/database_helper.dart';
+import 'package:spendle/views/widget_tree.dart';
 
 class WelcomeWidget extends StatefulWidget {
   const WelcomeWidget({super.key});
@@ -33,9 +34,31 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 100, 0, 0),
-      child: Stack(
+      padding: const EdgeInsets.fromLTRB(24, 120, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome back,',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              Text(
+                username,
+                style: const TextStyle(
+                  fontSize: 28,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -48,23 +71,21 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
               ).then((_) {
                 // Refresh username when coming back from settings
                 _loadUsername();
+                NavBarController.apply();
               });
             },
-            child: const Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 15, 22, 0),
-                child: Icon(Icons.settings, size: 30, color: Colors.white),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                FontAwesomeIcons.gear,
+                color: Colors.white,
+                size: 22,
               ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const Text('Welcome back,', style: KTextstyle.smallHeaderText),
-              Text(username, style: KTextstyle.headerText),
-            ],
           ),
         ],
       ),

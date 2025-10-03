@@ -9,6 +9,7 @@ import 'package:spendle/shared/widgets/curvedbox_widget.dart';
 import 'package:spendle/shared/widgets/overview_widget.dart';
 import 'package:spendle/shared/widgets/welcome_widget.dart';
 import 'package:spendle/views/pages/expense_history_page.dart';
+import 'package:spendle/views/widget_tree.dart';
 import 'edit_expense_page.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:intl/intl.dart';
@@ -35,9 +36,12 @@ class HomePageState extends State<HomePage> {
   // guard to avoid concurrent preference reloads
   bool _prefLoadInProgress = false;
 
+  final overviewKey = GlobalKey<OverviewWidgetState>();
+
   void refresh() {
     loadCategories();
     loadExpenses();
+    overviewKey.currentState?.refresh();
   }
 
   @override
@@ -50,6 +54,7 @@ class HomePageState extends State<HomePage> {
 
     // Automatic update check after first frame (will run only once per app session)
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      overviewKey.currentState?.refresh();
       UpdateService.checkForUpdate(context);
     });
   }
@@ -278,6 +283,8 @@ class HomePageState extends State<HomePage> {
                               // refresh after coming back from edit
                               loadCategories();
                               loadExpenses();
+                              overviewKey.currentState?.refresh();
+                              NavBarController.apply();
                             });
                           },
                           child: const Text(
@@ -676,7 +683,7 @@ class HomePageState extends State<HomePage> {
           Stack(
             children: [
               const CurvedboxWidget(),
-              OverviewWidget(),
+              OverviewWidget(key: overviewKey),
               const WelcomeWidget(),
             ],
           ),
@@ -686,10 +693,7 @@ class HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  'Expense History',
-                  style: KTextstyle.headerBlackText,
-                ),
+                const Text('Recent Expense', style: KTextstyle.headerBlackText),
                 Row(
                   children: [
                     GestureDetector(
@@ -702,6 +706,8 @@ class HomePageState extends State<HomePage> {
                         ).then((_) {
                           loadCategories();
                           loadExpenses();
+                          overviewKey.currentState?.refresh();
+                          NavBarController.apply();
                         });
                       },
                       child: const Text(
@@ -738,7 +744,7 @@ class HomePageState extends State<HomePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 70),
                       Icon(
                         Icons.receipt_long,
                         size: 64,
@@ -749,10 +755,12 @@ class HomePageState extends State<HomePage> {
                         'No expenses to show',
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 )
               : ListView.builder(
+                  padding: const EdgeInsets.only(top: 18),
                   shrinkWrap: true,
                   physics: const ClampingScrollPhysics(),
                   itemCount: expenses.length,
@@ -765,7 +773,7 @@ class HomePageState extends State<HomePage> {
                         .isNotEmpty;
 
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 5, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: () => _showNoteSheet(expense),

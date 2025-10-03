@@ -1,11 +1,33 @@
+// overview_widget.dart
 import 'package:flutter/material.dart';
-import 'package:spendle/shared/constants/text_constant.dart';
 import 'package:spendle/database/database_helper.dart';
 
-class OverviewWidget extends StatelessWidget {
+class OverviewWidget extends StatefulWidget {
   const OverviewWidget({super.key});
 
-  /// Fetch total expenses, average monthly, total transactions from DB
+  @override
+  State<OverviewWidget> createState() => OverviewWidgetState();
+}
+
+class OverviewWidgetState extends State<OverviewWidget> {
+  Future<Map<String, dynamic>>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  void refresh() {
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    setState(() {
+      _future = _loadOverview();
+    });
+  }
+
   Future<Map<String, dynamic>> _loadOverview() async {
     final db = await DatabaseHelper().database;
     final rows = await db.query('expenses');
@@ -18,26 +40,21 @@ class OverviewWidget extends StatelessWidget {
       final dateStr = row['date'] as String;
       totalExpenses += amount;
 
-      // Try to parse date with DateTime; fall back to splitting (e.g. "YYYY-MM-DD" or "YYYY/MM/DD")
       String monthKey;
       final dt = DateTime.tryParse(dateStr);
       if (dt != null) {
-        // Key: "YYYY-MM"
         monthKey =
             '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}';
       } else {
-        // Fallback: split on common separators and take first two parts
         final parts = dateStr.split(RegExp(r'[-/]'));
         if (parts.length >= 2) {
           final year = parts[0].padLeft(4, '0');
           final month = parts[1].padLeft(2, '0');
           monthKey = '$year-$month';
         } else {
-          // If all else fails use the raw date string as key (prevents crash)
           monthKey = dateStr;
         }
       }
-
       monthlyTotals[monthKey] = (monthlyTotals[monthKey] ?? 0) + amount;
     }
 
@@ -47,142 +64,265 @@ class OverviewWidget extends StatelessWidget {
       avgMonthly = totalPerMonth / monthlyTotals.length;
     }
 
+    // Calculate trend % (compared to previous month)
+    double trendPercent = 0;
+    if (monthlyTotals.length > 1) {
+      final sortedMonths = monthlyTotals.keys.toList()..sort();
+      final lastMonth = sortedMonths.last;
+      final prevMonth = sortedMonths[sortedMonths.length - 2];
+
+      final lastAmount = monthlyTotals[lastMonth]!;
+      final prevAmount = monthlyTotals[prevMonth]!;
+      if (prevAmount != 0) {
+        trendPercent = ((lastAmount - prevAmount) / prevAmount) * 100;
+      } else {
+        trendPercent = 100; // fallback if previous month is zero
+      }
+    }
+
     return {
       'totalExpenses': totalExpenses,
       'averageMonthly': avgMonthly,
       'totalTransactions': rows.length,
+      'trendPercent': trendPercent,
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    // Constants for responsive sizing
+    const double baseWidth = 420; // design width
+    const double maxCardWidth = 640; // max width on large screens
+    const double horizontalPadding = 20; // outside padding
+
     return FutureBuilder<Map<String, dynamic>>(
-      future: _loadOverview(),
+      future: _future,
       builder: (context, snapshot) {
-        // Default values if DB not yet loaded
         double totalExpenses = 0;
         double averageMonthly = 0;
         int totalTransactions = 0;
+        double trendPercent = 0;
 
         if (snapshot.hasData) {
           totalExpenses = snapshot.data!['totalExpenses'] as double;
           averageMonthly = snapshot.data!['averageMonthly'] as double;
           totalTransactions = snapshot.data!['totalTransactions'] as int;
+          trendPercent = snapshot.data!['trendPercent'] as double;
         }
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(30, 200, 30, 20),
-          child: Stack(
-            children: [
-              Container(
-                height: 220,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.secondary,
-                      Theme.of(context).colorScheme.tertiary,
-                    ],
-                    transform: const GradientRotation(3.1416 / 4),
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withAlpha(50),
-                      spreadRadius: 5,
-                      blurRadius: 5,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(8.0),
-                  width: double.infinity,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 26, 0, 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Expenses',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // When parent gives infinite width (rare), fallback to screen width
+            final screenWidth = MediaQuery.of(context).size.width;
+            final availableWidth = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : screenWidth;
+
+            // Reserve horizontal padding, clamp width to a maximum
+            final usableWidth = (availableWidth - (horizontalPadding * 2))
+                .clamp(0.0, maxCardWidth);
+
+            // Ensure a minimum width so the card doesn't collapse on very small screens
+            final cardWidth = usableWidth.clamp(280.0, maxCardWidth);
+
+            // scaleFactor derived from cardWidth relative to base design width
+            final scaleFactor = (cardWidth / baseWidth).clamp(0.6, 1.5);
+
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 200, 20, 2),
+                child: SizedBox(
+                  width: cardWidth,
+                  // maintain aspect ratio
+                  child: AspectRatio(
+                    aspectRatio: 1.75,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color.fromARGB(255, 74, 150, 240),
+                            Color.fromARGB(255, 74, 130, 240),
+                            Color.fromARGB(255, 43, 90, 219),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20 * scaleFactor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF667EEA,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: 20 * scaleFactor,
+                            offset: Offset(0, 8 * scaleFactor),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(16 * scaleFactor),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.analytics_outlined,
+                                  color: Colors.white,
+                                  size: 28 * scaleFactor,
+                                ),
+                                SizedBox(width: 12 * scaleFactor),
+                                Expanded(
+                                  child: Text(
+                                    'Your Overview',
+                                    style: TextStyle(
+                                      fontSize: 18 * scaleFactor,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 20 * scaleFactor),
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _StatItem(
+                                          icon: Icons.trending_up_rounded,
+                                          label: 'Total Spent',
+                                          value:
+                                              '\$${totalExpenses.toStringAsFixed(2)}',
+                                          isRightAligned: false,
+                                          scaleFactor: scaleFactor,
+                                        ),
+                                        SizedBox(height: 5 * scaleFactor),
+                                        Text(
+                                          trendPercent >= 0
+                                              ? '+${trendPercent.toStringAsFixed(1)}%'
+                                              : '${trendPercent.toStringAsFixed(1)}%',
+                                          style: TextStyle(
+                                            color: trendPercent <= 0
+                                                ? Colors.greenAccent
+                                                : Colors.yellowAccent,
+                                            fontSize: 16 * scaleFactor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 16 * scaleFactor),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        _StatItem(
+                                          icon: Icons.receipt_long,
+                                          label: 'Transactions',
+                                          value: totalTransactions.toString(),
+                                          isRightAligned: true,
+                                          scaleFactor: scaleFactor,
+                                        ),
+                                        SizedBox(height: 8 * scaleFactor),
+                                        _StatItem(
+                                          icon: Icons.calendar_month,
+                                          label: 'Avg Monthly',
+                                          value:
+                                              '\$${averageMonthly.toStringAsFixed(2)}',
+                                          isRightAligned: true,
+                                          scaleFactor: scaleFactor,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 0),
-                    Text(
-                      '\$ ${totalExpenses.toStringAsFixed(2)}',
-                      style: KTextstyle.headerText,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 140, 0, 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Transactions',
-                      style: KTextstyle.smallHeaderText,
-                    ),
-                    const SizedBox(height: 0),
-                    Text(
-                      '$totalTransactions',
-                      style: KTextstyle.moneySmallText,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                alignment: Alignment.bottomRight,
-                padding: const EdgeInsets.fromLTRB(0, 140, 20, 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Monthly Average',
-                      style: KTextstyle.smallHeaderText,
-                    ),
-                    const SizedBox(height: 0),
-                    Text(
-                      '\$ ${averageMonthly.toStringAsFixed(2)}',
-                      style: KTextstyle.moneySmallText,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(0, 40, 20, 0),
-                alignment: Alignment.bottomRight,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFd9ed92),
-                    borderRadius: BorderRadius.circular(50),
                   ),
-                  child: const SizedBox(width: 50, height: 50),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(0, 40, 50, 0),
-                alignment: Alignment.bottomRight,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFb5e48c),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: const SizedBox(width: 50, height: 50),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isRightAligned;
+  final double scaleFactor;
+
+  const _StatItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isRightAligned = false,
+    required this.scaleFactor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: isRightAligned
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: isRightAligned
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          children: [
+            if (!isRightAligned) ...[
+              Icon(icon, color: Colors.white70, size: 20 * scaleFactor),
+              SizedBox(width: 6 * scaleFactor),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12 * scaleFactor,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (isRightAligned) ...[
+              SizedBox(width: 6 * scaleFactor),
+              Icon(icon, color: Colors.white70, size: 20 * scaleFactor),
+            ],
+          ],
+        ),
+        SizedBox(height: 4 * scaleFactor),
+        Text(
+          value,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 20 * scaleFactor,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

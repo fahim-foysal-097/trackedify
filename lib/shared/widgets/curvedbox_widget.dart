@@ -7,39 +7,20 @@ class CurvedboxWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
-        bottomRight: Radius.elliptical(300, 30), // round top-left
+        bottomRight: Radius.elliptical(300, 30),
         bottomLeft: Radius.elliptical(300, 30),
       ),
       child: Container(
         height: 350,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.tertiary,
+              Color.fromARGB(255, 37, 140, 214),
+              Color.fromARGB(255, 37, 120, 214),
+              Color.fromARGB(255, 35, 90, 209),
             ],
-            transform: const GradientRotation(3.1416 / 4),
+            transform: GradientRotation(3.1416 / 4),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class CurvedboxWidget2 extends StatelessWidget {
-  const CurvedboxWidget2({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        bottomRight: Radius.elliptical(300, 30), // round top-left
-        bottomLeft: Radius.elliptical(300, 30),
-      ),
-      child: Container(
-        height: 350,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.tertiary,
         ),
       ),
     );

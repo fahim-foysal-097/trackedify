@@ -13,6 +13,7 @@ import 'package:spendle/views/pages/export_page.dart';
 import 'package:spendle/views/pages/import_page.dart';
 import 'package:spendle/views/pages/settings_page.dart';
 import 'package:spendle/services/update_service.dart';
+import 'package:spendle/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -424,7 +425,10 @@ class UserPageState extends State<UserPage> {
                         MaterialPageRoute(
                           builder: (context) => const SettingsPage(),
                         ),
-                      ).then((_) => loadUserInfo());
+                      ).then((_) {
+                        loadUserInfo();
+                        NavBarController.apply();
+                      });
                     },
                   ),
 
@@ -475,7 +479,9 @@ class UserPageState extends State<UserPage> {
                         MaterialPageRoute(
                           builder: (BuildContext context) => const ExportPage(),
                         ),
-                      );
+                      ).then((_) {
+                        NavBarController.apply();
+                      });
                     },
                   ),
 
@@ -503,6 +509,7 @@ class UserPageState extends State<UserPage> {
                           ).then((_) {
                             if (!context.mounted) return;
                             Navigator.pop(context);
+                            NavBarController.apply();
                           });
                         },
                         panaraDialogType: PanaraDialogType.error,
@@ -594,7 +601,9 @@ class UserPageState extends State<UserPage> {
                         MaterialPageRoute(
                           builder: (BuildContext context) => const AboutPage(),
                         ),
-                      );
+                      ).then((_) {
+                        NavBarController.apply();
+                      });
                     },
                   ),
                 ],
