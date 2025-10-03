@@ -171,6 +171,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   Widget _buildPreviewCard() {
     return Card(
+      color: Colors.blue.shade50,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
@@ -181,7 +182,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               radius: 28,
               backgroundColor: selectedColor,
               child: Icon(
-                selectedIcon ?? Icons.category,
+                selectedIcon ?? Icons.label,
                 color: Colors.white,
                 size: 28,
               ),
@@ -239,8 +240,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                         ? [
                             BoxShadow(
                               color: color.withValues(alpha: 0.45),
-                              blurRadius: 12.0,
-                              spreadRadius: 2.0,
+                              blurRadius: 8.0,
+                              spreadRadius: 1.5,
                             ),
                           ]
                         : [
@@ -382,7 +383,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: icons.length,
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.all(10),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: MediaQuery.of(context).size.width >= 720 ? 12 : 6,
               crossAxisSpacing: 12,
@@ -537,7 +538,6 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               _buildColorChips(),
               const SizedBox(height: 20),
 
-              // Centered "Pick Icon"
               const Center(
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 8),

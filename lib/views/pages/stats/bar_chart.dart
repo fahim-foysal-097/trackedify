@@ -102,12 +102,6 @@ class MyBarChartState extends State<MyBarChart> {
     }
   }
 
-  LinearGradient get _barsGradient => const LinearGradient(
-    colors: [Colors.blue, Colors.cyan],
-    begin: Alignment.bottomCenter,
-    end: Alignment.topCenter,
-  );
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -219,7 +213,7 @@ class MyBarChartState extends State<MyBarChart> {
                     title: 'Total',
                     value: currency.format(total7),
                     subtitle: '7d',
-                    backgroundColor: Colors.blue.shade50,
+                    backgroundColor: Colors.blue.shade100,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -229,7 +223,7 @@ class MyBarChartState extends State<MyBarChart> {
                     title: 'Avg / day',
                     value: currency.format(avg7),
                     subtitle: '7d',
-                    backgroundColor: Colors.green.shade50,
+                    backgroundColor: Colors.green.shade100,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -241,68 +235,61 @@ class MyBarChartState extends State<MyBarChart> {
                         ? DateFormat('MM/dd').format(maxDay)
                         : '-',
                     subtitle: "7d",
-                    backgroundColor: Colors.orange.shade50,
+                    backgroundColor: Colors.orange.shade100,
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
-          // The bar chart
+          // Last 7 days
           SizedBox(
             height: 300,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: BarChart(
-                BarChartData(
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (group) => Colors.transparent,
-                      tooltipPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      tooltipMargin: 8,
-                      fitInsideHorizontally: true,
-                      fitInsideVertically: true,
-                      getTooltipItem:
-                          (
-                            BarChartGroupData group,
-                            int groupIndex,
-                            BarChartRodData rod,
-                            int rodIndex,
-                          ) {
-                            // Do not show tooltip if the value is 0 or less
-                            if (rod.toY <= 0) return null;
-
-                            // Format currency
-                            final String amountLabel = currency.format(rod.toY);
-
-                            return BarTooltipItem(
-                              amountLabel,
-                              const TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
+              child: LineChart(
+                LineChartData(
+                  minY: 0,
+                  maxY: (computedMaxY <= 0) ? 50.0 : computedMaxY,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: (computedMaxY / 5).ceilToDouble(),
+                    verticalInterval: 1,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.grey.withValues(alpha: 0.18),
+                      strokeWidth: 1,
+                    ),
+                    getDrawingVerticalLine: (value) => FlLine(
+                      color: Colors.grey.withValues(alpha: 0.12),
+                      strokeWidth: 1,
                     ),
                   ),
-
                   titlesData: FlTitlesData(
-                    show: true,
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 36,
-                        getTitlesWidget: getTitles,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) =>
+                            getTitles(value, meta),
                       ),
                     ),
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 42,
+                        interval: (computedMaxY / 4).ceilToDouble(),
+                        getTitlesWidget: (value, meta) => Padding(
+                          padding: const EdgeInsets.only(right: 6.0),
+                          child: Text(
+                            '\$${value.toInt()}',
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ),
                     ),
                     topTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
@@ -312,29 +299,67 @@ class MyBarChartState extends State<MyBarChart> {
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  gridData: const FlGridData(show: false),
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: computedMaxY,
-                  barGroups: List.generate(7, (i) {
-                    return BarChartGroupData(
-                      x: i,
-                      barRods: [
-                        BarChartRodData(
-                          toY: dailyTotals[i],
-                          gradient: _barsGradient,
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: maxDaily,
-                            color: Colors.grey.shade200,
-                          ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: List.generate(dailyTotals.length, (i) {
+                        return FlSpot(i.toDouble(), dailyTotals[i]);
+                      }),
+                      isCurved: true,
+                      preventCurveOverShooting: true,
+                      isStrokeJoinRound: true,
+                      isStrokeCapRound: true,
+                      color: Colors.lightBlue.shade700,
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) =>
+                            FlDotCirclePainter(
+                              radius: 3, // smaller dots
+                              color: Colors.white,
+                              strokeWidth: 1.2,
+                              strokeColor: Colors.blue.shade700,
+                            ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.blue.shade300.withValues(alpha: 0.45),
+                            Colors.blue.shade300.withValues(alpha: 0.12),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
-                      ],
-                      // only show tooltip indicator for non-zero bars
-                      showingTooltipIndicators: dailyTotals[i] > 0
-                          ? [0]
-                          : <int>[],
-                    );
-                  }),
+                      ),
+                    ),
+                  ],
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (touchedSpot) => Colors.black87,
+                      tooltipPadding: const EdgeInsets.all(8),
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((lineBarSpot) {
+                          final x = lineBarSpot.x.toInt().clamp(
+                            0,
+                            dailyTotals.length - 1,
+                          );
+                          final daysAgo = (dailyTotals.length - 1) - x;
+                          final date = DateTime.now().subtract(
+                            Duration(days: daysAgo),
+                          );
+                          final dateStr = DateFormat(
+                            'MMM d, yyyy',
+                          ).format(date);
+                          final y = lineBarSpot.y;
+                          return LineTooltipItem(
+                            '$dateStr\n\$${y.toStringAsFixed(2)}',
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

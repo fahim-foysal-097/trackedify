@@ -128,6 +128,10 @@ class _EditExpensePageState extends State<EditExpensePage> {
     if (kDebugMode) {
       debugPrint('Expense updated');
     }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> pickDate() async {

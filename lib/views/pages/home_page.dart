@@ -565,7 +565,7 @@ class HomePageState extends State<HomePage> {
         context,
         title: 'Could not parse',
         message:
-            'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20". ',
+            'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20".',
         buttonText: "Okay",
         onTapDismiss: () {
           Navigator.of(context).pop();

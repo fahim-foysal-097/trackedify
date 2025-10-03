@@ -3,8 +3,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:spendle/database/database_helper.dart';
 
-// TODO : CHANGE THE CHART
-
 class MonthlyOverviewTab extends StatefulWidget {
   const MonthlyOverviewTab({super.key});
 
@@ -229,8 +227,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     if (intervalY <= 0) intervalY = 1.0;
 
     return Card(
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -390,7 +388,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     final topCats = monthInfo['topCategories'] as List;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(

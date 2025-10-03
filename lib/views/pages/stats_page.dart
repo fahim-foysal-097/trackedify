@@ -57,6 +57,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
+                    color: Colors.deepPurpleAccent,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -84,6 +85,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
+                    color: Colors.deepPurpleAccent,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -115,6 +117,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
+                    color: Colors.deepPurpleAccent,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),

@@ -382,17 +382,16 @@ class ExpenseLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (last30DaysExpenses.isEmpty) {
-      return Card(
-        color: Colors.red,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 6,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              'No data available for last 30 days chart.',
-              style: TextStyle(color: Colors.white),
-            ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data available for last 30 days chart.',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -423,130 +422,128 @@ class ExpenseLineChart extends StatelessWidget {
     double intervalY = (computedTop / 5).ceilToDouble();
     if (intervalY <= 0) intervalY = 1.0;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              "Expenses Trend - Last 30 Days",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 240,
-              child: LineChart(
-                LineChartData(
-                  minY: 0,
-                  maxY: (computedTop <= 0) ? 50.0 : (computedTop + intervalY),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: true,
-                    horizontalInterval: intervalY,
-                    verticalInterval: 3,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.2),
-                      strokeWidth: 1,
-                    ),
-                    getDrawingVerticalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.2),
-                      strokeWidth: 1,
-                    ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            "Expenses Trend - Last 30 Days",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 240,
+            child: LineChart(
+              LineChartData(
+                minY: 0,
+                maxY: (computedTop <= 0) ? 50.0 : (computedTop + intervalY),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  horizontalInterval: intervalY,
+                  verticalInterval: 3,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    strokeWidth: 1,
                   ),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 32,
-                        interval: 3,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt().clamp(0, 29);
-                          final daysAgo = 29 - index;
-                          final date = now.subtract(Duration(days: daysAgo));
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              DateFormat('dd').format(date),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        interval: intervalY,
-                        getTitlesWidget: (value, meta) => Text(
-                          '\$${value.toInt()}',
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+                  getDrawingVerticalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    strokeWidth: 1,
                   ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      preventCurveOverShooting: true,
-                      preventCurveOvershootingThreshold: 0,
-                      isStrokeJoinRound: true,
-                      isStrokeCapRound: true,
-                      color: Colors.deepPurpleAccent,
-                      barWidth: 3,
-                      dotData: const FlDotData(show: false), // ? show dots
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.deepPurpleAccent.withValues(alpha: 0.5),
-                            Colors.deepPurpleAccent.withValues(alpha: 0.2),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (touchedSpot) => Colors.black87,
-                      tooltipPadding: const EdgeInsets.all(8),
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((lineBarSpot) {
-                          final x = lineBarSpot.x.toInt().clamp(0, 29);
-                          final daysAgo = 29 - x;
-                          final date = DateTime.now().subtract(
-                            Duration(days: daysAgo),
-                          );
-                          final dateStr = DateFormat(
-                            'MMM d, yyyy',
-                          ).format(date);
-                          final y = lineBarSpot.y;
-                          return LineTooltipItem(
-                            '$dateStr\n\$${y.toStringAsFixed(2)}',
-                            const TextStyle(color: Colors.white, fontSize: 12),
-                          );
-                        }).toList();
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 32,
+                      interval: 3,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt().clamp(0, 29);
+                        final daysAgo = 29 - index;
+                        final date = now.subtract(Duration(days: daysAgo));
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            DateFormat('dd').format(date),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        );
                       },
                     ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: intervalY,
+                      getTitlesWidget: (value, meta) => Text(
+                        '\$${value.toInt()}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    preventCurveOverShooting: true,
+                    preventCurveOvershootingThreshold: 0,
+                    isStrokeJoinRound: true,
+                    isStrokeCapRound: true,
+                    color: Colors.deepPurpleAccent,
+                    barWidth: 3,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurpleAccent.withValues(alpha: 0.5),
+                          Colors.deepPurpleAccent.withValues(alpha: 0.2),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => Colors.black87,
+                    tooltipPadding: const EdgeInsets.all(8),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((lineBarSpot) {
+                        final x = lineBarSpot.x.toInt().clamp(0, 29);
+                        final daysAgo = 29 - x;
+                        final date = DateTime.now().subtract(
+                          Duration(days: daysAgo),
+                        );
+                        final dateStr = DateFormat('MMM d, yyyy').format(date);
+                        final y = lineBarSpot.y;
+                        return LineTooltipItem(
+                          '$dateStr\n\$${y.toStringAsFixed(2)}',
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      }).toList();
+                    },
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -561,17 +558,16 @@ class ExpenseBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (categoryExpenses.isEmpty) {
-      return Card(
-        color: Colors.red,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 6,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              'No data available for categories.',
-              style: TextStyle(color: Colors.white),
-            ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data available for categories.',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -591,113 +587,113 @@ class ExpenseBarChart extends StatelessWidget {
     double intervalY = (computedTop / 5).ceilToDouble();
     if (intervalY <= 0) intervalY = 1.0;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              "Top Categories Spending",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 240,
-              child: BarChart(
-                BarChartData(
-                  maxY: computedTop + intervalY,
-                  alignment: BarChartAlignment.spaceAround,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (group) => Colors.black87,
-                      tooltipPadding: const EdgeInsets.all(12),
-                      tooltipBorderRadius: BorderRadius.circular(8),
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final idx = group.x.toInt();
-                        final catName = (idx >= 0 && idx < topCategories.length)
-                            ? topCategories[idx].key
-                            : '';
-                        return BarTooltipItem(
-                          '$catName\n\$${rod.toY.toStringAsFixed(2)}',
-                          const TextStyle(color: Colors.white, fontSize: 12),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            "Top Categories Spending",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 240,
+            child: BarChart(
+              BarChartData(
+                maxY: computedTop + intervalY,
+                alignment: BarChartAlignment.spaceAround,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (group) => Colors.black87,
+                    tooltipPadding: const EdgeInsets.all(12),
+                    tooltipBorderRadius: BorderRadius.circular(8),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final idx = group.x.toInt();
+                      final catName = (idx >= 0 && idx < topCategories.length)
+                          ? topCategories[idx].key
+                          : '';
+                      return BarTooltipItem(
+                        '$catName\n\$${rod.toY.toStringAsFixed(2)}',
+                        const TextStyle(color: Colors.white, fontSize: 12),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 32,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= topCategories.length) {
+                          return const SizedBox();
+                        }
+                        final categoryName = topCategories[idx].key;
+                        final shortName = categoryName.length > 6
+                            ? '${categoryName.substring(0, 6)}...'
+                            : categoryName;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Transform.rotate(
+                            angle: -0.785,
+                            child: Text(
+                              shortName,
+                              style: const TextStyle(fontSize: 9),
+                            ),
+                          ),
                         );
                       },
                     ),
                   ),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 32,
-                        interval: 1,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= topCategories.length) {
-                            return const SizedBox();
-                          }
-                          final categoryName = topCategories[idx].key;
-                          final shortName = categoryName.length > 6
-                              ? '${categoryName.substring(0, 6)}...'
-                              : categoryName;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Transform.rotate(
-                              angle: -0.785,
-                              child: Text(
-                                shortName,
-                                style: const TextStyle(fontSize: 9),
-                              ),
-                            ),
-                          );
-                        },
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: intervalY,
+                      getTitlesWidget: (value, meta) => Text(
+                        '\$${value.toInt()}',
+                        style: const TextStyle(fontSize: 10),
                       ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        interval: intervalY,
-                        getTitlesWidget: (value, meta) => Text(
-                          '\$${value.toInt()}',
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: topCategories.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final cat = entry.value;
-                    final color = cat.value['color'] as Color;
-                    final amount = (cat.value['amount'] as num).toDouble();
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          toY: amount,
-                          color: color,
-                          width: 16,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
+                borderData: FlBorderData(show: false),
+                barGroups: topCategories.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final cat = entry.value;
+                  final color = cat.value['color'] as Color;
+                  final amount = (cat.value['amount'] as num).toDouble();
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: amount,
+                        color: color,
+                        width: 16,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -764,40 +760,38 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.availableMonths.isEmpty) {
-      return Card(
-        color: Colors.red,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 6,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              'No data available for month comparison.',
-              style: TextStyle(color: Colors.white),
-            ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data available for month comparison.',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
     }
 
     if (widget.availableMonths.length < 2) {
-      return Card(
-        color: Colors.red,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 6,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const Center(
-                child: Text(
-                  'Need at least two months for comparison.',
-                  style: TextStyle(color: Colors.white),
-                ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Center(
+              child: Text(
+                'Need at least two months for comparison.',
+                style: TextStyle(color: Colors.white),
               ),
-              Lottie.asset('assets/lotties/chart.json', height: 250),
-            ],
-          ),
+            ),
+            Lottie.asset('assets/lotties/chart.json', height: 250),
+          ],
         ),
       );
     }
@@ -809,151 +803,151 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
       'MMM yyyy',
     ).format(DateFormat('yyyy-MM').parse(selectedMonth2));
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Monthly Comparison (Daily Trend)",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    icon: const Icon(
-                      Icons.calendar_month_outlined,
-                      color: Colors.white,
-                    ),
-                    initialValue: selectedMonth1,
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    dropdownColor: Colors.blue,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.blue,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    items: widget.availableMonths.map((month) {
-                      final formatted = DateFormat(
-                        'MMM yyyy',
-                      ).format(DateFormat('yyyy-MM').parse(month));
-                      return DropdownMenuItem(
-                        value: month,
-                        child: Text(
-                          formatted,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedMonth1 = value;
-                        });
-                      }
-                    },
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Monthly Comparison (Daily Trend)",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  icon: const Icon(
+                    Icons.calendar_month_outlined,
+                    color: Colors.white,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    icon: const Icon(
-                      Icons.calendar_month_outlined,
-                      color: Colors.black,
+                  initialValue: selectedMonth1,
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  dropdownColor: Colors.blue,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
                     ),
-                    initialValue: selectedMonth2,
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    dropdownColor: Colors.amber,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.amber,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+                    filled: true,
+                    fillColor: Colors.blue,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                    items: widget.availableMonths.map((month) {
-                      final formatted = DateFormat(
-                        'MMM yyyy',
-                      ).format(DateFormat('yyyy-MM').parse(month));
-                      return DropdownMenuItem(
-                        value: month,
-                        child: Text(formatted),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedMonth2 = value;
-                        });
-                      }
-                    },
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: const BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
+                  items: widget.availableMonths.map((month) {
+                    final formatted = DateFormat(
+                      'MMM yyyy',
+                    ).format(DateFormat('yyyy-MM').parse(month));
+                    return DropdownMenuItem(
+                      value: month,
+                      child: Text(
+                        formatted,
+                        style: const TextStyle(color: Colors.white),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      month1Formatted,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedMonth1 = value;
+                      });
+                    }
+                  },
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: const BoxDecoration(
-                        color: Colors.amber,
-                        shape: BoxShape.circle,
-                      ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  icon: const Icon(
+                    Icons.calendar_month_outlined,
+                    color: Colors.black,
+                  ),
+                  initialValue: selectedMonth2,
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  dropdownColor: Colors.amber,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      month2Formatted,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    filled: true,
+                    fillColor: Colors.amber,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                  ],
+                  ),
+                  items: widget.availableMonths.map((month) {
+                    final formatted = DateFormat(
+                      'MMM yyyy',
+                    ).format(DateFormat('yyyy-MM').parse(month));
+                    return DropdownMenuItem(
+                      value: month,
+                      child: Text(formatted),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedMonth2 = value;
+                      });
+                    }
+                  },
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildLineChart(month1Formatted, month2Formatted),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    month1Formatted,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    month2Formatted,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLineChart(month1Formatted, month2Formatted),
+        ],
       ),
     );
   }
@@ -1284,7 +1278,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
     // Recompute totals each build (cheap)
     final monthlyTotals = _monthlyTotalsForYear(selectedYear);
 
-    // Empty state handling: if selected year has no positive data -> show friendly card
+    // Empty state handling: if selected year has no positive data -> show friendly container
     final bool hasYearData = monthlyTotals.values.any((v) => v > 0.0);
 
     final monthLabels = List.generate(
@@ -1295,74 +1289,70 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
     final formatter = NumberFormat.currency(symbol: "\$");
 
     if (!hasYearData) {
-      return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: Colors.red,
-        elevation: 6,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Yearly Trend',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Yearly Trend',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  DropdownButton<int>(
-                    iconEnabledColor: Colors.white,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                    value: selectedYear,
-                    items: availableYears.map((y) {
-                      return DropdownMenuItem(
-                        value: y,
-                        child: Text(
-                          y.toString(),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (v) {
-                      if (v != null) {
-                        setState(() {
-                          selectedYear = v;
-                        });
-                      }
-                    },
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<int>(
+                  iconEnabledColor: Colors.white,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  value: selectedYear,
+                  items: availableYears.map((y) {
+                    return DropdownMenuItem(
+                      value: y,
+                      child: Text(
+                        y.toString(),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v != null) {
+                      setState(() {
+                        selectedYear = v;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: Column(
+                children: [
+                  Lottie.asset("assets/lotties/list.json", height: 200),
+                  Text(
+                    'No expenses recorded for ${selectedYear.toString()}.',
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Add some expenses or choose another year to view the yearly trend.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.white60),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Center(
-                child: Column(
-                  children: [
-                    Lottie.asset("assets/lotties/list.json", height: 200),
-                    Text(
-                      'No expenses recorded for ${selectedYear.toString()}.',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Add some expenses or choose another year to view the yearly trend.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: Colors.white60),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -1403,143 +1393,140 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
       );
     });
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // header + year selector
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Yearly Trend',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // header + year selector
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Yearly Trend',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 8),
+              DropdownButton<int>(
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                value: selectedYear,
+                items: availableYears.map((y) {
+                  return DropdownMenuItem(value: y, child: Text(y.toString()));
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    setState(() {
+                      selectedYear = v;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Chart area
+          SizedBox(
+            height: 260,
+            child: BarChart(
+              BarChartData(
+                maxY: computedTop + intervalY,
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: intervalY,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.22),
+                    strokeWidth: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
-                DropdownButton<int>(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  value: selectedYear,
-                  items: availableYears.map((y) {
-                    return DropdownMenuItem(
-                      value: y,
-                      child: Text(y.toString()),
-                    );
-                  }).toList(),
-                  onChanged: (v) {
-                    if (v != null) {
-                      setState(() {
-                        selectedYear = v;
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            // Chart area
-            SizedBox(
-              height: 260,
-              child: BarChart(
-                BarChartData(
-                  maxY: computedTop + intervalY,
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: intervalY,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.22),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= monthLabels.length) {
-                            return const SizedBox();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Transform.rotate(
-                              angle: -pi / 3.4,
-                              child: Text(
-                                monthLabels[idx],
-                                style: const TextStyle(fontSize: 11),
-                              ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= monthLabels.length) {
+                          return const SizedBox();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Transform.rotate(
+                            angle: -pi / 3.4,
+                            child: Text(
+                              monthLabels[idx],
+                              style: const TextStyle(fontSize: 11),
                             ),
-                          );
-                        },
-                        interval: 1,
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 46,
-                        interval: intervalY,
-                        getTitlesWidget: (value, meta) => Text(
-                          '\$${value.toInt()}',
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: barGroups,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (group) => Colors.black87,
-                      tooltipPadding: const EdgeInsets.all(8),
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final monthIdx = group.x.toInt();
-                        final month = monthLabels[monthIdx];
-                        final value = rod.toY;
-                        return BarTooltipItem(
-                          '$month\n${formatter.format(value)}',
-                          const TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         );
                       },
+                      interval: 1,
                     ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 46,
+                      interval: intervalY,
+                      getTitlesWidget: (value, meta) => Text(
+                        '\$${value.toInt()}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: barGroups,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (group) => Colors.black87,
+                    tooltipPadding: const EdgeInsets.all(8),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final monthIdx = group.x.toInt();
+                      final month = monthLabels[monthIdx];
+                      final value = rod.toY;
+                      return BarTooltipItem(
+                        '$month\n${formatter.format(value)}',
+                        const TextStyle(color: Colors.white, fontSize: 12),
+                      );
+                    },
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total (${selectedYear.toString()})',
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total (${selectedYear.toString()})',
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              Text(
+                formatter.format(
+                  monthlyTotals.values.fold(0.0, (p, e) => p + e),
                 ),
-                Text(
-                  formatter.format(
-                    monthlyTotals.values.fold(0.0, (p, e) => p + e),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
