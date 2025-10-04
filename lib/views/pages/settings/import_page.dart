@@ -194,7 +194,17 @@ class _ImportPageState extends State<ImportPage> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Database imported successfully.')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Database imported successfully')),
+            ],
+          ),
+        ),
       );
       return true;
     } catch (e) {
@@ -432,9 +442,19 @@ class _ImportPageState extends State<ImportPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'JSON import done — expenses: +$insertedExpenses (skipped $skippedExpenses), '
-            'categories: +$insertedCategories (skipped $skippedCategories), user_info: $insertedUsers',
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'JSON import done — expenses: +$insertedExpenses (skipped $skippedExpenses), '
+                  'categories: +$insertedCategories (skipped $skippedCategories), user_info: $insertedUsers',
+                ),
+              ),
+            ],
           ),
           duration: const Duration(seconds: 5),
         ),

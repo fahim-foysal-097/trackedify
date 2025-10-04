@@ -726,7 +726,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               prefixIcon: const Padding(
                                 padding: EdgeInsets.all(12.0),
                                 child: Icon(
-                                  FontAwesomeIcons.moneyCheckDollar,
+                                  FontAwesomeIcons.wallet,
                                   size: 18,
                                   color: Colors.grey,
                                 ),

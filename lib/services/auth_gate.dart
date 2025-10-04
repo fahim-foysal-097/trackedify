@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:spendle/services/auth_service.dart';
 import 'package:spendle/views/pages/lock_screen.dart';
@@ -34,11 +35,7 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     if (_locked == null) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-        ),
+        body: Center(child: CupertinoActivityIndicator(color: Colors.blue)),
       );
     }
     if (_locked == true) {

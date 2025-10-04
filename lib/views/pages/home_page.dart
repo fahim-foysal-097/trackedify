@@ -337,7 +337,15 @@ class HomePageState extends State<HomePage> {
     if (!_voiceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Voice commands are disabled in Settings'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.mic_off, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Voice commands are disabled in Settings')),
+            ],
+          ),
         ),
       );
       return;
@@ -345,7 +353,17 @@ class HomePageState extends State<HomePage> {
 
     if (!_voiceAvailable || _speech == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Voice recognition not available')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.mic_off, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Voice recognition not available')),
+            ],
+          ),
+        ),
       );
       // try re-initializing in case permission was granted meanwhile
       await _initSpeech();
@@ -394,9 +412,19 @@ class HomePageState extends State<HomePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isListening = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Voice error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Voice error: $e')),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -627,9 +655,19 @@ class HomePageState extends State<HomePage> {
     final amountVal = double.tryParse(amountCtl.text.replaceAll(',', '.'));
     if (amountVal == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid amount')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Invalid amount')),
+            ],
+          ),
+        ),
+      );
       return;
     }
     final categoryVal = categoryCtl.text.trim().isEmpty
@@ -647,8 +685,18 @@ class HomePageState extends State<HomePage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Added: \$${amountVal.toStringAsFixed(2)} - $categoryVal',
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.deepPurple,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Added: \$${amountVal.toStringAsFixed(2)} - $categoryVal',
+              ),
+            ),
+          ],
         ),
       ),
     );

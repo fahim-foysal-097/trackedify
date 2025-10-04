@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:spendle/database/database_helper.dart';
@@ -112,12 +111,19 @@ class _GetStartedPageState extends State<GetStartedPage> {
         dialogShown = false;
       }
 
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text("Database imported successfully!")),
-      // );
-      if (kDebugMode) {
-        debugPrint("Database imported successfullt!");
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Database imported successfully')),
+            ],
+          ),
+        ),
+      );
 
       // Navigate to main app **after successful import**
       if (!mounted) return;

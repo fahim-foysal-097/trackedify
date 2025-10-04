@@ -178,9 +178,8 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
             },
             elevation: 7,
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(width: 3, color: Colors.blue),
-              borderRadius: BorderRadius.circular(30),
+            shape: const CircleBorder(
+              side: BorderSide(width: 3, color: Colors.blue),
             ),
             child: const Icon(Icons.add, size: 28),
           ),

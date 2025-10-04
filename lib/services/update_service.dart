@@ -332,7 +332,10 @@ class UpdateService {
                         builder: (_, progress, _) {
                           return Column(
                             children: [
-                              LinearProgressIndicator(value: progress),
+                              LinearProgressIndicator(
+                                value: progress,
+                                color: Colors.blue,
+                              ),
                               const SizedBox(height: 12),
                               Center(
                                 child: Text(

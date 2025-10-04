@@ -175,7 +175,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
                     crossAxisCount: MediaQuery.of(context).size.width <= 600
                         ? 4
                         : 6,
-                    mainAxisSpacing: 16,
+                    mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
                     childAspectRatio: 0.7,
                   ),
@@ -715,7 +715,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
                                 prefixIcon: const Padding(
                                   padding: EdgeInsets.all(12.0),
                                   child: Icon(
-                                    FontAwesomeIcons.moneyCheckDollar,
+                                    FontAwesomeIcons.wallet,
                                     size: 18,
                                     color: Colors.grey,
                                   ),

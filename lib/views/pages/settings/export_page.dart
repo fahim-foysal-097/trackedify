@@ -190,10 +190,20 @@ class _ExportPageState extends State<ExportPage> {
         final bool isContentUri = savedPath.startsWith('content://');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              isContentUri
-                  ? 'Database exported successfully (SAF URI).'
-                  : 'Database exported to: $savedPath',
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isContentUri
+                        ? 'Database exported successfully (SAF URI).'
+                        : 'Database exported to: $savedPath',
+                  ),
+                ),
+              ],
             ),
             duration: const Duration(seconds: 4),
           ),
@@ -309,8 +319,18 @@ class _ExportPageState extends State<ExportPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'CSV export complete (${savedPaths.length} file(s) saved)',
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'CSV export complete (${savedPaths.length} file(s) saved)',
+                  ),
+                ),
+              ],
             ),
           ),
         );

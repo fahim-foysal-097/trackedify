@@ -42,6 +42,10 @@ class StatsPageState extends State<StatsPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
           ),
           bottom: const TabBar(
+            indicatorColor: Colors.deepPurpleAccent,
+            labelColor: Colors.deepPurple,
+            automaticIndicatorColorAdjustment: true,
+            
             tabs: [
               Tab(text: "All Time"),
               Tab(text: "Monthly"),

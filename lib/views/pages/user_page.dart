@@ -132,7 +132,17 @@ class UserPageState extends State<UserPage> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save profile picture: $e')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.warning_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Failed to save profile picture: $e')),
+              ],
+            ),
+          ),
         );
       }
     }
@@ -185,7 +195,17 @@ class UserPageState extends State<UserPage> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete profile picture: $e')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.warning_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Failed to delete profile picture: $e')),
+              ],
+            ),
+          ),
         );
       }
     }
@@ -468,7 +488,18 @@ class UserPageState extends State<UserPage> {
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text("All data deleted!"),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: Colors.red,
+                                content: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.warning_rounded,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(child: Text('All data deleted')),
+                                  ],
+                                ),
                               ),
                             );
                           }
@@ -550,7 +581,7 @@ class UserPageState extends State<UserPage> {
                         context,
                         title: "Clear downloads?",
                         message:
-                            "This will delete all temporary downloaded updates. Continue?",
+                            "This will delete all temporary downloaded updates (safe). Continue?",
                         textColor: Colors.black54,
                         confirmButtonText: "Clear",
                         cancelButtonText: "Cancel",
@@ -566,8 +597,21 @@ class UserPageState extends State<UserPage> {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(
-                            "Cleared $deleted file(s) from app download folder.",
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: Colors.deepPurple,
+                          content: Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  "Cleared $deleted file(s) from app download folder.",
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
