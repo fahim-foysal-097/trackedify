@@ -175,6 +175,7 @@ class InsightsPageState extends State<InsightsPage> {
         ),
       ),
       body: RefreshIndicator(
+        color: Colors.deepPurple,
         onRefresh: fetchExpenses,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

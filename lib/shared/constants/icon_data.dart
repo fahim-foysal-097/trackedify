@@ -23,7 +23,12 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.lunch_dining,
     Icons.dinner_dining,
     Icons.takeout_dining,
+    Icons.set_meal,
+    Icons.emoji_food_beverage,
+    Icons.restaurant_menu,
+    Icons.local_dining,
   ],
+
   'Shopping': [
     Icons.shopping_cart,
     Icons.shopping_bag,
@@ -40,7 +45,12 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.shopping_basket,
     Icons.qr_code,
     Icons.barcode_reader,
+    Icons.storefront,
+    Icons.shopping_cart_checkout,
+    Icons.sell,
+    Icons.price_check,
   ],
+
   'Entertainment': [
     Icons.movie_outlined,
     Icons.videogame_asset,
@@ -63,7 +73,12 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.attractions,
     Icons.celebration,
     Icons.party_mode,
+    Icons.album,
+    Icons.library_music,
+    Icons.movie_creation,
+    Icons.music_video,
   ],
+
   'Health & Fitness': [
     Icons.health_and_safety,
     Icons.local_hospital,
@@ -84,7 +99,11 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.emergency,
     Icons.vaccines,
     Icons.medical_information,
+    Icons.sports_handball,
+    Icons.sports_gymnastics_rounded,
+    Icons.free_breakfast_outlined,
   ],
+
   'Education': [
     Icons.school_outlined,
     Icons.book,
@@ -102,7 +121,10 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.numbers,
     Icons.functions,
     Icons.biotech,
+    Icons.quiz,
+    Icons.auto_stories,
   ],
+
   'Travel & Transport': [
     Icons.flight_takeoff,
     Icons.directions_car,
@@ -128,7 +150,12 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.local_airport,
     Icons.luggage,
     Icons.tour,
+    Icons.traffic,
+    Icons.train_outlined,
+    Icons.car_rental,
+    Icons.navigation,
   ],
+
   'Home & Utilities': [
     Icons.home_outlined,
     Icons.bed,
@@ -151,7 +178,11 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.gas_meter,
     Icons.electrical_services,
     Icons.plumbing,
+    Icons.home_repair_service,
+    Icons.apartment,
+    Icons.house,
   ],
+
   'Finance': [
     Icons.trending_up,
     Icons.savings,
@@ -170,7 +201,11 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.swap_horiz,
     Icons.bar_chart,
     Icons.pie_chart,
+    Icons.account_circle,
+    Icons.show_chart,
+    Icons.track_changes,
   ],
+
   'Family & Personal': [
     Icons.pets,
     Icons.family_restroom,
@@ -190,7 +225,10 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.diversity_2,
     Icons.diversity_3,
     Icons.wc,
+    Icons.emoji_people,
+    Icons.house_rounded,
   ],
+
   'Technology': [
     Icons.computer,
     Icons.phone_android,
@@ -213,7 +251,11 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.sd_card,
     Icons.usb,
     Icons.bluetooth,
+    Icons.smartphone,
+    Icons.memory,
+    Icons.smart_toy,
   ],
+
   'Sports': [
     Icons.sports_soccer,
     Icons.sports_basketball,
@@ -232,7 +274,10 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.sports_rugby,
     Icons.sports_volleyball,
     Icons.sports,
+    Icons.fitness_center,
+    Icons.self_improvement,
   ],
+
   'Other': [
     Icons.more_horiz,
     Icons.category,
@@ -258,29 +303,94 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.question_mark,
     Icons.settings,
     Icons.tune,
+    Icons.timeline,
+    Icons.history,
+    Icons.map,
   ],
+
+  'Beauty & Grooming': [
+    Icons.brush,
+    Icons.face,
+    Icons.style,
+    Icons.spa,
+    Icons.cut,
+    Icons.content_cut,
+    Icons.shower,
+  ],
+
+  'Gifts & Donations': [
+    Icons.card_giftcard,
+    Icons.redeem,
+    Icons.volunteer_activism,
+    Icons.favorite,
+    Icons.attach_money,
+  ],
+
+  'Subscriptions': [
+    Icons.subscriptions,
+    Icons.autorenew,
+    Icons.repeat,
+    Icons.credit_card,
+  ],
+
+  'Auto & Vehicle': [
+    Icons.directions_car,
+    Icons.car_rental,
+    Icons.car_repair,
+    Icons.ev_station,
+    Icons.local_gas_station,
+    Icons.motorcycle,
+    Icons.directions_bus,
+  ],
+
+  'Work & Office': [
+    Icons.work,
+    Icons.business_center,
+    Icons.account_box,
+    Icons.source,
+    Icons.meeting_room,
+  ],
+
+  'Hobbies & Crafts': [
+    Icons.create,
+    Icons.palette,
+    Icons.toys,
+    Icons.extension,
+    Icons.local_play,
+  ],
+
+  'Gardening & Outdoor': [
+    Icons.nature,
+    Icons.park,
+    Icons.terrain,
+    Icons.grass,
+    Icons.local_florist,
+  ],
+  
+  'Insurance & Legal': [Icons.policy, Icons.gavel, Icons.shield, Icons.gavel],
 };
 
 // Predefined color choices
 final List<Color> predefinedColors = [
   Colors.blue,
-  Colors.red,
-  Colors.green,
-  Colors.orange,
-  Colors.purple,
-  Colors.pink,
-  Colors.teal,
-  Colors.amber,
-  Colors.indigo,
-  Colors.brown,
   Colors.cyan,
-  Colors.deepPurple,
-  Colors.deepOrange,
-  Colors.lime,
-  Colors.grey,
-  Colors.black,
-  Colors.yellow,
-  Colors.purpleAccent,
   Colors.indigoAccent,
+  Colors.indigo,
+  Colors.green,
+  Colors.lightGreenAccent,
+  Colors.lime,
+  Colors.yellow,
+  Colors.amber,
+  Colors.orange,
+  Colors.deepOrange,
+  Colors.red,
+  Colors.pink,
+  Colors.purpleAccent,
+  Colors.purple,
+  Colors.deepPurple,
+  Colors.teal,
   Colors.tealAccent,
+  Colors.brown,
+  Colors.black,
+  Colors.grey,
 ];

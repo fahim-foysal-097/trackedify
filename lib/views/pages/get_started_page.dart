@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/views/widget_tree.dart';
 
@@ -55,14 +57,61 @@ class _GetStartedPageState extends State<GetStartedPage> {
     ).pushReplacement(MaterialPageRoute(builder: (_) => const WidgetTree()));
   }
 
+  /// Quick header-based check whether file looks like SQLite.
+  bool _looksLikeSqlite(File f) {
+    try {
+      final raf = f.openSync(mode: FileMode.read);
+      final header = raf.readSync(16);
+      raf.closeSync();
+      final headerStr = String.fromCharCodes(header);
+      return headerStr.startsWith('SQLite format 3');
+    } catch (e) {
+      if (kDebugMode) debugPrint('SQLite header check failed: $e');
+      return false;
+    }
+  }
+
+  /// More thorough validation: try to open DB read-only and ensure at least
+  /// one of the expected tables exists.
+  Future<bool> _validateDbFile(String path) async {
+    final importFile = File(path);
+    if (!await importFile.exists()) return false;
+
+    // Fast header check first
+    if (!_looksLikeSqlite(importFile)) {
+      if (kDebugMode) debugPrint('File does not have SQLite header');
+      return false;
+    }
+
+    // Attempt to open read-only and check for required tables
+    Database? tmpDb;
+    try {
+      tmpDb = await openDatabase(path, readOnly: true);
+      final rows = await tmpDb.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('expenses','categories','user_info')",
+      );
+      await tmpDb.close();
+      return rows.isNotEmpty;
+    } catch (e) {
+      if (kDebugMode) debugPrint('DB validation failed opening file: $e');
+      try {
+        if (tmpDb != null) await tmpDb.close();
+      } catch (_) {}
+      return false;
+    }
+  }
+
   // Import DB - user picks file
   Future<void> importDb() async {
+    if (isImporting || !mounted) return;
+
     setState(() {
       isImporting = true;
     });
 
-    bool dialogShown = false;
+    bool spinnerShown = false;
     try {
+      // let user pick .db file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['db'],
@@ -71,46 +120,82 @@ class _GetStartedPageState extends State<GetStartedPage> {
       if (!mounted) return;
 
       if (result == null || result.files.single.path == null) {
+        // user cancelled
+        if (kDebugMode) debugPrint('DB import cancelled');
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
         return;
       }
 
-      // Show progress indicator
+      final importPath = result.files.single.path!;
+      final importFile = File(importPath);
+      if (!await importFile.exists()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected file does not exist.')),
+        );
+        return;
+      }
+
+      // show spinner while validating and importing
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CupertinoActivityIndicator()),
       );
-      dialogShown = true;
+      spinnerShown = true;
 
-      final importPath = result.files.single.path!;
-      final importFile = File(importPath);
-
-      if (!await importFile.exists()) {
-        if (dialogShown && mounted && Navigator.canPop(context)) {
+      // Validate the file first (header + schema check)
+      final isValid = await _validateDbFile(importPath);
+      if (!isValid) {
+        if (spinnerShown && mounted && Navigator.canPop(context)) {
           Navigator.pop(context);
-          dialogShown = false;
+          spinnerShown = false;
         }
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Selected file does not exist.")),
+          const SnackBar(
+            content: Text(
+              'Selected file is not a valid Spendle database or is corrupted. Import cancelled.',
+            ),
+          ),
         );
         return;
       }
 
-      // Perform the import
-      await DatabaseHelper().importDatabase(importPath);
-      await DatabaseHelper().closeDatabase();
-
-      if (!mounted) return;
-
-      if (dialogShown && mounted && Navigator.canPop(context)) {
-        Navigator.pop(context);
-        dialogShown = false;
+      // calling helper to copy/import DB
+      try {
+        await DatabaseHelper().importDatabase(importPath);
+      } catch (e) {
+        // helper threw - treat as failure
+        if (spinnerShown && mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+          spinnerShown = false;
+        }
+        if (!mounted) return;
+        if (kDebugMode) debugPrint('Helper importDatabase threw: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
+        return;
       }
 
+      // close any open db handle inside helper
+      try {
+        await DatabaseHelper().closeDatabase();
+      } catch (e) {
+        if (kDebugMode) debugPrint('closeDatabase after import failed: $e');
+      }
+
+      // close spinner
+      if (spinnerShown && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        spinnerShown = false;
+      }
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -131,9 +216,9 @@ class _GetStartedPageState extends State<GetStartedPage> {
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const WidgetTree()));
     } catch (e) {
-      if (dialogShown && mounted && Navigator.canPop(context)) {
+      if (spinnerShown && mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
-        dialogShown = false;
+        spinnerShown = false;
       }
 
       if (mounted) {
@@ -141,6 +226,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
           context,
         ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
       }
+      if (kDebugMode) debugPrint('Import failed: $e');
     } finally {
       if (mounted) {
         setState(() {

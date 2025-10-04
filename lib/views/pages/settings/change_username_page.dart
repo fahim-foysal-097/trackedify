@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:spendle/database/database_helper.dart';
 
 class ChangeUsernamePage extends StatefulWidget {
@@ -110,7 +111,11 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                       hintText: 'New Username',
                       filled: true,
                       fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.edit, color: Colors.grey),
+                      prefixIcon: const Icon(
+                        FontAwesomeIcons.pen,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -123,14 +128,14 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                     height: kToolbarHeight,
                     child: TextButton(
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: Colors.deepPurple,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: _saveUsername,
                       child: const Text(
-                        'Save',
+                        'Save Username',
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),

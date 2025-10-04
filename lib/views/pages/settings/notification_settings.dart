@@ -67,6 +67,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           message:
               "We couldn't get notification permission. Please enable it from system settings.",
           buttonText: "OK",
+          textColor: Colors.black54,
           onTapDismiss: () => Navigator.pop(context),
           panaraDialogType: PanaraDialogType.normal,
         );
@@ -120,10 +121,11 @@ class _NotificationSettingsState extends State<NotificationSettings> {
   void _showTips() {
     PanaraInfoDialog.show(
       context,
-      title: "Tips — Notifications",
+      title: "Tips - Notifications",
       message:
           "Turn on daily reminders to get a quick nudge to add expenses. If notifications don't appear, check system permissions.",
       buttonText: "Got it",
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );

@@ -150,6 +150,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     // If month has no data -> show friendly empty card (keeps dropdown above)
     if (allZero) {
       return Card(
+        color: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 6,
         child: Column(

@@ -54,6 +54,7 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
       message:
           'You can use voice to add expenses. Say for example: "Add food 20" or "Shopping 500". If it fails, check microphone permission and language settings.',
       buttonText: 'Got it',
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );

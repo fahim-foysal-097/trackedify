@@ -8,7 +8,7 @@ class NavBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color bg = Colors.blue;
+    const Color bg = Colors.blueAccent;
     const Color selectedIconColor = Colors.white;
     final Color unselectedIconColor = Colors.white.withValues(alpha: 0.65);
 

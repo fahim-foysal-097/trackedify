@@ -140,7 +140,9 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CupertinoActivityIndicator()));
+      return const Scaffold(
+        body: Center(child: CupertinoActivityIndicator(radius: 15)),
+      );
     }
 
     if (!hasUser) return const OnboardingPage();
@@ -160,7 +162,6 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
           height: FabConfig.fabDiameter,
           child: FloatingActionButton(
             onPressed: () {
-              // open AddPage; handle post-pop logic (refresh) inside then(...) if needed
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AddPage()),
@@ -179,7 +180,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
             elevation: 7,
             backgroundColor: Colors.white,
             shape: const CircleBorder(
-              side: BorderSide(width: 3, color: Colors.blue),
+              side: BorderSide(width: 3, color: Colors.blueAccent),
             ),
             child: const Icon(Icons.add, size: 28),
           ),

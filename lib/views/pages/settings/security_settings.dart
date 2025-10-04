@@ -40,6 +40,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       message:
           'Enable App Lock (PIN) to protect your data. You can change PIN, reset it with your recovery password, or set a recovery password below.',
       buttonText: 'Got it',
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -272,6 +273,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
           : 'Disabling lock will remove the PIN and recovery password. Are you sure?',
       confirmButtonText: "Confirm",
       cancelButtonText: "Cancel",
+      textColor: Colors.black54,
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: v ? PanaraDialogType.success : PanaraDialogType.warning,

@@ -1,49 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/shared/constants/icon_data.dart';
-
-/// Custom ScrollPhysics that *amplifies* the fling velocity so fast swipes
-/// travel further (gives a feeling of acceleration / momentum).
-class AcceleratingScrollPhysics extends ScrollPhysics {
-  /// Maximum multiplier applied to fling velocity (2.5 means up to 2.5x).
-  final double maxMultiplier;
-
-  const AcceleratingScrollPhysics({super.parent, this.maxMultiplier = 2.5});
-
-  @override
-  AcceleratingScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return AcceleratingScrollPhysics(
-      parent: buildParent(ancestor),
-      maxMultiplier: maxMultiplier,
-    );
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-    ScrollMetrics position,
-    double velocity,
-  ) {
-    // If no significant fling or we are already out of range, fall back to default.
-    // Use toleranceFor(position).velocity instead of deprecated 'tolerance'.
-    if (velocity.abs() <= toleranceFor(position).velocity ||
-        position.outOfRange) {
-      return super.createBallisticSimulation(position, velocity);
-    }
-
-    // Compute multiplier based on fling speed with a smooth curve.
-    // Small velocities -> small multiplier. Fast flings -> stronger multiplier up to maxMultiplier.
-    // Adjust the denominator (1200) to change sensitivity.
-    final base = (velocity.abs() / 1200.0).clamp(0.0, maxMultiplier - 1.0);
-    final multiplier =
-        1.0 + base; // final multiplier between 1.0 and maxMultiplier
-
-    final double amplifiedVelocity = velocity * multiplier;
-
-    // Let parent physics create the actual ballistic simulation with the adjusted velocity.
-    return super.createBallisticSimulation(position, amplifiedVelocity);
-  }
-}
 
 class CreateCategoryPage extends StatefulWidget {
   const CreateCategoryPage({super.key});
@@ -106,6 +66,21 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     _pulseController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void showTipsDialog() {
+    const tips =
+        '''You can add custom categories from here. You can also edit categories from settings page.''';
+
+    PanaraInfoDialog.show(
+      context,
+      title: 'Hints & Tips',
+      message: tips,
+      buttonText: 'Got it',
+      onTapDismiss: () => Navigator.pop(context),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.normal,
+    );
   }
 
   Future<void> _openColorPicker() async {
@@ -182,7 +157,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               radius: 28,
               backgroundColor: selectedColor,
               child: Icon(
-                selectedIcon ?? Icons.label,
+                selectedIcon ?? FontAwesomeIcons.tag,
                 color: Colors.white,
                 size: 28,
               ),
@@ -411,16 +386,22 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
+          forceMaterialTransparency: true,
+          toolbarHeight: 70,
           elevation: 0,
-          centerTitle: true,
           title: const Text("Create New Category"),
           leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
+          actionsPadding: const EdgeInsets.only(right: 12),
+          actions: [
+            IconButton(
+              tooltip: 'Tips',
+              icon: const Icon(Icons.lightbulb_outline),
+              onPressed: showTipsDialog,
+            ),
+          ],
         ),
         // two FABs as same-height extended buttons with unique hero tags and solid colors (no alpha)
         floatingActionButton: Padding(
@@ -461,9 +442,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
           padding: const EdgeInsets.symmetric(horizontal: 18.0),
           child: ListView(
             controller: _scrollController,
-            physics: const AcceleratingScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
+            physics: const BouncingScrollPhysics(),
             children: [
               const SizedBox(height: 8),
               _buildPreviewCard(),
@@ -501,7 +480,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                         radius: 20,
                         backgroundColor: selectedColor,
                         child: const Icon(
-                          Icons.label,
+                          FontAwesomeIcons.tag,
                           size: 18,
                           color: Colors.white,
                         ),
