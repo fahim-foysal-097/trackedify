@@ -127,9 +127,19 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Category "$name" added!')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.deepPurple,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text('Category "$name" added!')),
+          ],
+        ),
+      ),
+    );
     Navigator.pop(context, true);
   }
 

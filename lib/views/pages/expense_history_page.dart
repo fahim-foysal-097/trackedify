@@ -91,9 +91,19 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     await loadExpenses();
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Expense deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Expense deleted')),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -115,7 +125,17 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$deletedCount expense(s) deleted')),
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.delete, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('$deletedCount expense(s) deleted')),
+            ],
+          ),
+        ),
       );
     }
   }

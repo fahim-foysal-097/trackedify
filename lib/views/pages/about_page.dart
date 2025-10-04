@@ -301,10 +301,7 @@ class _AboutPageState extends State<AboutPage> {
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 51, 127, 240),
-                      Color.fromARGB(255, 20, 87, 196),
-                    ],
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -423,10 +420,7 @@ class _AboutPageState extends State<AboutPage> {
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 12, 130, 226),
-                      Color.fromARGB(255, 120, 93, 238),
-                    ],
+                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -545,7 +539,7 @@ class _AboutPageState extends State<AboutPage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: t.background,
+                                  color: Colors.blueAccent,
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
@@ -639,14 +633,14 @@ class _AboutPageState extends State<AboutPage> {
               Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF047857), Color(0xFF34D399)],
+                    colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF047857).withValues(alpha: 0.20),
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.20),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),

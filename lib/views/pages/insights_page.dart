@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +23,7 @@ class InsightsPageState extends State<InsightsPage> {
   Map<String, dynamic> insightsData = {};
   List<String> availableMonths = []; // 'yyyy-MM' strings
   List<Map<String, dynamic>> allExpenses = [];
+  Map<String, Color> categoryColorMap = {};
 
   @override
   void initState() {
@@ -160,6 +160,7 @@ class InsightsPageState extends State<InsightsPage> {
         'percentChange': percentChange,
       };
       availableMonths = months;
+      categoryColorMap = categoryColors;
     });
   }
 
@@ -186,16 +187,30 @@ class InsightsPageState extends State<InsightsPage> {
               const SizedBox(height: 16),
               InsightsCards(insights: insightsData),
               const SizedBox(height: 20),
-              ExpenseLineChart(last30DaysExpenses: last30DaysExpenses),
-              const SizedBox(height: 20),
+              Last30DaysChart(last30DaysExpenses: last30DaysExpenses),
+              const SizedBox(height: 16),
               MonthCompareChart(
                 allExpenses: allExpenses,
                 availableMonths: availableMonths,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              TwentyDaysWithPredictionChart(allExpenses: allExpenses),
+              const SizedBox(height: 16),
+              CumulativeAreaChart(last30DaysExpenses: last30DaysExpenses),
+              WeekdayBarChart(last30DaysExpenses: last30DaysExpenses),
+              const SizedBox(height: 16),
               YearlyTrendChart(allExpenses: allExpenses),
-              const SizedBox(height: 20),
-              ExpenseBarChart(categoryExpenses: categoryExpenses),
+              const SizedBox(height: 16),
+              const SizedBox(height: 16),
+              CategoryPieChart(categoryExpenses: categoryExpenses),
+              const SizedBox(height: 16),
+              TopCategoryChart(categoryExpenses: categoryExpenses),
+              const SizedBox(height: 16),
+              TopExpensesList(
+                allExpenses: allExpenses,
+                topN: 6,
+                categoryColors: categoryColorMap,
+              ),
             ],
           ),
         ),
@@ -374,11 +389,11 @@ class InsightsCards extends StatelessWidget {
   }
 }
 
-// -------------------- EXPENSE LINE CHART --------------------
+// -------------------- LAST 30 DAYS CHART --------------------
 
-class ExpenseLineChart extends StatelessWidget {
+class Last30DaysChart extends StatelessWidget {
   final List<Map<String, dynamic>> last30DaysExpenses;
-  const ExpenseLineChart({super.key, required this.last30DaysExpenses});
+  const Last30DaysChart({super.key, required this.last30DaysExpenses});
 
   @override
   Widget build(BuildContext context) {
@@ -550,11 +565,11 @@ class ExpenseLineChart extends StatelessWidget {
   }
 }
 
-// -------------------- EXPENSE BAR CHART --------------------
+// -------------------- TOP CATEGORY CHART --------------------
 
-class ExpenseBarChart extends StatelessWidget {
+class TopCategoryChart extends StatelessWidget {
   final Map<String, Map<String, dynamic>> categoryExpenses;
-  const ExpenseBarChart({super.key, required this.categoryExpenses});
+  const TopCategoryChart({super.key, required this.categoryExpenses});
 
   @override
   Widget build(BuildContext context) {
@@ -813,9 +828,11 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Monthly Comparison (Daily Trend)",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          const Center(
+            child: Text(
+              "Monthly Comparison (Daily Trend)",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -1526,6 +1543,1058 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------- CATEGORY PIE CHART --------------------
+class CategoryPieChart extends StatelessWidget {
+  final Map<String, Map<String, dynamic>> categoryExpenses;
+  const CategoryPieChart({super.key, required this.categoryExpenses});
+
+  @override
+  Widget build(BuildContext context) {
+    if (categoryExpenses.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No category data to show.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    final total = categoryExpenses.values
+        .map((m) => (m['amount'] as num).toDouble())
+        .fold<double>(0.0, (p, e) => p + e);
+
+    final sections = <PieChartSectionData>[];
+    categoryExpenses.forEach((name, m) {
+      final amount = (m['amount'] as num).toDouble();
+      final color = (m['color'] is Color) ? m['color'] as Color : Colors.grey;
+      final percent = total > 0 ? amount / total : 0.0;
+
+      sections.add(
+        PieChartSectionData(
+          value: amount,
+          title: '${(percent * 100).toStringAsFixed(0)}%',
+          color: color,
+          radius: 36,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          badgeWidget: null,
+          showTitle: percent >= 0.06, // avoid tiny labels crowding
+        ),
+      );
+    });
+
+    // Legend builder
+    Widget buildLegend() {
+      final items = categoryExpenses.entries.toList();
+      return Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: items.take(8).map((e) {
+          final name = e.key;
+          final amount = (e.value['amount'] as num).toDouble();
+          final color = (e.value['color'] is Color)
+              ? e.value['color'] as Color
+              : Colors.grey;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$name • \$${amount.toStringAsFixed(0)}',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Category Distribution',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 180,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: PieChart(
+                    PieChartData(
+                      sections: sections,
+                      centerSpaceRadius: 34,
+                      sectionsSpace: 2,
+                      pieTouchData: PieTouchData(
+                        touchCallback: (event, response) {
+                          // no state needed here; tooltip handled by library if used externally
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 6,
+                  child: SingleChildScrollView(child: buildLegend()),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Total: \$${total.toStringAsFixed(2)}',
+            style: const TextStyle(color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------- WEEKDAY BAR CHART --------------------
+class WeekdayBarChart extends StatelessWidget {
+  final List<Map<String, dynamic>> last30DaysExpenses;
+  const WeekdayBarChart({super.key, required this.last30DaysExpenses});
+
+  @override
+  Widget build(BuildContext context) {
+    if (last30DaysExpenses.isEmpty) {
+      return Column(
+        children: [
+         const  SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: const Center(
+              child: Text(
+                'No data available for weekday breakdown.',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Aggregate totals by weekday (Mon=1 ... Sun=7)
+    final Map<int, double> weekdayTotals = {
+      for (int i = 1; i <= 7; i++) i: 0.0,
+    };
+    for (var e in last30DaysExpenses) {
+      final dt = e['date'] as DateTime;
+      final wd = dt.weekday;
+      weekdayTotals[wd] =
+          (weekdayTotals[wd] ?? 0) + (e['amount'] as num).toDouble();
+    }
+
+    // Prepare bar groups (0..6)
+    final labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final maxY = weekdayTotals.values.fold<double>(
+      0.0,
+      (p, e) => e > p ? e : p,
+    );
+    final computedTop = (maxY <= 0) ? 50.0 : maxY;
+    final intervalY = ((computedTop / 4).ceilToDouble() <= 0)
+        ? 1.0
+        : (computedTop / 4).ceilToDouble();
+
+    final groups = List.generate(7, (i) {
+      final val = weekdayTotals[i + 1] ?? 0.0;
+      final color = (val <= 0)
+          ? Colors.grey.withValues(alpha: 0.25)
+          : Colors.deepPurpleAccent;
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: val,
+            color: color,
+            width: 14,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+          ),
+        ],
+      );
+    });
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: Text(
+              'Spending by Weekday',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 180,
+            child: BarChart(
+              BarChartData(
+                maxY: computedTop + intervalY,
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: intervalY,
+                  getDrawingHorizontalLine: (v) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.18),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= labels.length) {
+                          return const SizedBox();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6.0),
+                          child: Text(
+                            labels[idx],
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: intervalY,
+                      getTitlesWidget: (v, meta) => Text(
+                        '\$${v.toInt()}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: groups,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (group) => Colors.black87,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final label = labels[group.x.toInt()];
+                      return BarTooltipItem(
+                        '$label\n\$${rod.toY.toStringAsFixed(2)}',
+                        const TextStyle(color: Colors.white),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------- CUMULATIVE AREA (LAST 30 DAYS) --------------------
+class CumulativeAreaChart extends StatelessWidget {
+  final List<Map<String, dynamic>> last30DaysExpenses;
+  const CumulativeAreaChart({super.key, required this.last30DaysExpenses});
+
+  @override
+  Widget build(BuildContext context) {
+    if (last30DaysExpenses.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data for cumulative chart.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // Build daily totals (30 days) same indexing as Last30DaysChart
+    Map<int, double> dailyTotals = {for (int i = 0; i < 30; i++) i: 0.0};
+    final now = DateTime.now();
+    for (var e in last30DaysExpenses) {
+      DateTime dt = e['date'] as DateTime;
+      int diff = now.difference(dt).inDays;
+      if (diff < 30 && diff >= 0) {
+        dailyTotals[29 - diff] =
+            (dailyTotals[29 - diff] ?? 0) + (e['amount'] as num).toDouble();
+      }
+    }
+
+    // cumulative
+    double running = 0.0;
+    final spots = List.generate(30, (i) {
+      running += dailyTotals[i] ?? 0.0;
+      return FlSpot(i.toDouble(), running);
+    });
+
+    final maxY = spots
+        .map((s) => s.y)
+        .fold<double>(0.0, (p, e) => e > p ? e : p);
+    final computedTop = (maxY <= 0) ? 50.0 : maxY;
+    final intervalY = ((computedTop / 5).ceilToDouble() <= 0)
+        ? 1.0
+        : (computedTop / 5).ceilToDouble();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: Text(
+              'Cumulative Expenses (30 days)',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 220,
+            child: LineChart(
+              LineChartData(
+                minY: 0,
+                maxY: computedTop + intervalY,
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: intervalY,
+                  getDrawingHorizontalLine: (v) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.18),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 5,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt().clamp(0, 29);
+                        final daysAgo = 29 - idx;
+                        final date = now.subtract(Duration(days: daysAgo));
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            DateFormat('dd').format(date),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                      interval: intervalY,
+                      getTitlesWidget: (v, meta) => Text(
+                        '\$${v.toInt()}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    barWidth: 3,
+                    color: Colors.green,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.green.withValues(alpha: 0.45),
+                          Colors.green.withValues(alpha: 0.12),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => Colors.black87,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((t) {
+                        final idx = t.x.toInt().clamp(0, 29);
+                        final daysAgo = 29 - idx;
+                        final date = DateTime.now().subtract(
+                          Duration(days: daysAgo),
+                        );
+                        final dateStr = DateFormat('MMM d').format(date);
+                        return LineTooltipItem(
+                          '$dateStr\n\$${t.y.toStringAsFixed(2)}',
+                          const TextStyle(color: Colors.white),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Current cumulative (30D): \$${spots.last.y.toStringAsFixed(2)}',
+            style: const TextStyle(color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------- TOP EXPENSES LIST (with mini sparklines) --------------------
+class TopExpensesList extends StatelessWidget {
+  final List<Map<String, dynamic>> allExpenses;
+  final int topN;
+  final Map<String, Color> categoryColors;
+  const TopExpensesList({
+    super.key,
+    required this.allExpenses,
+    this.topN = 5,
+    this.categoryColors = const {},
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (allExpenses.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No expenses recorded yet.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // sort descending by amount and take topN
+    final sorted = List<Map<String, dynamic>>.from(allExpenses)
+      ..sort((a, b) => (b['amount'] as num).compareTo(a['amount'] as num));
+    final top = sorted.take(topN).toList();
+
+    Widget miniSparklineFor(Map<String, dynamic> entry) {
+      // Build a tiny sparkline from surrounding days of this entry (if available)
+      final dt = DateTime.parse(entry['date'] as String);
+      final start = dt.subtract(const Duration(days: 6));
+      final Map<int, double> byDay = {for (int i = 0; i < 7; i++) i: 0.0};
+      for (var e in allExpenses) {
+        final d = DateTime.parse(e['date'] as String);
+        if (!d.isBefore(start) && !d.isAfter(dt)) {
+          final idx = d.difference(start).inDays;
+          if (idx >= 0 && idx < 7) {
+            byDay[idx] = (byDay[idx] ?? 0) + (e['amount'] as num).toDouble();
+          }
+        }
+      }
+      final spots = List.generate(
+        7,
+        (i) => FlSpot(i.toDouble(), byDay[i] ?? 0.0),
+      );
+      final maxY =
+          spots.map((s) => s.y).fold<double>(0.0, (p, e) => e > p ? e : p) +
+          1.0;
+      return SizedBox(
+        width: 90,
+        height: 34,
+        child: LineChart(
+          LineChartData(
+            minY: 0,
+            maxY: maxY,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: Colors.deepPurpleAccent,
+                dotData: const FlDotData(show: false),
+                barWidth: 2,
+              ),
+            ],
+            titlesData: const FlTitlesData(show: false),
+            gridData: const FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            lineTouchData: const LineTouchData(enabled: false),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Top Expenses',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: top.map((e) {
+              final amount = (e['amount'] as num).toDouble();
+              final date = DateTime.parse(e['date'] as String);
+              final cat = e['category'] as String? ?? 'Uncategorized';
+              // look up category color from provided map, fallback to a neutral color
+              final displayColor =
+                  categoryColors[cat] ??
+                  (e['color'] is int ? Color(e['color'] as int) : Colors.grey);
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: displayColor.withValues(alpha: 1.0),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cat,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM d, yyyy').format(date),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '\$${amount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        miniSparklineFor(e),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------- 20 DAYS WITH 10 DAYS PREDICTION --------------------
+class TwentyDaysWithPredictionChart extends StatelessWidget {
+  final List<Map<String, dynamic>> allExpenses;
+
+  const TwentyDaysWithPredictionChart({super.key, required this.allExpenses});
+
+  Map<String, dynamic> _fitHoltWinters(
+    List<double> data,
+    double alpha,
+    double beta,
+    double gamma,
+    int period,
+  ) {
+    int n = data.length;
+    if (n == 0) {
+      return {'level': 0.0, 'trend': 0.0, 'seasonal': List.filled(period, 0.0)};
+    }
+
+    // Linear regression for initial level and trend
+    double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (int t = 0; t < n; t++) {
+      double x = t.toDouble();
+      double y = data[t];
+      sumX += x;
+      sumY += y;
+      sumXY += x * y;
+      sumX2 += x * x;
+    }
+    double denom = n * sumX2 - sumX * sumX;
+    double initTrend = denom != 0 ? (n * sumXY - sumX * sumY) / denom : 0.0;
+    double initLevel = (sumY - initTrend * sumX) / n;
+
+    // Detrended series
+    List<double> detrended = List.generate(
+      n,
+      (t) => data[t] - (initLevel + initTrend * t.toDouble()),
+    );
+
+    // Initial seasonal components
+    List<double> seasSums = List.filled(period, 0.0);
+    List<int> seasCounts = List.filled(period, 0);
+    for (int t = 0; t < n; t++) {
+      int s = t % period;
+      seasSums[s] += detrended[t];
+      seasCounts[s]++;
+    }
+    List<double> seasonal = List.generate(
+      period,
+      (s) => seasCounts[s] > 0 ? seasSums[s] / seasCounts[s] : 0.0,
+    );
+
+    // Normalize seasonal to sum to 0
+    double avgS = seasonal.reduce((a, b) => a + b) / period;
+    for (int s = 0; s < period; s++) {
+      seasonal[s] -= avgS;
+    }
+
+    // Handle case with insufficient data for seasonality
+    if (n < period) {
+      gamma = 0.0;
+      seasonal = List.filled(period, 0.0);
+    }
+
+    // Initialize
+    double level = initLevel;
+    double trend = initTrend;
+
+    // Update loop
+    for (int t = 0; t < n; t++) {
+      double currSeason = seasonal[t % period];
+      double deseason = data[t] - currSeason;
+      double newLevel = alpha * deseason + (1 - alpha) * (level + trend);
+      double newTrend = beta * (newLevel - level) + (1 - beta) * trend;
+      double newSeason =
+          gamma * (data[t] - newLevel) + (1 - gamma) * currSeason;
+      level = newLevel;
+      trend = newTrend;
+      seasonal[t % period] = newSeason;
+    }
+
+    return {'level': level, 'trend': trend, 'seasonal': seasonal};
+  }
+
+  List<double> _forecastFromFit(
+    Map<String, dynamic> fit,
+    int n,
+    int steps,
+    int period,
+  ) {
+    List<double> fc = [];
+    double level = fit['level'];
+    double trend = fit['trend'];
+    List<double> seasonal = List<double>.from(fit['seasonal']);
+    for (int k = 1; k <= steps; k++) {
+      int seasonIndex = (n - 1 + k) % period;
+      double f = level + k * trend + seasonal[seasonIndex];
+      fc.add(f < 0 ? 0 : f);
+    }
+    return fc;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (allExpenses.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data available for prediction chart.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    final now = DateTime.now();
+    final dayNow = DateTime(now.year, now.month, now.day);
+    final startFitDate = dayNow.subtract(const Duration(days: 60));
+
+    Map<DateTime, double> daily = {};
+    for (var e in allExpenses) {
+      final dtStr = e['date'] as String;
+      final dt = DateTime.parse(dtStr);
+      final day = DateTime(dt.year, dt.month, dt.day);
+      if (day.isAfter(startFitDate.subtract(const Duration(days: 1))) &&
+          day.isBefore(dayNow.add(const Duration(days: 1)))) {
+        daily[day] = (daily[day] ?? 0) + (e['amount'] as num).toDouble();
+      }
+    }
+
+    List<double> historical = [];
+    DateTime current = startFitDate;
+    while (!current.isAfter(dayNow)) {
+      historical.add(daily[current] ?? 0.0);
+      current = current.add(const Duration(days: 1));
+    }
+
+    int n = historical.length;
+    if (n < 1) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: Text(
+            'No data available for prediction chart.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // Holt-Winters parameters
+    const int period = 7;
+    double alpha = 0.3;
+    double beta = 0.1;
+    double gamma = 0.3;
+
+    // Optimize parameters if sufficient data
+    if (n > 30) {
+      int trainLen = n - 10;
+      List<double> trainData = historical.sublist(0, trainLen);
+      if (trainLen >= period * 2) {
+        double bestMse = double.infinity;
+        double bestAlpha = 0.3;
+        double bestBeta = 0.1;
+        double bestGamma = 0.3;
+        for (double a = 0.1; a <= 0.9; a += 0.2) {
+          for (double b = 0.1; b <= 0.9; b += 0.2) {
+            for (double g = 0.1; g <= 0.9; g += 0.2) {
+              var fit = _fitHoltWinters(trainData, a, b, g, period);
+              List<double> valFc = _forecastFromFit(fit, trainLen, 10, period);
+              double mse = 0;
+              for (int i = 0; i < 10; i++) {
+                double err = valFc[i] - historical[trainLen + i];
+                mse += err * err;
+              }
+              mse /= 10;
+              if (mse < bestMse) {
+                bestMse = mse;
+                bestAlpha = a;
+                bestBeta = b;
+                bestGamma = g;
+              }
+            }
+          }
+        }
+        alpha = bestAlpha;
+        beta = bestBeta;
+        gamma = bestGamma;
+      }
+    }
+
+    var fitAll = _fitHoltWinters(historical, alpha, beta, gamma, period);
+    List<double> forecasts = _forecastFromFit(fitAll, n, 10, period);
+
+    // Shown historical: last 20 days
+    int histShowStart = n - 20;
+    if (histShowStart < 0) histShowStart = 0;
+    int histShowLen = n - histShowStart;
+    List<FlSpot> histSpots = [];
+    for (int i = 0; i < histShowLen; i++) {
+      histSpots.add(FlSpot(i.toDouble(), historical[histShowStart + i]));
+    }
+    List<FlSpot> predSpots = [histSpots.last];
+    for (int i = 0; i < 10; i++) {
+      predSpots.add(FlSpot((histShowLen + i).toDouble(), forecasts[i]));
+    }
+
+    // Chart maxY
+    double maxY = 0;
+    for (var s in histSpots) {
+      maxY = max(maxY, s.y);
+    }
+    for (var s in predSpots) {
+      maxY = max(maxY, s.y);
+    }
+    maxY = maxY > 0 ? maxY : 100.0;
+    double intervalY = (maxY / 5).ceilToDouble();
+    intervalY = intervalY > 0 ? intervalY : 1.0;
+    double chartMaxY = maxY + intervalY;
+
+    // Chart start date
+    DateTime chartStart = dayNow.subtract(Duration(days: histShowLen - 1));
+    int totalPoints = histShowLen + 10;
+    final double predStartX = histShowLen.toDouble();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            "Expenses Trend - Last 20 Days with Next 10 Prediction",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 240,
+            child: LineChart(
+              LineChartData(
+                minY: 0,
+                maxY: chartMaxY,
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  horizontalInterval: intervalY,
+                  verticalInterval: 3,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    strokeWidth: 1,
+                  ),
+                  getDrawingVerticalLine: (value) => FlLine(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 32,
+                      interval: 3,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt().clamp(0, totalPoints - 1);
+                        final date = chartStart.add(Duration(days: index));
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            DateFormat('dd').format(date),
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      interval: intervalY,
+                      getTitlesWidget: (value, meta) => Text(
+                        '\$${value.toInt()}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                extraLinesData: ExtraLinesData(
+                  verticalLines: [
+                    VerticalLine(
+                      x: histShowLen - 0.5,
+                      color: Colors.grey.withValues(alpha: 0.8),
+                      strokeWidth: 1,
+                      dashArray: [5, 5],
+                      label: VerticalLineLabel(
+                        show: true,
+                        alignment: Alignment.topLeft,
+                        direction: LabelDirection.horizontal,
+                        labelResolver: (line) => 'Today',
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: histSpots,
+                    isCurved: true,
+                    preventCurveOverShooting: true,
+                    preventCurveOvershootingThreshold: 0,
+                    isStrokeJoinRound: true,
+                    isStrokeCapRound: true,
+                    color: Colors.deepPurpleAccent,
+                    barWidth: 3,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurpleAccent.withValues(alpha: 0.5),
+                          Colors.deepPurpleAccent.withValues(alpha: 0.2),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                  LineChartBarData(
+                    spots: predSpots,
+                    isCurved: true,
+                    preventCurveOverShooting: true,
+                    preventCurveOvershootingThreshold: 0,
+                    isStrokeJoinRound: true,
+                    isStrokeCapRound: true,
+                    color: Colors.blueAccent,
+                    barWidth: 3,
+                    dashArray: [5, 5],
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.blueAccent.withValues(alpha: 0.3),
+                          Colors.blueAccent.withValues(alpha: 0.1),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => Colors.black87,
+                    tooltipPadding: const EdgeInsets.all(8),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final bool isPredict = spot.x >= predStartX;
+                        final x = spot.x.toInt();
+                        final date = chartStart.add(Duration(days: x));
+                        final dateStr = DateFormat('MMM d, yyyy').format(date);
+                        final y = spot.y;
+                        final prefix = isPredict ? 'Predicted\n' : '';
+                        return LineTooltipItem(
+                          '$prefix$dateStr\n\$${y.toStringAsFixed(2)}',
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.trending_up, color: Colors.blue, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Next day (${DateFormat('MMM d').format(dayNow.add(const Duration(days: 1)))}) predicted expense: \$${forecasts[0].toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
