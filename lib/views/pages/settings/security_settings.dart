@@ -171,7 +171,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, pinCtl.text.trim()),
-            child: const Text('Verify'),
+            child: const Text('Verify', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -366,7 +366,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: const Text(
-                          'Protect the app with a 4–6 digit PIN',
+                          'Protect the app with a 4-6 digit PIN',
                         ),
                         trailing: _processing
                             ? const SizedBox(

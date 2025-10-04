@@ -155,6 +155,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       message:
           'Long-press again to confirm deletion of "$name".\n\n(Press OK to delete.)',
       buttonText: 'Delete',
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.warning,
     );
@@ -168,6 +169,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       message: 'Are you sure you want to delete "$name"?',
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
+      textColor: Colors.black54,
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: PanaraDialogType.error,
@@ -178,9 +180,19 @@ class _EditExpensePageState extends State<EditExpensePage> {
       await db.delete("categories", where: "id = ?", whereArgs: [id]);
       await loadCategories();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Category '$name' deleted!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.delete, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text("Category '$name' deleted!")),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -531,16 +543,36 @@ class _EditExpensePageState extends State<EditExpensePage> {
     FocusScope.of(context).unfocus();
 
     if (selectedCategoryName == null || selectedCategoryName!.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+          content: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Please select a category')),
+            ],
+          ),
+        ),
+      );
       return;
     }
 
     final amount = double.tryParse(expenseController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+          content: Row(
+            children: [
+              Icon(Icons.info, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Please enter a valid amount')),
+            ],
+          ),
+        ),
       );
       return;
     }
@@ -598,6 +630,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       title: "Tips",
       message: tips.isNotEmpty ? tips : "No tips available right now.",
       buttonText: "Got it",
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );

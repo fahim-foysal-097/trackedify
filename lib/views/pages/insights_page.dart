@@ -197,10 +197,10 @@ class InsightsPageState extends State<InsightsPage> {
               TwentyDaysWithPredictionChart(allExpenses: allExpenses),
               const SizedBox(height: 16),
               CumulativeAreaChart(last30DaysExpenses: last30DaysExpenses),
+              const SizedBox(height: 16),
               WeekdayBarChart(last30DaysExpenses: last30DaysExpenses),
               const SizedBox(height: 16),
               YearlyTrendChart(allExpenses: allExpenses),
-              const SizedBox(height: 16),
               const SizedBox(height: 16),
               CategoryPieChart(categoryExpenses: categoryExpenses),
               const SizedBox(height: 16),
@@ -401,7 +401,7 @@ class Last30DaysChart extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
         child: const Center(
@@ -1693,7 +1693,6 @@ class WeekdayBarChart extends StatelessWidget {
     if (last30DaysExpenses.isEmpty) {
       return Column(
         children: [
-         const  SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
               color: Colors.red,
@@ -1760,6 +1759,7 @@ class WeekdayBarChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 16),
           const Center(
             child: Text(
               'Spending by Weekday',
@@ -2284,7 +2284,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
         child: const Center(

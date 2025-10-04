@@ -673,7 +673,10 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                     ),
                     ListTile(
-                      leading: const Icon(Icons.link, color: Colors.white70),
+                      leading: const Icon(
+                        FontAwesomeIcons.squareGithub,
+                        color: Colors.white70,
+                      ),
                       title: const Text(
                         'GitHub',
                         style: TextStyle(color: Colors.white),

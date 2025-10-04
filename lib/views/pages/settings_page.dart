@@ -340,7 +340,7 @@ class SettingsPage extends StatelessWidget {
                   title: 'Visit Website',
                   iconColor: iconColor,
                   onTap: () => launchURL(
-                    "https://fahim-foysal-097.github.io/spendle-website/releases.html",
+                    "https://fahim-foysal-097.github.io/spendle-website/",
                   ),
                 ),
                 SettingsButton(

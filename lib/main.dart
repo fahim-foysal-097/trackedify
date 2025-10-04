@@ -55,6 +55,8 @@ Future<void> main() async {
     // print('Notification init failed: $e');
   }
 
+  NavBarController.apply;
+
   runApp(const MyApp());
 }
 

@@ -798,26 +798,6 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                         ],
                       ),
                       const SizedBox(height: 18),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Pick a color',
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildColorPalette(),
-                      const SizedBox(height: 18),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Pick an icon',
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildIconGrid(),
-                      const SizedBox(height: 26),
                       Row(
                         children: [
                           Expanded(
@@ -864,6 +844,27 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 18),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Pick a color',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildColorPalette(),
+                      const SizedBox(height: 18),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Pick an icon',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildIconGrid(),
+                      const SizedBox(height: 26),
                     ],
                   ),
                 ),

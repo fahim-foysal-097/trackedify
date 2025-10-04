@@ -165,7 +165,7 @@ class _SetPinPageState extends State<SetPinPage> {
                 height: kToolbarHeight,
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Colors.deepPurple,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

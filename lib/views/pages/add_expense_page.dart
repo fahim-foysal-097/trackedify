@@ -98,7 +98,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
       onTapConfirm: () {
         Navigator.pop(context, true);
       },
-      textColor: Colors.grey.shade700,
+      textColor: Colors.black54,
       panaraDialogType: PanaraDialogType.error,
     );
 
@@ -107,9 +107,19 @@ You can create your own categories! Long press a category to delete it. Tap a ca
       await db.delete("categories", where: "id = ?", whereArgs: [id]);
       await loadCategories();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Category '$name' deleted!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.delete, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text("Category '$name' deleted!")),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -498,9 +508,19 @@ You can create your own categories! Long press a category to delete it. Tap a ca
     FocusScope.of(context).unfocus();
 
     if (selectedCategoryName == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+          content: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Please select a category')),
+            ],
+          ),
+        ),
+      );
       return;
     }
 
@@ -514,16 +534,36 @@ You can create your own categories! Long press a category to delete it. Tap a ca
 
     final amount = double.tryParse(expenseController.text);
     if (amount == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter an amount')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+          content: Row(
+            children: [
+              Icon(Icons.info, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Please enter an amount')),
+            ],
+          ),
+        ),
+      );
       return;
     }
 
     if (amount <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid amount')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+          content: Row(
+            children: [
+              Icon(Icons.info, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Please enter a valid amount')),
+            ],
+          ),
+        ),
+      );
       return;
     }
 
@@ -560,6 +600,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
 
       if (addAnotherAfterSave) {
         _clearFields(keepCategory: true);
+        setState(() => addAnotherAfterSave = false);
       } else {
         _clearFields(keepCategory: false);
         Navigator.pop(context);
@@ -581,6 +622,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
       title: "Tips",
       message: tips.isNotEmpty ? tips : "No tips available right now.",
       buttonText: "Got it",
+      textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
