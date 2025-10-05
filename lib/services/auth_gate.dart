@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:spendle/services/auth_service.dart';
-import 'package:spendle/views/pages/lock_screen.dart';
-import 'package:spendle/views/widget_tree.dart';
+import 'package:trackedify/services/auth_service.dart';
+import 'package:trackedify/views/pages/lock_screen.dart';
+import 'package:trackedify/views/widget_tree.dart';
 
 class AuthGate extends StatefulWidget {
   final Widget child;

@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/database/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ImportPage extends StatefulWidget {
@@ -152,7 +152,7 @@ class _ImportPageState extends State<ImportPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Selected file is not a valid Spendle database or is corrupted. Import cancelled.',
+              'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
             ),
           ),
         );

@@ -16,12 +16,12 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String _appName = 'Spendle';
+  String _appName = 'Trackedify';
   String _version = '';
   String _buildNumber = '';
   String _platformInfo = '';
   final String _releasePageUrl =
-      'https://fahim-foysal-097.github.io/spendle-website/releases.html';
+      'https://fahim-foysal-097.github.io/trackedify-website/releases.html';
 
   bool _loadingRelease = false;
   String? _latestTitle;
@@ -394,7 +394,7 @@ class _AboutPageState extends State<AboutPage> {
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () => _launchURL(
-                            'https://github.com/fahim-foysal-097/Spendle',
+                            'https://github.com/fahim-foysal-097/Trackedify',
                           ),
                           icon: const Icon(Icons.code),
                           label: const Text('Source (GitHub)'),
@@ -697,7 +697,7 @@ class _AboutPageState extends State<AboutPage> {
               // Small footer
               Center(
                 child: Text(
-                  'Spendle - Built with care',
+                  'Trackedify - Built with care',
                   style: TextStyle(color: Colors.grey.shade600),
                 ),
               ),

@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/services/auth_service.dart';
-import 'package:spendle/views/pages/set_pin_page.dart';
+import 'package:trackedify/services/auth_service.dart';
+import 'package:trackedify/views/pages/set_pin_page.dart';
 
 class SecuritySettings extends StatefulWidget {
   const SecuritySettings({super.key});

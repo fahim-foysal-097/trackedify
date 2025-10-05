@@ -5,10 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/database/Logic/add_expense.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/views/pages/calculator.dart';
-import 'package:spendle/views/pages/create_category_page.dart';
+import 'package:trackedify/database/Logic/add_expense.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/views/pages/calculator.dart';
+import 'package:trackedify/views/pages/create_category_page.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});

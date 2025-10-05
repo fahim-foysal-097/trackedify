@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/views/pages/insights/charts.dart';
-import 'package:spendle/views/pages/insights/prediction_charts.dart';
-import 'package:spendle/views/pages/insights/summary_cards.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/views/pages/insights/charts.dart';
+import 'package:trackedify/views/pages/insights/prediction_charts.dart';
+import 'package:trackedify/views/pages/insights/summary_cards.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
@@ -258,4 +258,3 @@ class InsightsPageState extends State<InsightsPage> {
     }
   }
 }
-

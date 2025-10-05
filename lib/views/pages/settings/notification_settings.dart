@@ -2,9 +2,9 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/services/notification_service.dart';
-import 'package:spendle/shared/constants/constants.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/notification_service.dart';
+import 'package:trackedify/shared/constants/constants.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 
 // TODO : let user pick time for the reminder
@@ -81,7 +81,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         await _notificationUtil.scheduleDailyAt(
           id: AppConstants.dailyReminderId,
           channelKey: AppStrings.scheduledChannelKey,
-          title: 'Spendle Reminder',
+          title: 'Trackedify Reminder',
           body: 'Don\'t forget to add your expenses today.',
           hour: 20,
           minute: 0,

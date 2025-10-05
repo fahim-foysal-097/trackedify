@@ -6,14 +6,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/constants/text_constant.dart';
-import 'package:spendle/views/pages/about_page.dart';
-import 'package:spendle/views/pages/settings/export_page.dart';
-import 'package:spendle/views/pages/settings/import_page.dart';
-import 'package:spendle/views/pages/settings_page.dart';
-import 'package:spendle/services/update_service.dart';
-import 'package:spendle/views/widget_tree.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/constants/text_constant.dart';
+import 'package:trackedify/views/pages/about_page.dart';
+import 'package:trackedify/views/pages/settings/export_page.dart';
+import 'package:trackedify/views/pages/settings/import_page.dart';
+import 'package:trackedify/views/pages/settings_page.dart';
+import 'package:trackedify/services/update_service.dart';
+import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -625,7 +625,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Release Notes',
                     accent: Colors.green,
                     onTap: () => _launchURL(
-                      "https://fahim-foysal-097.github.io/spendle-website/releases.html",
+                      "https://fahim-foysal-097.github.io/trackedify-website/releases.html",
                     ),
                   ),
 
@@ -634,7 +634,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Website',
                     accent: Colors.deepPurple,
                     onTap: () => _launchURL(
-                      "https://fahim-foysal-097.github.io/spendle-website/",
+                      "https://fahim-foysal-097.github.io/trackedify-website/",
                     ),
                   ),
 
@@ -643,7 +643,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Report Bug',
                     accent: Colors.red,
                     onTap: () => _launchURL(
-                      "https://github.com/fahim-foysal-097/Spendle/issues/new?template=bug_report.md",
+                      "https://github.com/fahim-foysal-097/Trackedify/issues/new?template=bug_report.md",
                     ),
                   ),
 
@@ -675,7 +675,9 @@ class UserPageState extends State<UserPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    appVersion.isNotEmpty ? 'Spendle v$appVersion' : 'Spendle',
+                    appVersion.isNotEmpty
+                        ? 'Trackedify v$appVersion'
+                        : 'Trackedify',
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                 ],

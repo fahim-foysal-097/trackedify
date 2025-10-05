@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/services/update_service.dart';
-import 'package:spendle/views/pages/about_page.dart';
-import 'package:spendle/views/pages/settings/edit_categories_page.dart';
-import 'package:spendle/views/pages/settings/export_page.dart';
-import 'package:spendle/views/pages/settings/import_page.dart';
-import 'package:spendle/views/pages/settings/change_username_page.dart';
-import 'package:spendle/views/pages/settings/notification_settings.dart';
-import 'package:spendle/views/pages/settings/security_settings.dart';
-import 'package:spendle/views/pages/settings/voice_commands_settings.dart';
-import 'package:spendle/views/widget_tree.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/update_service.dart';
+import 'package:trackedify/views/pages/about_page.dart';
+import 'package:trackedify/views/pages/settings/edit_categories_page.dart';
+import 'package:trackedify/views/pages/settings/export_page.dart';
+import 'package:trackedify/views/pages/settings/import_page.dart';
+import 'package:trackedify/views/pages/settings/change_username_page.dart';
+import 'package:trackedify/views/pages/settings/notification_settings.dart';
+import 'package:trackedify/views/pages/settings/security_settings.dart';
+import 'package:trackedify/views/pages/settings/voice_commands_settings.dart';
+import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // TODO : remove 'Clear Downloaded Updates' and add some other settings
@@ -342,7 +342,7 @@ class SettingsPage extends StatelessWidget {
                   title: 'Visit Website',
                   iconColor: iconColor,
                   onTap: () => launchURL(
-                    "https://fahim-foysal-097.github.io/spendle-website/",
+                    "https://fahim-foysal-097.github.io/trackedify-website/",
                   ),
                 ),
                 SettingsButton(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 class OverviewWidget extends StatefulWidget {
   const OverviewWidget({super.key});

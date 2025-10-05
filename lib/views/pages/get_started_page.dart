@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/views/widget_tree.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/views/widget_tree.dart';
 
 class GetStartedPage extends StatefulWidget {
   const GetStartedPage({super.key});
@@ -158,7 +158,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Selected file is not a valid Spendle database or is corrupted. Import cancelled.',
+              'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
             ),
           ),
         );

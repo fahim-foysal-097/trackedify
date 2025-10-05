@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:spendle/views/pages/get_started_page.dart';
+import 'package:trackedify/views/pages/get_started_page.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -9,7 +9,7 @@ class OnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final pages = [
       OnboardingPageModel(
-        title: 'Welcome to Spendle',
+        title: 'Welcome to Trackedify',
         description: 'Manage your expenses efficiently and smartly',
         lottieAsset: 'assets/lotties/wallet2.json',
         bgColor: const Color(0xFF287ce9),

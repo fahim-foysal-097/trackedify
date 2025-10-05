@@ -7,7 +7,7 @@ import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 // TODO : export a single CSV file
 
@@ -253,7 +253,6 @@ class _ExportPageState extends State<ExportPage> {
       final db = await _dbHelper.database;
 
       // ? We will create 2 CSV files in temp (expenses, categories), and call save dialog for each -- needs improvement (single file)
-      
 
       // expenses
       final expenses = await db.query('expenses', orderBy: 'date ASC');

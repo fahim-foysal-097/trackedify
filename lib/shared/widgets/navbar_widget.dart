@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:spendle/data/notifiers.dart';
-import 'package:spendle/shared/constants/constants.dart';
+import 'package:trackedify/data/notifiers.dart';
+import 'package:trackedify/shared/constants/constants.dart';
 
 class NavBarWidget extends StatelessWidget {
   const NavBarWidget({super.key});

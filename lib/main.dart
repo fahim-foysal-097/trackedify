@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/services.dart';
-import 'package:spendle/services/notification_service.dart';
-import 'package:spendle/shared/constants/constants.dart';
-import 'package:spendle/views/widget_tree.dart';
-import 'package:spendle/views/pages/set_pin_page.dart';
-import 'package:spendle/services/auth_gate.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/services/notification_service.dart';
+import 'package:trackedify/shared/constants/constants.dart';
+import 'package:trackedify/views/widget_tree.dart';
+import 'package:trackedify/views/pages/set_pin_page.dart';
+import 'package:trackedify/services/auth_gate.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,7 @@ Future<void> main() async {
         await notifUtil.scheduleDailyAt(
           id: AppConstants.dailyReminderId,
           channelKey: AppStrings.scheduledChannelKey,
-          title: 'Spendle Reminder',
+          title: 'Trackedify Reminder',
           body: 'Don\'t forget to add your expenses today.',
           hour: 20,
           minute: 00,
@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Assigning the global key
-      title: 'Spendle',
+      title: 'Trackedify',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigoAccent,

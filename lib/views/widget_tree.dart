@@ -3,16 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:spendle/data/notifiers.dart';
-import 'package:spendle/shared/constants/constants.dart';
-import 'package:spendle/shared/widgets/navbar_widget.dart';
-import 'package:spendle/views/pages/home_page.dart';
-import 'package:spendle/views/pages/insights_page.dart';
-import 'package:spendle/views/pages/stats_page.dart';
-import 'package:spendle/views/pages/user_page.dart';
-import 'package:spendle/views/pages/add_expense_page.dart';
-import 'package:spendle/views/pages/onboarding_page.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/data/notifiers.dart';
+import 'package:trackedify/shared/constants/constants.dart';
+import 'package:trackedify/shared/widgets/navbar_widget.dart';
+import 'package:trackedify/views/pages/home_page.dart';
+import 'package:trackedify/views/pages/insights_page.dart';
+import 'package:trackedify/views/pages/stats_page.dart';
+import 'package:trackedify/views/pages/user_page.dart';
+import 'package:trackedify/views/pages/add_expense_page.dart';
+import 'package:trackedify/views/pages/onboarding_page.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 class NavBarController {
   static Future<void> apply() async {

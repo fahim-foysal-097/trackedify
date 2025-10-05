@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.spendle"
+    namespace = "com.fahim.trackedify"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.fahim.spendle"
+        applicationId = "com.fahim.trackedify"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 9

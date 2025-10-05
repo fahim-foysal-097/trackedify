@@ -1,6 +1,6 @@
-# Spendle <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/App-Download-blue?style=for-the-badge"></a>
+# Trackedify <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/App-Download-blue?style=for-the-badge"></a>
 
-Spendle is a lightweight personal expense tracker designed to help you take control of your finances with ease.
+Trackedify is a lightweight personal expense tracker designed to help you take control of your finances with ease.
 
 - Track & categorize your expenses
 - Analyze your spending patterns with detailed insights

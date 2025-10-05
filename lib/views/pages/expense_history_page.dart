@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/database/database_helper.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {

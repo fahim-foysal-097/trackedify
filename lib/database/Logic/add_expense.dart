@@ -1,4 +1,4 @@
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 Future<void> addExpense({
   required String category,

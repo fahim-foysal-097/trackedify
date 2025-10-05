@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:spendle/services/auth_service.dart';
-import 'package:spendle/views/pages/set_pin_page.dart';
+import 'package:trackedify/services/auth_service.dart';
+import 'package:trackedify/views/pages/set_pin_page.dart';
 
 class LockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -164,7 +164,7 @@ class _LockScreenState extends State<LockScreen> {
                             ),
                             const SizedBox(height: 18),
                             const Text(
-                              'Unlock Spendle',
+                              'Unlock Trackedify',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,

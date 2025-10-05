@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:spendle/views/pages/settings_page.dart';
-import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/views/widget_tree.dart';
+import 'package:trackedify/views/pages/settings_page.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/views/widget_tree.dart';
 
 class WelcomeWidget extends StatefulWidget {
   const WelcomeWidget({super.key});

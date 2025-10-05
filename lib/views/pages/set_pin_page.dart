@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:spendle/services/auth_service.dart';
+import 'package:trackedify/services/auth_service.dart';
 
 class SetPinPage extends StatefulWidget {
   final bool isChanging;

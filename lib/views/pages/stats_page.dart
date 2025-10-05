@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:spendle/views/pages/stats/last7days_stats.dart';
-import 'package:spendle/views/pages/stats/monthly_overview.dart';
-import 'package:spendle/views/pages/stats/all_time_stats.dart';
+import 'package:trackedify/views/pages/stats/last7days_stats.dart';
+import 'package:trackedify/views/pages/stats/monthly_overview.dart';
+import 'package:trackedify/views/pages/stats/all_time_stats.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});

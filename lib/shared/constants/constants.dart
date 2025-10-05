@@ -7,7 +7,7 @@ class AppStrings {
   static const String scheduledChannelKey = 'scheduled_channel';
   static const String scheduledChannelName = 'Scheduled Notifications';
   static const String scheduledChannelDescription =
-      'This channel is for scheduled notification for spendle';
+      'This channel is for scheduled notification for trackedify';
 
   static const String defaultIcon = 'resource://drawable/ic_notification';
 

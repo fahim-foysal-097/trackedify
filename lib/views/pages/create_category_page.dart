@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:spendle/data/category_suggestion_data.dart';
-import 'package:spendle/data/icon_and_color_data.dart';
-import 'package:spendle/database/database_helper.dart';
+import 'package:trackedify/data/category_suggestion_data.dart';
+import 'package:trackedify/data/icon_and_color_data.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 /// Local suggestion helper (simple on-device "AI" (not really, just rules) using Levenshtein).
 class CategorySuggestionHelper {

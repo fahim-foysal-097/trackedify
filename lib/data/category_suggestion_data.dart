@@ -4,7 +4,7 @@
 // (lib/shared/constants/icon_data.dart). Edit/add entries here.
 
 import 'package:flutter/material.dart';
-import 'package:spendle/data/icon_and_color_data.dart';
+import 'package:trackedify/data/icon_and_color_data.dart';
 
 /// Simple container for icon + color suggestions.
 class CategoryData {

@@ -12,7 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
   static const _repoOwner = "fahim-foysal-097";
-  static const _repoName = "spendle";
+  static const _repoName = "trackedify";
 
   /// Optional GitHub API token for higher rate limit
   static const String? _githubToken = null; // null for none
@@ -110,7 +110,7 @@ class UpdateService {
 
       final headers = <String, String>{
         "Accept": "application/vnd.github+json",
-        "User-Agent": "Spendle-App",
+        "User-Agent": "Trackedify-App",
         if (_githubToken != null) "Authorization": "token $_githubToken",
       };
 
@@ -303,7 +303,7 @@ class UpdateService {
       // Use app-specific external storage (no runtime storage permission needed)
       final dir = await getExternalStorageDirectory();
       if (dir == null) return;
-      final filePath = "${dir.path}/spendle-$version.apk";
+      final filePath = "${dir.path}/trackedify-$version.apk";
       final file = File(filePath);
 
       final request = http.Request('GET', Uri.parse(url));

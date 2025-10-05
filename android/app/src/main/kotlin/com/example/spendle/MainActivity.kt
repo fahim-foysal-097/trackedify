@@ -1,4 +1,4 @@
-package com.example.spendle
+package com.fahim.trackedify
 
 import io.flutter.embedding.android.FlutterActivity
 
