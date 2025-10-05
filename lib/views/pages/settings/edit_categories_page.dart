@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/constants/icon_data.dart';
+import 'package:spendle/data/icon_and_color_data.dart';
 import 'package:spendle/views/pages/create_category_page.dart';
 import 'package:spendle/views/widget_tree.dart';
 

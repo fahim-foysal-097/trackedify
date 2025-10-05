@@ -366,7 +366,7 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.grass,
     Icons.local_florist,
   ],
-  
+
   'Insurance & Legal': [Icons.policy, Icons.gavel, Icons.shield, Icons.gavel],
 };
 

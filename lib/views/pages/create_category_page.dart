@@ -2,8 +2,88 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
+import 'package:spendle/data/category_suggestion_data.dart';
+import 'package:spendle/data/icon_and_color_data.dart';
 import 'package:spendle/database/database_helper.dart';
-import 'package:spendle/shared/constants/icon_data.dart';
+
+/// Local suggestion helper (simple on-device "AI" (not really, just rules) using Levenshtein).
+class CategorySuggestionHelper {
+  final Map<String, CategoryData> dataset;
+  CategorySuggestionHelper({required this.dataset});
+
+  // Levenshtein distance (iterative DP)
+  int _levenshtein(String s, String t) {
+    final m = s.length;
+    final n = t.length;
+    if (m == 0) return n;
+    if (n == 0) return m;
+
+    List<int> prev = List<int>.generate(n + 1, (i) => i);
+    List<int> curr = List<int>.filled(n + 1, 0);
+
+    for (int i = 1; i <= m; i++) {
+      curr[0] = i;
+      for (int j = 1; j <= n; j++) {
+        int cost = s[i - 1] == t[j - 1] ? 0 : 1;
+        curr[j] = [
+          curr[j - 1] + 1, // insertion
+          prev[j] + 1, // deletion
+          prev[j - 1] + cost, // substitution
+        ].reduce((a, b) => a < b ? a : b);
+      }
+      // swap
+      final temp = prev;
+      prev = curr;
+      curr = temp;
+    }
+    return prev[n];
+  }
+
+  /// Suggest a CategoryData for the [input].
+  ///
+  /// Respects user's explicit choices (if [userPickedIcon] / [userPickedColor] are true
+  /// then those fields are not overridden).
+  ///
+  /// If no close match is found, returns null.
+  CategoryData? suggest(
+    String input, {
+    bool userPickedIcon = false,
+    bool userPickedColor = false,
+  }) {
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.isEmpty) return null;
+    if (dataset.isEmpty) return null;
+
+    String? bestKey;
+    CategoryData? bestData;
+    int? bestDist;
+
+    dataset.forEach((key, data) {
+      final k = key.toLowerCase().trim();
+      if (k.isEmpty) return;
+      final dist = _levenshtein(trimmed, k);
+      if (bestDist == null || dist < bestDist!) {
+        bestDist = dist;
+        bestKey = k;
+        bestData = data;
+      }
+    });
+
+    if (bestDist == null || bestData == null || bestKey == null) return null;
+
+    // normalized distance (0.0..1.0)
+    final norm =
+        bestDist! /
+        (trimmed.length > bestKey!.length ? trimmed.length : bestKey!.length);
+
+    // Only accept suggestions that are reasonably similar.
+    // tweak this threshold to be more/less aggressive.
+    if (norm > 0.45) return null;
+
+    // return a copy (icon & color present)
+    return CategoryData(bestData!.icon, bestData!.color);
+  }
+}
 
 class CreateCategoryPage extends StatefulWidget {
   const CreateCategoryPage({super.key});
@@ -15,17 +95,26 @@ class CreateCategoryPage extends StatefulWidget {
 class _CreateCategoryPageState extends State<CreateCategoryPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
-  Color selectedColor = Colors.blue;
+
+  // Persistent selections
+  Color selectedColor = Colors.blue; // initial color (user may change)
   IconData? selectedIcon;
 
-  bool get _iconPicked => selectedIcon != null;
+  // Flags to know if user explicitly picked things (so AI never overwrites)
+  bool userPickedColor = false;
+  bool userPickedIcon = false;
+
+  // AI suggestions (nullable)
+  IconData? aiSuggestedIcon;
+  Color? aiSuggestedColor;
+
+  // suggestion helper that reads dataset from separate file
+  late final CategorySuggestionHelper _suggestionHelper;
 
   late final Map<String, bool> _expandedCategories;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnim;
   late final ScrollController _scrollController;
-
-  // unique hero tags for FABs (stable for this page instance)
   late final Object _scrollFabHeroTag;
   late final Object _saveFabHeroTag;
 
@@ -33,7 +122,9 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
   void initState() {
     super.initState();
 
-    // Expand all categories by default
+    // pass the external dataset into the helper so dataset can be edited independently
+    _suggestionHelper = CategorySuggestionHelper(dataset: categoryDataset);
+
     _expandedCategories = {
       for (final entry in iconCategories.entries) entry.key: true,
     };
@@ -45,6 +136,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
+
     _pulseAnim = CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -57,8 +149,6 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     _saveFabHeroTag = UniqueKey();
   }
 
-  void _onNameChanged() => setState(() {});
-
   @override
   void dispose() {
     _nameController.removeListener(_onNameChanged);
@@ -68,10 +158,35 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     super.dispose();
   }
 
+  // When user types, compute suggestion immediately.
+  void _onNameChanged() {
+    final input = _nameController.text;
+    final suggestion = _suggestionHelper.suggest(
+      input,
+      userPickedIcon: userPickedIcon,
+      userPickedColor: userPickedColor,
+    );
+
+    setState(() {
+      // Update AI suggestions but respect user picks
+      aiSuggestedIcon = (userPickedIcon) ? null : suggestion?.icon;
+      aiSuggestedColor = (userPickedColor) ? null : suggestion?.color;
+
+      // If user hasn't picked a color, auto-apply the suggested color to selectedColor.
+      if (!userPickedColor && aiSuggestedColor != null) {
+        selectedColor = aiSuggestedColor!;
+      }
+
+      // We purposefully do NOT automatically set selectedIcon. We show AI suggestion
+      // visually (star overlay). But if you want AI to auto-apply icon as default,
+      // uncomment the following line:
+      // if (!userPickedIcon && aiSuggestedIcon != null) selectedIcon = aiSuggestedIcon;
+    });
+  }
+
   void showTipsDialog() {
     const tips =
-        '''You can add custom categories from here. You can also edit categories from settings page.''';
-
+        'You can add custom categories from here. You can also edit categories from settings page.';
     PanaraInfoDialog.show(
       context,
       title: 'Hints & Tips',
@@ -89,7 +204,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text("Select Custom Color"),
+        title: const Text('Select Custom Color'),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: selectedColor,
@@ -102,14 +217,18 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              setState(() => selectedColor = picked);
+              setState(() {
+                selectedColor = picked;
+                userPickedColor = true; // user explicitly picked a color
+                aiSuggestedColor = null; // clear AI suggestion once user picks
+              });
               Navigator.pop(context);
             },
-            child: const Text("Select"),
+            child: const Text('Select'),
           ),
         ],
       ),
@@ -118,12 +237,16 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   Future<void> _saveCategory() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty || !_iconPicked) return;
+    // allow saving if either user selected icon or AI suggested one exists
+    final iconToSave = selectedIcon ?? aiSuggestedIcon;
+    final colorToSave = selectedColor;
+
+    if (name.isEmpty || iconToSave == null) return;
 
     await DatabaseHelper().addCategory(
       name,
-      selectedColor.toARGB32(),
-      selectedIcon!.codePoint,
+      colorToSave.toARGB32(),
+      iconToSave.codePoint,
     );
 
     if (!mounted) return;
@@ -145,7 +268,6 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   void _scrollToTop() {
     if (_scrollController.hasClients) {
-      // A smooth animated scroll with decelerating curve.
       _scrollController.animateTo(
         0.0,
         duration: const Duration(milliseconds: 420),
@@ -154,7 +276,28 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     }
   }
 
+  // Helper to pick color from chips
+  void _onPickColor(Color color) {
+    setState(() {
+      selectedColor = color;
+      userPickedColor = true;
+      aiSuggestedColor = null;
+    });
+  }
+
+  // Effective color to display: if user hasn't picked but AI suggested exists, prefer AI suggestion
+  Color get _effectiveColor {
+    if (userPickedColor) return selectedColor;
+    return aiSuggestedColor ?? selectedColor;
+  }
+
+  // whether there's a valid icon available (user-picked or AI suggestion)
+  bool get _hasIconForSave => selectedIcon != null || aiSuggestedIcon != null;
+
   Widget _buildPreviewCard() {
+    final displayIcon = selectedIcon ?? aiSuggestedIcon ?? FontAwesomeIcons.tag;
+    final showStar = selectedIcon == null && aiSuggestedIcon != null;
+
     return Card(
       color: Colors.blue.shade50,
       elevation: 2,
@@ -163,14 +306,21 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: selectedColor,
-              child: Icon(
-                selectedIcon ?? FontAwesomeIcons.tag,
-                color: Colors.white,
-                size: 28,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: _effectiveColor,
+                  child: Icon(displayIcon, color: Colors.white, size: 28),
+                ),
+                if (showStar)
+                  const Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Icon(Icons.star, size: 16, color: Colors.amber),
+                  ),
+              ],
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -211,17 +361,16 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         spacing: 10,
         runSpacing: 10,
         children: [
-          // predefined colors
           for (final color in predefinedColors)
             GestureDetector(
-              onTap: () => setState(() => selectedColor = color),
+              onTap: () => _onPickColor(color),
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 240),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    boxShadow: selectedColor == color
+                    boxShadow: _effectiveColor == color
                         ? [
                             BoxShadow(
                               color: color.withValues(alpha: 0.45),
@@ -240,27 +389,25 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                   child: CircleAvatar(
                     radius: 26,
                     backgroundColor: color,
-                    child: selectedColor == color
+                    child: _effectiveColor == color
                         ? const Icon(Icons.check, color: Colors.white)
                         : null,
                   ),
                 ),
               ),
             ),
-
-          // custom color pick button
           GestureDetector(
             onTap: _openColorPicker,
             child: Container(
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: selectedColor,
+                color: _effectiveColor,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.grey.shade200),
                 boxShadow: [
                   BoxShadow(
-                    color: selectedColor.withValues(alpha: 0.18),
+                    color: _effectiveColor.withValues(alpha: 0.18),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -276,13 +423,18 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   Widget _buildIconTile(IconData icon) {
     final isSelected = icon == selectedIcon;
+    final isSuggested =
+        (aiSuggestedIcon != null && icon == aiSuggestedIcon && !isSelected);
 
     return GestureDetector(
-      onTap: () => setState(() => selectedIcon = icon),
+      onTap: () => setState(() {
+        selectedIcon = icon;
+        userPickedIcon = true;
+        aiSuggestedIcon = null; // user override
+      }),
       child: AnimatedBuilder(
         animation: _pulseAnim,
         builder: (context, child) {
-          // animated border width and blur (double values)
           final double borderWidth = isSelected
               ? (2.0 + _pulseAnim.value * 4.0)
               : 0.0;
@@ -298,13 +450,13 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? selectedColor : Colors.transparent,
+                color: isSelected ? _effectiveColor : Colors.transparent,
                 width: borderWidth,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: selectedColor.withValues(alpha: 0.36),
+                        color: _effectiveColor.withValues(alpha: 0.36),
                         blurRadius: blur,
                         spreadRadius: 1.0,
                       ),
@@ -317,14 +469,29 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                       ),
                     ],
             ),
-            child: CircleAvatar(
-              radius: 26,
-              backgroundColor: isSelected ? selectedColor : Colors.white,
-              child: Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.grey.shade700,
-                size: 22,
-              ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: isSelected ? _effectiveColor : Colors.white,
+                  child: Icon(
+                    icon,
+                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                    size: 22,
+                  ),
+                ),
+                if (isSuggested)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Icon(
+                      Icons.star,
+                      size: 14,
+                      color: Colors.amber.shade600,
+                    ),
+                  ),
+              ],
             ),
           );
         },
@@ -336,7 +503,6 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // category header - NO background, transparent look
         InkWell(
           onTap: () => setState(
             () => _expandedCategories[title] =
@@ -389,7 +555,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   @override
   Widget build(BuildContext context) {
-    final bool canSave = _nameController.text.trim().isNotEmpty && _iconPicked;
+    final bool canSave =
+        _nameController.text.trim().isNotEmpty && _hasIconForSave;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -399,7 +566,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
           forceMaterialTransparency: true,
           toolbarHeight: 70,
           elevation: 0,
-          title: const Text("Create New Category"),
+          title: const Text('Create New Category'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => Navigator.of(context).maybePop(),
@@ -413,31 +580,26 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
             ),
           ],
         ),
-        // two FABs as same-height extended buttons with unique hero tags and solid colors (no alpha)
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(right: 12.0, bottom: 12.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Left FAB: scroll to top (extended to match save)
               FloatingActionButton.extended(
                 heroTag: _scrollFabHeroTag,
                 onPressed: _scrollToTop,
                 icon: const Icon(Icons.arrow_upward),
                 label: const Text('Top'),
-                // solid modern color, no alpha
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 elevation: 4,
               ),
               const SizedBox(width: 12),
-              // Right FAB: Save
               FloatingActionButton.extended(
                 heroTag: _saveFabHeroTag,
                 onPressed: canSave ? _saveCategory : null,
                 icon: const Icon(Icons.check),
                 label: Text(canSave ? 'Save' : 'Enter name & icon'),
-                // solid modern teal color, no alpha
                 backgroundColor: canSave
                     ? const Color(0xFF2563EB)
                     : Colors.grey.shade300,
@@ -457,15 +619,13 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               const SizedBox(height: 8),
               _buildPreviewCard(),
               const SizedBox(height: 18),
-
-              // modern reimagined name field inside a subtle card container
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withAlpha(8),
                       blurRadius: 10,
                       spreadRadius: 0.6,
                     ),
@@ -482,13 +642,13 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
-                    hintText: "Category name",
+                    hintText: 'Category name',
                     hintStyle: TextStyle(color: Colors.grey.shade500),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                       child: CircleAvatar(
                         radius: 20,
-                        backgroundColor: selectedColor,
+                        backgroundColor: _effectiveColor,
                         child: const Icon(
                           FontAwesomeIcons.tag,
                           size: 18,
@@ -503,7 +663,12 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                     suffixIcon: _nameController.text.trim().isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear),
-                            onPressed: () => _nameController.clear(),
+                            onPressed: () => setState(() {
+                              _nameController.clear();
+                              aiSuggestedIcon = null;
+                              aiSuggestedColor = null;
+                              // Keep user picks intact; clearing name doesn't undo explicit picks.
+                            }),
                           )
                         : null,
                     border: InputBorder.none,
@@ -515,38 +680,32 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 ),
               ),
               const SizedBox(height: 22),
-
-              // Centered "Pick Color"
               const Center(
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text(
-                    "Pick Color",
+                    'Pick Color',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                 ),
               ),
               _buildColorChips(),
               const SizedBox(height: 20),
-
               const Center(
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text(
-                    "Pick Icon",
+                    'Pick Icon',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                 ),
               ),
-
-              // icon categories list
               for (final entry in iconCategories.entries)
                 _buildIconCategory(
                   entry.key,
                   entry.value,
                   _expandedCategories[entry.key] ?? true,
                 ),
-
               const SizedBox(height: 18),
             ],
           ),

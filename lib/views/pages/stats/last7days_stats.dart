@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +32,8 @@ class MyBarChartState extends State<MyBarChart> {
   }
 
   Future<void> loadExpenses() async {
+    setState(() => isLoading = true);
+
     final db = await DatabaseHelper().database;
     final allData = await db.query('expenses', orderBy: 'date ASC');
 
@@ -105,7 +108,7 @@ class MyBarChartState extends State<MyBarChart> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CupertinoActivityIndicator());
     }
 
     // Check if all values are 0
@@ -197,7 +200,6 @@ class MyBarChartState extends State<MyBarChart> {
       ),
     ];
 
-    // give the bar chart a bounded height to avoid unbounded/expanding behavior
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(

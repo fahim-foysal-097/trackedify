@@ -43,6 +43,19 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 
 <a href="https://fahim-foysal-097.github.io/spendle-website/"><img src="https://img.shields.io/badge/Go to Website-Download-blue?style=for-the-badge"></a>
 
+## TODO
+
+- [x] Voice commands & App locker
+- [x] Charts & Insights
+- [x] Auto updater & Notifications
+- [x] Smart Suggestions
+- [ ] Budget & Income functionality
+- [ ] Smart alerts (e.g., overspending warnings)
+- [ ] Cloud backup
+- [ ] AI integration
+- [ ] Light/Dark theme
+- [ ] Export reports as PDF/Image
+
 ## Test/Build
 
 ### Test in debug mode

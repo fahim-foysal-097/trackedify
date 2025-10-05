@@ -223,7 +223,7 @@ class UserPageState extends State<UserPage> {
 
   void showTipsDialog() {
     const tips =
-        '''Tap the profile picture to edit and long-press to delete. Use the buttons below to export/import data, check for updates, and more. Also delete temporary downloaded updates to save space.''';
+        '''Tap the profile picture to edit and long-press to delete. Use the buttons below to export/import data, check for updates, and more.''';
 
     PanaraInfoDialog.show(
       context,

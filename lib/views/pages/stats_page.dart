@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:spendle/views/pages/stats/bar_chart.dart';
+import 'package:spendle/views/pages/stats/last7days_stats.dart';
 import 'package:spendle/views/pages/stats/monthly_overview.dart';
-import 'package:spendle/views/pages/stats/pie_chart.dart';
+import 'package:spendle/views/pages/stats/all_time_stats.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -45,7 +45,7 @@ class StatsPageState extends State<StatsPage> {
             indicatorColor: Colors.deepPurpleAccent,
             labelColor: Colors.deepPurple,
             automaticIndicatorColorAdjustment: true,
-            
+
             tabs: [
               Tab(text: "All Time"),
               Tab(text: "Monthly"),
@@ -61,7 +61,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurpleAccent,
+                    color: Colors.deepPurple,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -89,7 +89,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurpleAccent,
+                    color: Colors.deepPurple,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -121,7 +121,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurpleAccent,
+                    color: Colors.deepPurple,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),

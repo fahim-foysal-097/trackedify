@@ -41,7 +41,6 @@ class UpdateService {
   }
 
   /// Expose a helper to check whether automatic check already ran this session.
-  /// (Useful for debugging / tests.)
   static bool hasCheckedThisSession() => _hasCheckedThisSession;
 
   /// Reset the session flag (rarely needed; useful for tests or developer flows)
@@ -97,6 +96,8 @@ class UpdateService {
     // Mark as checked for the session if this was an automatic invocation.
     if (!manualCheck) {
       _hasCheckedThisSession = true;
+      // Clears download
+      UpdateService.clearDownloadFolder();
     }
 
     try {

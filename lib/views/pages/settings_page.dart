@@ -23,7 +23,7 @@ class SettingsPage extends StatelessWidget {
 
     void showTipsDialog() {
       const tips =
-          '''There are useful functions & settings like import/export here. You can also set daily reminders and app lock. Also you should delete temporary downloaded updates to save space.''';
+          '''There are useful functions & settings like import/export here. You can also set daily reminders and app lock.''';
 
       PanaraInfoDialog.show(
         context,

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -12,10 +13,9 @@ class MonthlyOverviewTab extends StatefulWidget {
 
 class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   List<Map<String, dynamic>> monthlyData = [];
-  // keep grouped raw expenses by month to compute daily totals quickly
   Map<String, List<Map<String, dynamic>>> groupedByMonth = {};
   String? selectedMonth; // yyyy-MM
-  bool loading = true;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -24,7 +24,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   }
 
   Future<void> loadMonthlyData() async {
-    setState(() => loading = true);
+    setState(() => isLoading = true);
     final db = await DatabaseHelper().database;
     final allExpenses = await db.query('expenses', orderBy: 'date DESC');
 
@@ -85,7 +85,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       setState(() {
         monthlyData = summary;
         selectedMonth = initSelected;
-        loading = false;
+        isLoading = false;
       });
     }
   }
@@ -543,8 +543,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Center(child: CircularProgressIndicator());
+    if (isLoading) {
+      return const Center(child: CupertinoActivityIndicator());
     }
 
     // If there is absolutely no monthly data and selectedMonth is null,
