@@ -17,6 +17,8 @@ import 'package:spendle/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+// TODO : remove 'Clear Downloaded Updates' and add some other settings
+
 class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});
 

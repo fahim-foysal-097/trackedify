@@ -47,8 +47,11 @@ Spendle is a lightweight personal expense tracker designed to help you take cont
 
 - [x] Voice commands & App locker
 - [x] Charts & Insights
+- [x] Predictions
 - [x] Auto updater & Notifications
-- [x] Smart Suggestions
+- [x] Smart Suggestions (in create category)
+- [ ] Make compatible with web
+- [ ] Save images as notes
 - [ ] Budget & Income functionality
 - [ ] Smart alerts (e.g., overspending warnings)
 - [ ] Cloud backup

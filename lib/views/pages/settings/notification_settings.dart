@@ -7,6 +7,8 @@ import 'package:spendle/services/notification_service.dart';
 import 'package:spendle/shared/constants/constants.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 
+// TODO : let user pick time for the reminder
+
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
 

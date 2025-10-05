@@ -5,14 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:intl/intl.dart';
 
-class MyPieChart extends StatefulWidget {
-  const MyPieChart({super.key});
+class AllTimeStats extends StatefulWidget {
+  const AllTimeStats({super.key});
 
   @override
-  State<MyPieChart> createState() => MyPieChartState();
+  State<AllTimeStats> createState() => AllTimeStatsState();
 }
 
-class MyPieChartState extends State<MyPieChart> {
+class AllTimeStatsState extends State<AllTimeStats> {
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
   Map<String, double> categoryTotals = {};
   Map<String, int> categoryCounts = {};
@@ -184,6 +184,17 @@ class MyPieChartState extends State<MyPieChart> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          children: [
+            SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
+            const CupertinoActivityIndicator(radius: 12),
+          ],
+        ),
+      );
+    }
+
     if (categoryTotals.isEmpty) {
       return Center(
         child: Stack(
@@ -351,245 +362,238 @@ class MyPieChartState extends State<MyPieChart> {
       ),
     ];
 
-    if (isLoading) {
-      return const Center(child: CupertinoActivityIndicator());
-    } else {
-      return SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                'Expenses by Category',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: Text(
+              'Expenses by Category',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            // Pie chart area (fixed height to avoid unbounded height)
-            SizedBox(
-              height: chartHeight,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  PieChart(
-                    PieChartData(
-                      sections: sections,
-                      sectionsSpace: 4,
-                      startDegreeOffset: -90,
-                      centerSpaceRadius: centerSpaceRadius,
-                      pieTouchData: PieTouchData(
-                        touchCallback: (event, response) {
-                          setState(() {
-                            if (response != null &&
-                                response.touchedSection != null &&
-                                event is! PointerExitEvent &&
-                                event is! PointerUpEvent) {
-                              touchedIndex =
-                                  response.touchedSection!.touchedSectionIndex;
-                            } else {
-                              touchedIndex = null;
-                            }
-                          });
-                        },
-                      ),
+          ),
+          // Pie chart area (fixed height to avoid unbounded height)
+          SizedBox(
+            height: chartHeight,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PieChart(
+                  PieChartData(
+                    sections: sections,
+                    sectionsSpace: 4,
+                    startDegreeOffset: -90,
+                    centerSpaceRadius: centerSpaceRadius,
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, response) {
+                        setState(() {
+                          if (response != null &&
+                              response.touchedSection != null &&
+                              event is! PointerExitEvent &&
+                              event is! PointerUpEvent) {
+                            touchedIndex =
+                                response.touchedSection!.touchedSectionIndex;
+                          } else {
+                            touchedIndex = null;
+                          }
+                        });
+                      },
                     ),
                   ),
-                  // Center overlay showing total expense
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '\$${totalExpense.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Legend: wrap so it uses available width and doesn't force height
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: entries.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final data = entry.value;
-                  final cat =
-                      categoryMap[data.key] ??
-                      {'color': Colors.grey, 'icon': Icons.category};
-                  final isSelected = touchedIndex == index;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        touchedIndex = isSelected ? null : index;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.amberAccent.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: cat['color'] as Color,
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(width: 2, color: Colors.black26)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${data.key} (\$${data.value.toStringAsFixed(2)})',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.normal,
-                              color: isSelected
-                                  ? Colors.black87
-                                  : Colors.grey[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Insights cards grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Quick Insights',
+                ),
+                // Center overlay showing total expense
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Total',
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: (MediaQuery.of(context).size.width >= 680)
-                          ? 4
-                          : 2,
-                      childAspectRatio: 1.2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                    const SizedBox(height: 6),
+                    Text(
+                      '\$${totalExpense.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                    children: statCards,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
-  }
+          ),
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    String? subValue,
-    required Color color,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+          const SizedBox(height: 12),
+
+          // Legend: wrap so it uses available width and doesn't force height
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: entries.asMap().entries.map((entry) {
+                final index = entry.key;
+                final data = entry.value;
+                final cat =
+                    categoryMap[data.key] ??
+                    {'color': Colors.grey, 'icon': Icons.category};
+                final isSelected = touchedIndex == index;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      touchedIndex = isSelected ? null : index;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.amberAccent.withValues(alpha: 0.3)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: cat['color'] as Color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(width: 2, color: Colors.black26)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${data.key} (\$${data.value.toStringAsFixed(2)})',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.black87
+                                : Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Insights cards grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Center(
+                  child: Text(
+                    'Quick Insights',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: (MediaQuery.of(context).size.width >= 680)
+                        ? 4
+                        : 2,
+                    childAspectRatio: 1.2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  children: statCards,
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (subValue != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                subValue,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
+}
+
+Widget _buildStatCard({
+  required IconData icon,
+  required String title,
+  required String value,
+  String? subValue,
+  required Color color,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (subValue != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subValue,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70, fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
 }

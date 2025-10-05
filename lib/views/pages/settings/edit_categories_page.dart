@@ -6,6 +6,7 @@ import 'package:spendle/database/database_helper.dart';
 import 'package:spendle/data/icon_and_color_data.dart';
 import 'package:spendle/views/pages/create_category_page.dart';
 import 'package:spendle/views/widget_tree.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class EditCategoriesPage extends StatefulWidget {
   const EditCategoriesPage({super.key});
@@ -264,7 +265,14 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   Widget _buildList() {
-    if (_loading) return const Center(child: CupertinoActivityIndicator());
+    if (_loading) {
+      return const Column(
+        children: [
+          SizedBox(height: 150),
+          Center(child: CupertinoActivityIndicator(radius: 11)),
+        ],
+      );
+    }
 
     if (_filtered.isEmpty) {
       return Padding(
@@ -654,6 +662,43 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
     Navigator.pop(context, true);
   }
 
+  Future<void> _openColorPicker() async {
+    Color picked = _selectedColor;
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Select Custom Color', textAlign: TextAlign.center),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: _selectedColor,
+            onColorChanged: (color) => picked = color,
+            enableAlpha: false,
+            displayThumbColor: true,
+            pickerAreaHeightPercent: 0.7,
+            pickerAreaBorderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _selectedColor = picked;
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Select'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildIconGrid() {
     return Wrap(
       spacing: 8,
@@ -685,36 +730,69 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
   }
 
   Widget _buildColorPalette() {
+    final bool isCustom = !widget.colorOptions.any(
+      (c) => c.toARGB32() == _selectedColor.toARGB32(),
+    );
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: widget.colorOptions.map((c) {
-        final selected = c.toARGB32() == _selectedColor.toARGB32();
-        return GestureDetector(
-          onTap: () => setState(() => _selectedColor = c),
+      children: [
+        ...widget.colorOptions.map((c) {
+          final selected = c.toARGB32() == _selectedColor.toARGB32();
+          return GestureDetector(
+            onTap: () => setState(() => _selectedColor = c),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: selected ? 46 : 40,
+              width: selected ? 46 : 40,
+              decoration: BoxDecoration(
+                color: c,
+                shape: BoxShape.circle,
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: c.withValues(alpha: 0.28),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: selected
+                  ? const Icon(Icons.check, color: Colors.white)
+                  : null,
+            ),
+          );
+        }),
+        GestureDetector(
+          onTap: _openColorPicker,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            height: selected ? 46 : 40,
-            width: selected ? 46 : 40,
+            height: isCustom ? 46 : 40,
+            width: isCustom ? 46 : 40,
             decoration: BoxDecoration(
-              color: c,
+              color: isCustom ? _selectedColor : Colors.transparent,
               shape: BoxShape.circle,
-              boxShadow: selected
+              border: isCustom ? null : Border.all(color: Colors.grey.shade300),
+              boxShadow: isCustom
                   ? [
                       BoxShadow(
-                        color: c.withValues(alpha: 0.28),
+                        color: _selectedColor.withValues(alpha: 0.28),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),
                     ]
                   : null,
             ),
-            child: selected
-                ? const Icon(Icons.check, color: Colors.white)
-                : null,
+            child: Center(
+              child: Icon(
+                Icons.color_lens,
+                color: isCustom ? Colors.white : Colors.grey.shade700,
+              ),
+            ),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 
@@ -829,11 +907,13 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                                 ),
                               ),
                               child: _saving
-                                  ? const SizedBox(
-                                      height: 18,
-                                      width: 18,
-                                      child: CupertinoActivityIndicator(
-                                        color: Colors.white,
+                                  ? const Center(
+                                      child: SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CupertinoActivityIndicator(
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     )
                                   : const Text(

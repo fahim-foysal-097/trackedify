@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:spendle/database/database_helper.dart';
 
+// TODO : improve cards style
+
 class MonthlyOverviewTab extends StatefulWidget {
   const MonthlyOverviewTab({super.key});
 
@@ -544,7 +546,14 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CupertinoActivityIndicator());
+      return Center(
+        child: Column(
+          children: [
+            SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
+            const CupertinoActivityIndicator(radius: 12),
+          ],
+        ),
+      );
     }
 
     // If there is absolutely no monthly data and selectedMonth is null,

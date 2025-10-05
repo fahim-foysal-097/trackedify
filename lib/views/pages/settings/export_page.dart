@@ -9,6 +9,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:spendle/database/database_helper.dart';
 
+// TODO : export a single CSV file
+
 class ExportPage extends StatefulWidget {
   const ExportPage({super.key});
 
@@ -250,7 +252,8 @@ class _ExportPageState extends State<ExportPage> {
 
       final db = await _dbHelper.database;
 
-      // We will create 2 CSV files in temp (expenses, categories), and call save dialog for each.
+      // ? We will create 2 CSV files in temp (expenses, categories), and call save dialog for each -- needs improvement (single file)
+      
 
       // expenses
       final expenses = await db.query('expenses', orderBy: 'date ASC');

@@ -11,10 +11,12 @@ class StatsPage extends StatefulWidget {
 }
 
 class StatsPageState extends State<StatsPage> {
-  final GlobalKey<MyPieChartState> _pieKey = GlobalKey<MyPieChartState>();
+  // for refreshing
+  final GlobalKey<AllTimeStatsState> _pieKey = GlobalKey<AllTimeStatsState>();
   final GlobalKey<MonthlyOverviewTabState> _monthlyKey =
       GlobalKey<MonthlyOverviewTabState>();
-  final GlobalKey<MyBarChartState> _barKey = GlobalKey<MyBarChartState>();
+  final GlobalKey<Last7daysStatsState> _barKey =
+      GlobalKey<Last7daysStatsState>();
 
   Future<void> refreshAll() async {
     final futures = <Future<void>>[];
@@ -73,7 +75,7 @@ class StatsPageState extends State<StatsPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const SizedBox(height: 20),
-                            MyPieChart(key: _pieKey),
+                            AllTimeStats(key: _pieKey),
                           ],
                         ),
                       ),
@@ -132,7 +134,7 @@ class StatsPageState extends State<StatsPage> {
                         child: Column(
                           children: [
                             const SizedBox(height: 8),
-                            MyBarChart(key: _barKey),
+                            Last7daysStats(key: _barKey),
                           ],
                         ),
                       ),

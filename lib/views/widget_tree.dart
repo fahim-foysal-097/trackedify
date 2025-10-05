@@ -18,7 +18,7 @@ class NavBarController {
   static Future<void> apply() async {
     await SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
-      overlays: [SystemUiOverlay.top], // keep status bar only
+      overlays: [SystemUiOverlay.top], // status bar only
     );
 
     SystemChrome.setSystemUIOverlayStyle(
@@ -173,7 +173,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
                 if (idx == 2) insightKey.currentState?.refresh();
                 if (idx == 3) userKey.currentState?.refresh();
 
-                // ensure nav rules reapply after returning
+                // reapply navrules after coming back
                 NavBarController.apply();
               });
             },

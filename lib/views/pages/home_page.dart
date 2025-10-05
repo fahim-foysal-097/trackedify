@@ -44,6 +44,7 @@ class HomePageState extends State<HomePage> {
     overviewKey.currentState?.refresh();
   }
 
+  // ! this shit is still slow
   @override
   void initState() {
     super.initState();
@@ -738,7 +739,10 @@ class HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('Recent Expense', style: KTextstyle.headerBlackText),
+                const Text(
+                  'Recent Expenses',
+                  style: KTextstyle.headerBlackText,
+                ),
                 Row(
                   children: [
                     GestureDetector(

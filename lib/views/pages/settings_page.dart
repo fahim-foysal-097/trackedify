@@ -14,6 +14,8 @@ import 'package:spendle/views/pages/settings/voice_commands_settings.dart';
 import 'package:spendle/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// TODO : remove 'Clear Downloaded Updates' and add some other settings
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 

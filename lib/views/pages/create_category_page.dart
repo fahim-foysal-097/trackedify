@@ -186,7 +186,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   void showTipsDialog() {
     const tips =
-        'You can add custom categories from here. You can also edit categories from settings page.';
+        'You can add custom categories from here. You can also edit categories from settings page. Also there is smart suggestions for icons and colors.';
     PanaraInfoDialog.show(
       context,
       title: 'Hints & Tips',
@@ -203,8 +203,9 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Select Custom Color'),
+        title: const Text('Select Custom Color', textAlign: TextAlign.center),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: selectedColor,
@@ -212,6 +213,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
             enableAlpha: false,
             displayThumbColor: true,
             pickerAreaHeightPercent: 0.7,
+            pickerAreaBorderRadius: BorderRadius.circular(10),
           ),
         ),
         actions: [
@@ -295,12 +297,13 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
   bool get _hasIconForSave => selectedIcon != null || aiSuggestedIcon != null;
 
   Widget _buildPreviewCard() {
-    final displayIcon = selectedIcon ?? aiSuggestedIcon ?? FontAwesomeIcons.tag;
+    final displayIcon =
+        selectedIcon ?? aiSuggestedIcon ?? FontAwesomeIcons.tags;
     final showStar = selectedIcon == null && aiSuggestedIcon != null;
 
     return Card(
       color: Colors.blue.shade50,
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
@@ -650,7 +653,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                         radius: 20,
                         backgroundColor: _effectiveColor,
                         child: const Icon(
-                          FontAwesomeIcons.tag,
+                          FontAwesomeIcons.tags,
                           size: 18,
                           color: Colors.white,
                         ),

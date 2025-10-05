@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:spendle/database/database_helper.dart';
 import 'package:intl/intl.dart';
 
-class MyBarChart extends StatefulWidget {
-  const MyBarChart({super.key});
+class Last7daysStats extends StatefulWidget {
+  const Last7daysStats({super.key});
 
   @override
-  State<MyBarChart> createState() => MyBarChartState();
+  State<Last7daysStats> createState() => Last7daysStatsState();
 }
 
-class MyBarChartState extends State<MyBarChart> {
+class Last7daysStatsState extends State<Last7daysStats> {
   List<double> dailyTotals = List.filled(7, 0);
   List<DateTime> last7Days = [];
   bool isLoading = true;
@@ -108,7 +108,14 @@ class MyBarChartState extends State<MyBarChart> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CupertinoActivityIndicator());
+      return Center(
+        child: Column(
+          children: [
+            SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
+            const CupertinoActivityIndicator(radius: 12),
+          ],
+        ),
+      );
     }
 
     // Check if all values are 0

@@ -51,7 +51,7 @@ Future<void> main() async {
       await notifUtil.cancelAllSchedules();
     }
   } catch (e) {
-    // If DB or notifications fail, continue to run app but log if needed.
+    // DB or notifications failed
     // print('Notification init failed: $e');
   }
 
@@ -63,20 +63,18 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // GlobalKey is used to access the NavigatorState from anywhere in the application
-  // This is crucial for navigating from background notification actions.
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey, // Assign the global key to the MaterialApp
+      navigatorKey: navigatorKey, // Assigning the global key
       title: 'Spendle',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigoAccent,
-          primary: const Color(0xFF00b4d8),
+          primary: Colors.deepPurple,
           secondary: const Color(0xFF56CCF2),
           tertiary: const Color(0xFF2F80ED),
           brightness: Brightness.light,
