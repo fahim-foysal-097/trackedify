@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
@@ -18,6 +19,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
   final TextEditingController _searchController = TextEditingController();
 
+  bool isLoading = true;
+
   // Multi-select state
   bool selectionMode = false;
   Set<int> selectedExpenses = {};
@@ -30,6 +33,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   Future<void> loadCategories() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final dbCategories = await DatabaseHelper().getCategories();
     setState(() {
       categoryMap = {
@@ -39,6 +46,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
             'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
           },
       };
+      isLoading = false;
     });
   }
 
@@ -72,6 +80,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   Future<void> loadExpenses() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final db = await DatabaseHelper().database;
     final data = await db.query('expenses', orderBy: 'date DESC, id DESC');
     setState(() {
@@ -79,6 +91,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       filteredExpenses = data;
     });
     await checkTips();
+    isLoading = false;
   }
 
   Map<String, dynamic> getCategory(String name) {
@@ -477,7 +490,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Using PopScope to intercept system/back pops when selectionMode is active.
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CupertinoActivityIndicator()));
+    }
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: PopScope<Object?>(

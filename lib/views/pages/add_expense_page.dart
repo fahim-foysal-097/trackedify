@@ -310,8 +310,8 @@ You can create your own categories! Long press a category to delete it. Tap a ca
     final DateTime? setDate = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1095)),
-      lastDate: DateTime.now().add(const Duration(days: 700)),
+      firstDate: DateTime(1975),
+      lastDate: DateTime(2060),
     );
     if (setDate != null) {
       setState(() {

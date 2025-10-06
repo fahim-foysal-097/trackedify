@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -33,6 +34,8 @@ class UserPageState extends State<UserPage> {
   int? userId;
   String appVersion = "";
 
+  int loadCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +45,7 @@ class UserPageState extends State<UserPage> {
 
   void refresh() {
     loadUserInfo();
+    loadAppVersion();
   }
 
   Future<void> loadAppVersion() async {
@@ -54,6 +58,7 @@ class UserPageState extends State<UserPage> {
     } catch (e) {
       if (kDebugMode) debugPrint('Failed to read package info: $e');
     }
+    loadCount++;
   }
 
   Future<void> _launchURL(String url) async {
@@ -100,6 +105,8 @@ class UserPageState extends State<UserPage> {
         whereArgs: [userId],
       );
     }
+
+    loadCount++;
   }
 
   /// Pick an image and copy it into app documents for stable storage.
@@ -240,6 +247,10 @@ class UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (loadCount != 2) {
+      return const Center(child: CupertinoActivityIndicator(radius: 12));
+    }
+
     final imageProvider = _profileImageExists()
         ? FileImage(File(profilePicPath!)) as ImageProvider
         : const AssetImage('assets/img/pfp.jpg');

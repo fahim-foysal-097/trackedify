@@ -375,8 +375,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1095)),
-      lastDate: DateTime.now().add(const Duration(days: 700)),
+      firstDate: DateTime(1975),
+      lastDate: DateTime(2060),
     );
     if (picked != null) {
       setState(() {

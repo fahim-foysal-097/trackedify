@@ -889,6 +889,9 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: const Text('Cancel'),
                             ),
