@@ -1337,29 +1337,43 @@ class WeekdayBarChart extends StatelessWidget {
           (weekdayTotals[wd] ?? 0) + (e['amount'] as num).toDouble();
     }
 
-    // Prepare bar groups (0..6)
+    // labels for bottom axis
     final labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // pick a distinct color for each weekday (Mon -> Sun)
+    final weekdayColors = <Color>[
+      Colors.red.shade400,
+      Colors.orange.shade400,
+      Colors.amber,
+      Colors.green.shade600,
+      Colors.teal.shade400,
+      Colors.blue.shade600,
+      Colors.purple.shade400,
+    ];
+
+    // compute max and intervals
     final maxY = weekdayTotals.values.fold<double>(
       0.0,
       (p, e) => e > p ? e : p,
     );
     final computedTop = (maxY <= 0) ? 50.0 : maxY;
-    final intervalY = ((computedTop / 4).ceilToDouble() <= 0)
-        ? 1.0
-        : (computedTop / 4).ceilToDouble();
+    // divide into 4 horizontal segments; ensure interval >= 1
+    final rawInterval = computedTop / 4.0;
+    final intervalY = (rawInterval <= 0.0) ? 1.0 : rawInterval;
 
+    // Prepare bar groups (0..6)
     final groups = List.generate(7, (i) {
       final val = weekdayTotals[i + 1] ?? 0.0;
       final color = (val <= 0)
           ? Colors.grey.withValues(alpha: 0.25)
-          : Colors.deepPurpleAccent;
+          : weekdayColors[i % weekdayColors.length];
       return BarChartGroupData(
         x: i,
         barRods: [
           BarChartRodData(
             toY: val,
             color: color,
-            width: 14,
+            width: 18,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
           ),
         ],
@@ -1375,23 +1389,23 @@ class WeekdayBarChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           const Center(
             child: Text(
               'Spending by Weekday',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 180,
+            height: 220,
             child: BarChart(
               BarChartData(
                 maxY: computedTop + intervalY,
                 gridData: FlGridData(
                   show: true,
                   horizontalInterval: intervalY,
-                  getDrawingHorizontalLine: (v) => FlLine(
+                  getDrawingHorizontalLine: (value) => FlLine(
                     color: Colors.grey.withValues(alpha: 0.18),
                     strokeWidth: 1,
                   ),
@@ -1400,7 +1414,8 @@ class WeekdayBarChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      getTitlesWidget: (value, meta) {
+                      // label builder for bottom axis
+                      getTitlesWidget: (double value, TitleMeta meta) {
                         final idx = value.toInt();
                         if (idx < 0 || idx >= labels.length) {
                           return const SizedBox();
@@ -1413,15 +1428,16 @@ class WeekdayBarChart extends StatelessWidget {
                           ),
                         );
                       },
+                      reservedSize: 30,
                     ),
                   ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
+                      reservedSize: 48,
                       interval: intervalY,
-                      getTitlesWidget: (v, meta) => Text(
-                        '\$${v.toInt()}',
+                      getTitlesWidget: (double value, TitleMeta meta) => Text(
+                        '\$${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -1439,17 +1455,46 @@ class WeekdayBarChart extends StatelessWidget {
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (group) => Colors.black87,
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final label = labels[group.x.toInt()];
-                      return BarTooltipItem(
-                        '$label\n\$${rod.toY.toStringAsFixed(2)}',
-                        const TextStyle(color: Colors.white),
-                      );
-                    },
+                    getTooltipItem:
+                        (
+                          BarChartGroupData group,
+                          int groupIndex,
+                          BarChartRodData rod,
+                          int rodIndex,
+                        ) {
+                          final label = labels[group.x.toInt()];
+                          return BarTooltipItem(
+                            '$label\n\$${rod.toY.toStringAsFixed(2)}',
+                            const TextStyle(color: Colors.white),
+                          );
+                        },
                   ),
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: 6),
+          // legend
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: List.generate(7, (i) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: weekdayColors[i],
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(labels[i], style: const TextStyle(fontSize: 12)),
+                ],
+              );
+            }),
           ),
         ],
       ),
@@ -1792,4 +1837,3 @@ class TopExpensesList extends StatelessWidget {
     );
   }
 }
-

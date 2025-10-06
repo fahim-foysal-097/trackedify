@@ -20,6 +20,7 @@ class _AuthGateState extends State<AuthGate> {
   void initState() {
     super.initState();
     _checkLocked();
+    NavBarController.apply();
   }
 
   Future<void> _checkLocked() async {

@@ -32,8 +32,8 @@ android {
         applicationId = "com.fahim.trackedify"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.6.0"
+        versionCode = 10
+        versionName = "1.6.1"
     }
 
         signingConfigs {
