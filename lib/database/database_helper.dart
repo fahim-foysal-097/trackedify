@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -67,7 +67,9 @@ class DatabaseHelper {
               user_tip_shown INTEGER DEFAULT 0,
               profile_pic TEXT,
               voice_enabled INTEGER DEFAULT 1,
-              notification_enabled INTEGER DEFAULT 1
+              notification_enabled INTEGER DEFAULT 1,
+              notification_hour INTEGER DEFAULT 20,
+              notification_minute INTEGER DEFAULT 0
             )
           ''');
 
@@ -128,6 +130,19 @@ class DatabaseHelper {
           try {
             await db.execute(
               'ALTER TABLE user_info ADD COLUMN notification_enabled INTEGER DEFAULT 1',
+            );
+          } catch (_) {}
+        }
+
+        if (oldVersion < 5) {
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN notification_hour INTEGER DEFAULT 20',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN notification_minute INTEGER DEFAULT 0',
             );
           } catch (_) {}
         }
@@ -304,5 +319,53 @@ class DatabaseHelper {
       'date': date,
       'note': note,
     });
+  }
+
+  // -------------------------
+  // Notification time helpers
+  // -------------------------
+
+  /// Returns a map with keys 'hour' and 'minute'. Defaults to 20:00 if not set.
+  Future<Map<String, int>> getNotificationTime() async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) {
+      // default 20:00
+      return {'hour': 20, 'minute': 0};
+    }
+    final first = rows.first;
+    final hour = (first['notification_hour'] is int)
+        ? first['notification_hour'] as int
+        : (first['notification_hour'] != null)
+        ? int.tryParse(first['notification_hour'].toString()) ?? 20
+        : 20;
+    final minute = (first['notification_minute'] is int)
+        ? first['notification_minute'] as int
+        : (first['notification_minute'] != null)
+        ? int.tryParse(first['notification_minute'].toString()) ?? 0
+        : 0;
+    return {'hour': hour, 'minute': minute};
+  }
+
+  /// Set the notification time for the single user row. Inserts a user row if none exists.
+  Future<void> setNotificationTime(int hour, int minute) async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) {
+      await db.insert('user_info', {
+        'username': 'User',
+        'notification_enabled': 1,
+        'notification_hour': hour,
+        'notification_minute': minute,
+      });
+      return;
+    }
+    final id = rows.first['id'] as int;
+    await db.update(
+      'user_info',
+      {'notification_hour': hour, 'notification_minute': minute},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

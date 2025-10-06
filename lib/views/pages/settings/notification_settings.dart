@@ -7,8 +7,6 @@ import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/shared/constants/constants.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 
-// TODO : let user pick time for the reminder
-
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
 
@@ -22,6 +20,8 @@ class _NotificationSettingsState extends State<NotificationSettings> {
   bool _saving = false;
 
   late final NotificationUtil _notificationUtil;
+  int _hour = 20;
+  int _minute = 0;
 
   @override
   void initState() {
@@ -33,36 +33,34 @@ class _NotificationSettingsState extends State<NotificationSettings> {
   }
 
   Future<void> _loadNotificationPref() async {
-    final v = await DatabaseHelper().isNotificationEnabled();
+    final enabled = await DatabaseHelper().isNotificationEnabled();
+    final time = await DatabaseHelper().getNotificationTime();
     if (!mounted) return;
     setState(() {
-      _notificationsEnabled = v;
+      _notificationsEnabled = enabled;
+      _hour = time['hour'] ?? 20;
+      _minute = time['minute'] ?? 0;
       _loading = false;
     });
   }
 
   Future<void> _toggleNotifications(bool newValue) async {
-    // Optimistically show spinner on control
     setState(() => _saving = true);
 
-    // Save pref first
     await DatabaseHelper().setNotificationEnabled(newValue);
 
     if (!mounted) return;
     setState(() => _notificationsEnabled = newValue);
 
     if (newValue) {
-      // Request permission
       final granted = await _notificationUtil.requestPermission();
       if (!granted) {
-        // permission denied — revert pref
         await DatabaseHelper().setNotificationEnabled(false);
         if (!mounted) return;
         setState(() {
           _notificationsEnabled = false;
           _saving = false;
         });
-        if (!mounted) return;
         PanaraInfoDialog.show(
           context,
           title: "Permission denied",
@@ -76,15 +74,19 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         return;
       }
 
-      // Schedule daily notification at 20:00
       try {
+        final time = await DatabaseHelper().getNotificationTime();
+        final h = time['hour'] ?? 20;
+        final m = time['minute'] ?? 0;
+
+        // scheduleDailyAt will cancel any existing noti with the same id and create the next one-shot instance.
         await _notificationUtil.scheduleDailyAt(
           id: AppConstants.dailyReminderId,
           channelKey: AppStrings.scheduledChannelKey,
           title: 'Trackedify Reminder',
           body: 'Don\'t forget to add your expenses today.',
-          hour: 20,
-          minute: 0,
+          hour: h,
+          minute: m,
         );
 
         if (!mounted) return;
@@ -101,15 +103,15 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         );
       }
     } else {
-      // Cancel schedules
+      // Cancel by ID
       try {
-        await _notificationUtil.cancelAllSchedules();
+        await _notificationUtil.cancelById(AppConstants.dailyReminderId);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Daily reminder disabled')),
         );
       } catch (e) {
-        if (kDebugMode) debugPrint('Cancel schedules failed: $e');
+        if (kDebugMode) debugPrint('Cancel failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to cancel reminder')),
         );
@@ -120,12 +122,103 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     setState(() => _saving = false);
   }
 
+  String _formatTime(int hour, int minute) {
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h12 = hour % 12 == 0 ? 12 : hour % 12;
+    final mm = minute.toString().padLeft(2, '0');
+    return '$h12:$mm $period';
+  }
+
+  Future<void> _pickTime() async {
+    final initial = TimeOfDay(hour: _hour, minute: _minute);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      builder: (context, child) => child ?? const SizedBox.shrink(),
+    );
+    if (picked == null) return;
+
+    setState(() => _saving = true);
+    try {
+      await DatabaseHelper().setNotificationTime(picked.hour, picked.minute);
+      if (!mounted) return;
+      setState(() {
+        _hour = picked.hour;
+        _minute = picked.minute;
+      });
+
+      // Cancel existing scheduled instance and reschedule next one-shot for the new time.
+      await _notificationUtil.cancelById(AppConstants.dailyReminderId);
+
+      if (_notificationsEnabled) {
+        final granted = await _notificationUtil.requestPermission();
+        if (granted) {
+          await _notificationUtil.scheduleDailyAt(
+            id: AppConstants.dailyReminderId,
+            channelKey: AppStrings.scheduledChannelKey,
+            title: 'Trackedify Reminder',
+            body: 'Don\'t forget to add your expenses today.',
+            hour: _hour,
+            minute: _minute,
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Reminder set for ${_formatTime(_hour, _minute)}'),
+            ),
+          );
+        } else {
+          await DatabaseHelper().setNotificationEnabled(false);
+          if (!mounted) return;
+          setState(() => _notificationsEnabled = false);
+          PanaraInfoDialog.show(
+            context,
+            title: "Permission denied",
+            message:
+                "We couldn't get notification permission. Reminder disabled. Please enable notifications in system settings to use reminders.",
+            buttonText: "OK",
+            textColor: Colors.black54,
+            onTapDismiss: () => Navigator.pop(context),
+            panaraDialogType: PanaraDialogType.normal,
+          );
+        }
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Reminder time saved: ${_formatTime(_hour, _minute)}',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to save/pick time: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save reminder time')),
+      );
+    } finally {
+      setState(() => _saving = false);
+    }
+  }
+
   void _showTips() {
     PanaraInfoDialog.show(
       context,
       title: "Tips - Notifications",
       message:
-          "Turn on daily reminders to get a quick nudge to add expenses. If notifications don't appear, check system permissions.",
+          "Turn on daily reminders to get a quick reminder to add expenses. If notifications don't appear, check system permissions.",
       buttonText: "Got it",
       textColor: Colors.black54,
       onTapDismiss: () => Navigator.pop(context),
@@ -187,48 +280,99 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                         horizontal: 12,
                         vertical: 8,
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                        ),
-                        leading: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.notifications,
-                            color: Colors.blue,
-                          ),
-                        ),
-                        title: const Text(
-                          'Daily reminder at 8:00 PM',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Receive a daily reminder to review/add expenses',
-                        ),
-                        trailing: _saving
-                            ? const SizedBox(
-                                width: 48,
-                                height: 30,
-                                child: Center(
-                                  child: CupertinoActivityIndicator(),
-                                ),
-                              )
-                            : CupertinoSwitch(
-                                value: _notificationsEnabled,
-                                activeTrackColor: Colors.blue,
-                                onChanged: (v) async {
-                                  // confirm when disabling? small confirmation can be useful; here we toggle directly
-                                  await _toggleNotifications(v);
-                                },
+                      child: Column(
+                        children: [
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                            ),
+                            leading: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                        onTap: () async {
-                          await _toggleNotifications(!_notificationsEnabled);
-                        },
+                              child: const Icon(
+                                Icons.notifications,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            title: Text(
+                              'Daily reminder at ${_formatTime(_hour, _minute)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: const Text(
+                              'Receive a daily reminder to review/add expenses',
+                            ),
+                            trailing: _saving
+                                ? const SizedBox(
+                                    width: 48,
+                                    height: 30,
+                                    child: Center(
+                                      child: CupertinoActivityIndicator(),
+                                    ),
+                                  )
+                                : CupertinoSwitch(
+                                    value: _notificationsEnabled,
+                                    activeTrackColor: Colors.blue,
+                                    onChanged: (v) async {
+                                      await _toggleNotifications(v);
+                                    },
+                                  ),
+                            onTap: () async {
+                              await _toggleNotifications(
+                                !_notificationsEnabled,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 18,
+                                    color: Colors.black54,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Reminder time',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatTime(_hour, _minute),
+                                        style: const TextStyle(
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              TextButton.icon(
+                                onPressed: _saving
+                                    ? null
+                                    : () async {
+                                        await _pickTime();
+                                      },
+                                icon: const Icon(Icons.edit_calendar_outlined),
+                                label: const Text('Change'),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),

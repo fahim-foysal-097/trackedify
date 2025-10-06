@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/services.dart';
@@ -13,49 +14,48 @@ Future<void> main() async {
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // Initialize Awesome Notifications and schedule if DB enables it.
+  // Initialize Awesome Notifications
   final notifUtil = NotificationUtil(
     awesomeNotifications: AwesomeNotifications(),
   );
   await notifUtil.init();
 
-  // Read DB preference and schedule/cancel before runApp
+  // Check DB preference and schedule/cancel before runApp
   try {
     final db = DatabaseHelper();
     final enabled = await db.isNotificationEnabled();
 
     if (enabled) {
-      // Request permission
       final granted = await notifUtil.requestPermission();
 
       if (!granted) {
-        // Redirect to exact alarm permission page (Android 12+)
+        // Request OS-level permission page (Android 12+)
         await AwesomeNotifications().showAlarmPage();
       }
 
       if (granted) {
-        // Scheduled Notification
+        // Get saved time (defaults to 20:00)
+        final time = await db.getNotificationTime();
+        final hour = time['hour'] ?? 20;
+        final minute = time['minute'] ?? 0;
+
+        // scheduleDailyAt cancels any existing noti by ID and create next one-shot.
         await notifUtil.scheduleDailyAt(
           id: AppConstants.dailyReminderId,
           channelKey: AppStrings.scheduledChannelKey,
           title: 'Trackedify Reminder',
           body: 'Don\'t forget to add your expenses today.',
-          hour: 20,
-          minute: 00,
+          hour: hour,
+          minute: minute,
         );
-      } else {
-        // user denied OS-level permission; do not schedule
       }
     } else {
-      // cancel previously scheduled reminders if any
-      await notifUtil.cancelAllSchedules();
+      // If disabled, cancel any scheduled reminder by ID
+      await notifUtil.cancelById(AppConstants.dailyReminderId);
     }
   } catch (e) {
-    // DB or notifications failed
-    // print('Notification init failed: $e');
+    if (kDebugMode) debugPrint('Notification init failed: $e');
   }
-
-  NavBarController.apply;
 
   runApp(const MyApp());
 }
