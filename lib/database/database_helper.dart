@@ -1,10 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-
-// TODO : figure out how to store images as notes
-// ? maybe use a seperate table
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -30,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -70,6 +68,18 @@ class DatabaseHelper {
               notification_enabled INTEGER DEFAULT 1,
               notification_hour INTEGER DEFAULT 20,
               notification_minute INTEGER DEFAULT 0
+            )
+          ''');
+
+          // --- Table: Image Notes (stores raw image binary as BLOB) ---
+          await txn.execute('''
+            CREATE TABLE img_notes (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              expense_id INTEGER,
+              image BLOB NOT NULL,
+              caption TEXT,
+              created_at TEXT DEFAULT (datetime('now')),
+              FOREIGN KEY(expense_id) REFERENCES expenses(id) ON DELETE CASCADE
             )
           ''');
 
@@ -146,6 +156,21 @@ class DatabaseHelper {
             );
           } catch (_) {}
         }
+
+        if (oldVersion < 6) {
+          try {
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS img_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                expense_id INTEGER,
+                image BLOB NOT NULL,
+                caption TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY(expense_id) REFERENCES expenses(id) ON DELETE CASCADE
+              )
+            ''');
+          } catch (_) {}
+        }
       },
     );
   }
@@ -180,6 +205,7 @@ class DatabaseHelper {
 
   Future<void> wipeAllData() async {
     final db = await database;
+    await db.delete('img_notes');
     await db.delete('expenses');
     await db.delete('user_info');
     await db.delete('categories');
@@ -367,5 +393,67 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // -------------------------
+  // Image notes (img_notes) - store raw bytes (BLOB)
+  // -------------------------
+
+  /// Insert an image note. 'expenseId' optional; if provided, image ties to that expense.
+  /// 'image' must be a Uint8List (File.readAsBytes() to get it).
+  Future<int> insertImageNote({
+    int? expenseId,
+    required Uint8List image,
+    String? caption,
+  }) async {
+    final db = await database;
+    return db.insert('img_notes', {
+      'expense_id': expenseId,
+      'image': image,
+      'caption': caption,
+    });
+  }
+
+  /// Get all image notes (optionally filter by expenseId)
+  Future<List<Map<String, dynamic>>> getImageNotes({int? expenseId}) async {
+    final db = await database;
+    if (expenseId != null) {
+      return db.query(
+        'img_notes',
+        where: 'expense_id = ?',
+        whereArgs: [expenseId],
+        orderBy: 'id DESC',
+      );
+    } else {
+      return db.query('img_notes', orderBy: 'id DESC');
+    }
+  }
+
+  /// Get a single image note by id.
+  Future<Map<String, dynamic>?> getImageNoteById(int id) async {
+    final db = await database;
+    final rows = await db.query('img_notes', where: 'id = ?', whereArgs: [id]);
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  /// Update image note (caption and/or image)
+  Future<int> updateImageNote({
+    required int id,
+    Uint8List? image,
+    String? caption,
+  }) async {
+    final db = await database;
+    final Map<String, Object?> values = {};
+    if (image != null) values['image'] = image;
+    if (caption != null) values['caption'] = caption;
+    if (values.isEmpty) return 0;
+    return db.update('img_notes', values, where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Delete an image note
+  Future<int> deleteImageNote(int id) async {
+    final db = await database;
+    return db.delete('img_notes', where: 'id = ?', whereArgs: [id]);
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
@@ -35,8 +36,20 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
   bool _saving = false;
 
+  // image handling
+  final ImagePicker _picker = ImagePicker();
+
+  // existing images loaded from DB (each item: {'id': int, 'bytes': Uint8List})
+  final List<Map<String, dynamic>> _existingImages = [];
+
+  // newly picked images (not yet in DB): list of Uint8List
+  final List<Uint8List> _newPickedImages = [];
+
+  // UI: image quality (1-100) passed to image_picker; default 38
+  int _selectedImageQuality = 38;
+
   final String tips =
-      '''You can edit the amount, date, category and note. Long-press a category to delete it. Use "Add" in the selector to create new categories.''';
+      '''You can edit the amount, date, category and note. Attach images (optional) and choose image quality before picking. Long-press a category to delete it.''';
 
   @override
   void initState() {
@@ -61,6 +74,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
     categoryController.text = selectedCategoryName ?? '';
 
     loadCategories();
+    _loadExistingImages();
   }
 
   @override
@@ -99,7 +113,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
         }
       });
     } catch (e) {
-      // fallback raw query
+      // fallback raw query if generic method fails
       final db = await DatabaseHelper().database;
       final dbCategories = await db.query('categories');
       setState(() {
@@ -160,8 +174,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
       panaraDialogType: PanaraDialogType.warning,
     );
 
-    // PanaraInfoDialog.show returns void; to keep behavior consistent use PanaraConfirmDialog:
-    // Use PanaraConfirmDialog for a real confirm flow:
     if (!mounted) return;
     final really = await PanaraConfirmDialog.show<bool>(
       context,
@@ -504,6 +516,54 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         'Note',
                         noteText == 'No note' ? '—' : noteText,
                       ),
+                      if (_existingImages.isNotEmpty ||
+                          _newPickedImages.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Attached images:',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 80,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount:
+                                _existingImages.length +
+                                _newPickedImages.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              if (i < _existingImages.length) {
+                                return GestureDetector(
+                                  onTap: () => _viewImageFullScreen(
+                                    _existingImages[i]['bytes'] as Uint8List,
+                                  ),
+                                  child: Image.memory(
+                                    _existingImages[i]['bytes'] as Uint8List,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              } else {
+                                final idx = i - _existingImages.length;
+                                return GestureDetector(
+                                  onTap: () => _viewImageFullScreen(
+                                    _newPickedImages[idx],
+                                  ),
+                                  child: Image.memory(
+                                    _newPickedImages[idx],
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   actions: [
@@ -539,6 +599,137 @@ class _EditExpensePageState extends State<EditExpensePage> {
     );
   }
 
+  // -------------------------
+  // Image helpers
+  // -------------------------
+
+  Future<void> _loadExistingImages() async {
+    _existingImages.clear();
+    final dbHelper = DatabaseHelper();
+    final rows = await dbHelper.getImageNotes(
+      expenseId: widget.expense['id'] as int,
+    );
+    for (final r in rows) {
+      dynamic imgData = r['image'];
+      Uint8List? bytes;
+      if (imgData is Uint8List) {
+        bytes = imgData;
+      } else if (imgData is List<int>) {
+        bytes = Uint8List.fromList(imgData);
+      } else if (imgData is String) {
+        // Unlikely, but handle base64 stored strings
+        try {
+          bytes = Uint8List.fromList(List<int>.from(imgData.codeUnits));
+        } catch (_) {
+          bytes = null;
+        }
+      } else {
+        bytes = null;
+      }
+
+      if (bytes != null) {
+        _existingImages.add({
+          'id': r['id'],
+          'bytes': bytes,
+          'caption': r['caption'],
+        });
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _pickImages() async {
+    try {
+      // Use user-selected image quality value
+      final List<XFile> files = await _picker.pickMultiImage(
+        imageQuality: _selectedImageQuality,
+      );
+
+      if (files.isEmpty) return;
+
+      // Show small progress modal while we read bytes
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
+      );
+
+      try {
+        for (final f in files) {
+          final bytes = await f.readAsBytes();
+          if (!mounted) return;
+          _newPickedImages.add(bytes);
+        }
+      } finally {
+        if (mounted) Navigator.of(context).pop();
+      }
+
+      if (mounted) setState(() {});
+    } on PlatformException catch (e) {
+      if (kDebugMode) debugPrint('Image pick failed: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to pick images')));
+    }
+  }
+
+  Future<void> _deleteExistingImage(int id) async {
+    final confirm = await PanaraConfirmDialog.show<bool>(
+      context,
+      title: "Delete image?",
+      message: "Delete this attached image?",
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      onTapCancel: () => Navigator.pop(context, false),
+      onTapConfirm: () => Navigator.pop(context, true),
+      textColor: Colors.black54,
+      panaraDialogType: PanaraDialogType.error,
+    );
+
+    if (confirm != true) return;
+
+    final dbHelper = DatabaseHelper();
+    await dbHelper.deleteImageNote(id);
+    _existingImages.removeWhere((e) => e['id'] == id);
+    if (mounted) setState(() {});
+  }
+
+  void _removeNewPickedImageAt(int index) {
+    setState(() {
+      _newPickedImages.removeAt(index);
+    });
+  }
+
+  void _viewImageFullScreen(Uint8List bytes) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: InteractiveViewer(child: Image.memory(bytes)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveNewImagesForExpense(int expenseId) async {
+    if (_newPickedImages.isEmpty) return;
+    final dbHelper = DatabaseHelper();
+    for (final bytes in _newPickedImages) {
+      // insertion expects Uint8List
+      await dbHelper.insertImageNote(
+        expenseId: expenseId,
+        image: bytes,
+        caption: null,
+      );
+    }
+    _newPickedImages.clear();
+  }
+
+  // -------------------------
+  // Save flow
+  // -------------------------
   Future<void> saveChanges() async {
     FocusScope.of(context).unfocus();
 
@@ -592,6 +783,12 @@ class _EditExpensePageState extends State<EditExpensePage> {
         where: 'id = ?',
         whereArgs: [widget.expense['id']],
       );
+
+      // save any new images
+      final expenseId = widget.expense['id'] as int;
+      await _saveNewImagesForExpense(expenseId);
+
+      await _loadExistingImages();
 
       if (!mounted) return;
 
@@ -873,6 +1070,208 @@ class _EditExpensePageState extends State<EditExpensePage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
+                      ),
+                    ),
+
+                    // IMAGE QUALITY + ATTACH IMAGES BLOCK
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Image quality',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Text('Quality'),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Slider(
+                                  activeColor: selectedCat?['color'],
+                                  min: 10,
+                                  max: 100,
+                                  divisions: 9,
+                                  label: '$_selectedImageQuality',
+                                  value: _selectedImageQuality.toDouble(),
+                                  onChanged: (v) => setState(
+                                    () => _selectedImageQuality = v.round(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('$_selectedImageQuality'),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _pickImages,
+                                icon: const Icon(
+                                  Icons.photo_library,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Attach images',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              if (_existingImages.isNotEmpty ||
+                                  _newPickedImages.isNotEmpty)
+                                Text(
+                                  '${_existingImages.length + _newPickedImages.length} attached',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          if (_existingImages.isNotEmpty) ...[
+                            const Text(
+                              'Existing images',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 92,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _existingImages.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (_, index) {
+                                  final item = _existingImages[index];
+                                  return Stack(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () => _viewImageFullScreen(
+                                          item['bytes'] as Uint8List,
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.memory(
+                                            item['bytes'] as Uint8List,
+                                            width: 92,
+                                            height: 92,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 6,
+                                        right: 6,
+                                        child: GestureDetector(
+                                          onTap: () => _deleteExistingImage(
+                                            item['id'] as int,
+                                          ),
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              color: Colors.black54,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(4.0),
+                                              child: Icon(
+                                                Icons.delete,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+
+                          if (_newPickedImages.isNotEmpty) ...[
+                            const Text(
+                              'New images',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 92,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _newPickedImages.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (_, index) {
+                                  final bytes = _newPickedImages[index];
+                                  return Stack(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _viewImageFullScreen(bytes),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.memory(
+                                            bytes,
+                                            width: 92,
+                                            height: 92,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 6,
+                                        right: 6,
+                                        child: GestureDetector(
+                                          onTap: () =>
+                                              _removeNewPickedImageAt(index),
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              color: Colors.black54,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(4.0),
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
                       ),
                     ),
 

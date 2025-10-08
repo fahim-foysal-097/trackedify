@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
-import 'package:trackedify/database/Logic/add_expense.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:trackedify/database/add_expense.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
@@ -33,9 +34,18 @@ class _AddPageState extends State<AddPage> {
   // Loading state for save button
   bool _saving = false;
 
+  // picked images bytes
+  final List<Uint8List> _pickedImages = [];
+
+  // Image picker
+  final ImagePicker _picker = ImagePicker();
+
+  // Image quality (1-100) to pass to platform picker. Mutable so slider can change it.
+  int _selectedImageQuality = 38;
+
   // Single-string tips (shown every time the user taps the tips/info button)
-  final String tips = '''
-You can create your own categories! Long press a category to delete it. Tap a category to select it.''';
+  final String tips =
+      '''You can create your own categories! Long press a category to delete it. Tap a category to select it. Attach images (optional) and choose image quality before picking.''';
 
   @override
   void initState() {
@@ -325,6 +335,7 @@ You can create your own categories! Long press a category to delete it. Tap a ca
     setState(() {
       expenseController.clear();
       noteController.clear();
+      _pickedImages.clear();
       selectedDate = DateTime.now();
       dateController.text = DateFormat('dd/MM/yyyy').format(selectedDate);
       if (!keepCategory) {
@@ -469,6 +480,33 @@ You can create your own categories! Long press a category to delete it. Tap a ca
                         'Note',
                         noteText == 'No note' ? '—' : noteText,
                       ),
+                      if (_pickedImages.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Attached images:',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 80,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _pickedImages.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (_, i) => GestureDetector(
+                              onTap: () =>
+                                  _viewImageFullScreen(_pickedImages[i]),
+                              child: Image.memory(
+                                _pickedImages[i],
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   actions: [
@@ -502,6 +540,81 @@ You can create your own categories! Long press a category to delete it. Tap a ca
         ],
       ),
     );
+  }
+
+  /// Pick multiple images (image_picker) and store bytes in _pickedImages
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> files = await _picker.pickMultiImage(
+        imageQuality: _selectedImageQuality,
+      );
+
+      if (files.isEmpty) return;
+
+      // Show small progress modal while we read bytes
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CupertinoActivityIndicator()),
+      );
+
+      try {
+        for (final f in files) {
+          final bytes = await f.readAsBytes();
+          if (!mounted) return;
+          _pickedImages.add(bytes);
+        }
+      } finally {
+        if (mounted) Navigator.of(context).pop();
+      }
+
+      if (mounted) setState(() {});
+    } on PlatformException catch (e) {
+      if (kDebugMode) debugPrint('Image pick failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to pick images')));
+    }
+  }
+
+  void _removePickedImageAt(int index) {
+    setState(() {
+      _pickedImages.removeAt(index);
+    });
+  }
+
+  void _viewImageFullScreen(Uint8List bytes) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: InteractiveViewer(child: Image.memory(bytes)),
+        ),
+      ),
+    );
+  }
+
+  /// After saving expense, persist all picked images into img_notes linking to the expense id.
+  Future<void> _saveImagesForExpense(int expenseId) async {
+    final dbHelper = DatabaseHelper();
+    for (final bytes in _pickedImages) {
+      await dbHelper.insertImageNote(
+        expenseId: expenseId,
+        image: bytes,
+        caption: null,
+      );
+    }
+  }
+
+  /// Get latest expense id (most recently inserted). Relying on sequential single-user workflow.
+  Future<int?> _getLatestExpenseId() async {
+    final db = await DatabaseHelper().database;
+    final rows = await db.query('expenses', orderBy: 'id DESC', limit: 1);
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int?;
   }
 
   Future<void> _onSavePressed() async {
@@ -580,6 +693,13 @@ You can create your own categories! Long press a category to delete it. Tap a ca
           note: noteText,
         ),
       );
+
+      // after insert, get the latest expense id (most recent)
+      final expenseId = await _getLatestExpenseId();
+
+      if (expenseId != null && _pickedImages.isNotEmpty) {
+        await _saveImagesForExpense(expenseId);
+      }
 
       if (!mounted) return;
 
@@ -877,9 +997,150 @@ You can create your own categories! Long press a category to delete it. Tap a ca
                         ),
                       ),
 
-                      const SizedBox(height: 18),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            // IMAGE QUALITY SLIDER
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                                vertical: 6,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Image quality',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      const Text('Quality'),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Slider(
+                                          activeColor: selectedCat?['color'],
+                                          min: 10,
+                                          max: 100,
+                                          divisions: 9,
+                                          label: '$_selectedImageQuality',
+                                          value: _selectedImageQuality
+                                              .toDouble(),
+                                          onChanged: (v) => setState(
+                                            () => _selectedImageQuality = v
+                                                .round(),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text('$_selectedImageQuality'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                      // iOS-style toggle (no subtitle)
+                            Row(
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _pickImages,
+                                  icon: const Icon(
+                                    Icons.photo_library,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    "Add images",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.deepPurple,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                if (_pickedImages.isNotEmpty)
+                                  Text(
+                                    "${_pickedImages.length} attached",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (_pickedImages.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 92,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _pickedImages.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 8),
+                                  itemBuilder: (_, index) {
+                                    final bytes = _pickedImages[index];
+                                    return Stack(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () =>
+                                              _viewImageFullScreen(bytes),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.memory(
+                                              bytes,
+                                              width: 92,
+                                              height: 92,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 6,
+                                          right: 6,
+                                          child: GestureDetector(
+                                            onTap: () =>
+                                                _removePickedImageAt(index),
+                                            child: Container(
+                                              decoration: const BoxDecoration(
+                                                color: Colors.black54,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(4.0),
+                                                child: Icon(
+                                                  Icons.close,
+                                                  size: 16,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 2),
+
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,

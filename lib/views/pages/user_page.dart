@@ -112,7 +112,10 @@ class UserPageState extends State<UserPage> {
   /// Pick an image and copy it into app documents for stable storage.
   Future<void> pickProfilePicture() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 38,
+    );
     if (!mounted) return;
 
     if (pickedFile != null && userId != null) {
