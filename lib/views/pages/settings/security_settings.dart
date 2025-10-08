@@ -88,9 +88,19 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       if (result == true) {
         await _loadAuthState();
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('App lock enabled')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('App lock enabled')),
+              ],
+            ),
+          ),
+        );
       }
       return;
     }
@@ -115,9 +125,19 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     await _auth.disablePin();
     await _loadAuthState();
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('App lock disabled')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text('App lock disabled')),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _changePin() async {
@@ -254,12 +274,21 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     );
 
     if (created == true) {
-      // Make sure state refreshed and notify user
       await _loadAuthState();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('PIN has been reset')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('PIN has been reset')),
+            ],
+          ),
+        ),
+      );
     }
   }
 

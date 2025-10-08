@@ -42,7 +42,19 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(v ? 'Voice commands enabled' : 'Voice commands disabled'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.deepPurple,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                v ? 'Voice commands enabled' : 'Voice commands disabled',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

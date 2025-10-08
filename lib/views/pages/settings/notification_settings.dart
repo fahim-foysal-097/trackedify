@@ -90,9 +90,19 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         );
 
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Daily reminder enabled')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('Daily reminder enabled')),
+              ],
+            ),
+          ),
+        );
       } catch (e) {
         if (kDebugMode) debugPrint('Schedule failed: $e');
         await DatabaseHelper().setNotificationEnabled(false);
@@ -108,12 +118,22 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         await _notificationUtil.cancelById(AppConstants.dailyReminderId);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Daily reminder disabled')),
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('Daily reminder disabled')),
+              ],
+            ),
+          ),
         );
       } catch (e) {
         if (kDebugMode) debugPrint('Cancel failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to cancel reminder')),
+          SnackBar(content: Text('Failed to cancel reminder: $e ')),
         );
       }
     }
@@ -164,7 +184,19 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Reminder set for ${_formatTime(_hour, _minute)}'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.deepPurple,
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Reminder set for ${_formatTime(_hour, _minute)}',
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         } else {
@@ -206,7 +238,17 @@ class _NotificationSettingsState extends State<NotificationSettings> {
       if (kDebugMode) debugPrint('Failed to save/pick time: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save reminder time')),
+         SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.cancel_outlined, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Failed to save reminder time: $e')),
+            ],
+          ),
+        ),
       );
     } finally {
       setState(() => _saving = false);
