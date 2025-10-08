@@ -42,7 +42,7 @@ class _AddPageState extends State<AddPage> {
   final ImagePicker _picker = ImagePicker();
 
   // Image quality (1-100) to pass to platform picker. Mutable so slider can change it.
-  int _selectedImageQuality = 38;
+  int _selectedImageQuality = 40;
 
   // Single-string tips (shown every time the user taps the tips/info button)
   final String tips =

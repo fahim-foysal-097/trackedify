@@ -34,7 +34,7 @@ class _ExportPageState extends State<ExportPage> {
 
   void showTipsDialog() {
     const tips =
-        '''You can export / backup you data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON.''';
+        '''You can export / backup you data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON. You can only backup image notes by exporting DB.''';
 
     PanaraInfoDialog.show(
       context,
@@ -410,7 +410,19 @@ class _ExportPageState extends State<ExportPage> {
         if (kDebugMode) debugPrint('JSON export cancelled');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('JSON export saved: ${p.basename(saved)}')),
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.deepPurple,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('JSON export saved: ${p.basename(saved)}'),
+                ),
+              ],
+            ),
+          ),
         );
         if (kDebugMode) {
           debugPrint("JSON export saved: ${p.basename(saved)}");

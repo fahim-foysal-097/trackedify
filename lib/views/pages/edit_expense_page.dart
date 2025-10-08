@@ -47,7 +47,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
   final List<Uint8List> _newPickedImages = [];
 
   // UI: image quality (1-100) passed to image_picker; default 38
-  int _selectedImageQuality = 38;
+  int _selectedImageQuality = 40;
 
   final String tips =
       '''You can edit the amount, date, category and note. Attach images (optional) and choose image quality before picking. Long-press a category to delete it.''';

@@ -12,13 +12,12 @@ import 'package:trackedify/shared/constants/text_constant.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
+import 'package:trackedify/views/pages/settings/notification_settings.dart';
 import 'package:trackedify/views/pages/settings_page.dart';
 import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
-// TODO : remove 'Clear Downloaded Updates' and add some other settings
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});
@@ -599,49 +598,19 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.trashArrowUp,
-                    label: 'Clear Downloads',
-                    accent: Colors.redAccent,
-                    onTap: () async {
-                      if (!mounted) return;
-                      final confirmed = await PanaraConfirmDialog.show<bool>(
+                    icon: FontAwesomeIcons.solidClock,
+                    label: 'Daily Reminder',
+                    accent: Colors.deepPurple,
+                    onTap: () {
+                      Navigator.push(
                         context,
-                        title: "Clear downloads?",
-                        message:
-                            "This will delete all temporary downloaded updates (safe). Continue?",
-                        textColor: Colors.black54,
-                        confirmButtonText: "Clear",
-                        cancelButtonText: "Cancel",
-                        onTapCancel: () => Navigator.pop(context, false),
-                        onTapConfirm: () => Navigator.pop(context, true),
-                        panaraDialogType: PanaraDialogType.warning,
-                      );
-                      if (!mounted) return;
-                      if (confirmed != true) return;
-
-                      // run cleanup
-                      final deleted = await UpdateService.clearDownloadFolder();
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.deepPurple,
-                          content: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  "Cleared $deleted file(s) from app download folder.",
-                                ),
-                              ),
-                            ],
-                          ),
+                        MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              const NotificationSettings(),
                         ),
-                      );
+                      ).then((_) {
+                        NavBarController.apply();
+                      });
                     },
                   ),
 

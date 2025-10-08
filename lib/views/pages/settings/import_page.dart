@@ -719,9 +719,9 @@ class _ImportPageState extends State<ImportPage> {
                   ),
                   SizedBox(height: 6),
                   Text(
-                    '• Importing a .db file replaces the app database. Use with caution.\n'
-                    '• Importing JSON can either append data (safe) or replace tables (destructive).\n'
-                    '• JSON should follow the export format produced by the app.',
+                    '1. Importing a .db file replaces the app database. Use with caution.\n\n'
+                    '2. Importing JSON can either append data (safe) or replace tables (destructive).\n\n'
+                    '3. JSON should follow the export format produced by the app.',
                     style: TextStyle(color: Colors.black87, height: 1.4),
                   ),
                 ],
