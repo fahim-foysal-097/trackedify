@@ -10,6 +10,7 @@ import 'package:trackedify/database/add_expense.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
+import 'package:trackedify/views/widget_tree.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -155,7 +156,9 @@ class _AddPageState extends State<AddPage> {
           Navigator.pop(context);
         },
       ),
-    );
+    ).then((_) {
+      NavBarController.apply();
+    });
   }
 
   void _showCategorySelector() {
@@ -313,7 +316,9 @@ class _AddPageState extends State<AddPage> {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      NavBarController.apply();
+    });
   }
 
   Future<void> _selectDate() async {

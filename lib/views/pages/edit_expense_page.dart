@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
+import 'package:trackedify/views/widget_tree.dart';
 
 class EditExpensePage extends StatefulWidget {
   final Map<String, dynamic> expense;
@@ -222,7 +223,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
           setState(() {}); // update preview
         },
       ),
-    );
+    ).then((_) {
+      NavBarController.apply();
+    });
   }
 
   void _showCategorySelector() {
@@ -380,7 +383,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      NavBarController.apply();
+    });
   }
 
   Future<void> _selectDate() async {

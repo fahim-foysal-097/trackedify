@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/views/widget_tree.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {
@@ -24,6 +29,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   // Multi-select state
   bool selectionMode = false;
   Set<int> selectedExpenses = {};
+
+  // Map expenseId -> image count
+  Map<int, int> _imageCountMap = {};
 
   @override
   void initState() {
@@ -79,6 +87,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     }
   }
 
+  /// Load expenses and prefetch image counts for visible items.
   Future<void> loadExpenses() async {
     setState(() {
       isLoading = true;
@@ -86,12 +95,52 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     final db = await DatabaseHelper().database;
     final data = await db.query('expenses', orderBy: 'date DESC, id DESC');
+
     setState(() {
       expenses = data;
       filteredExpenses = data;
     });
+
+    await _loadImageCountsForExpenses(data);
     await checkTips();
-    isLoading = false;
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  /// Efficiently load counts from img_notes for all supplied expenses.
+  Future<void> _loadImageCountsForExpenses(
+    List<Map<String, dynamic>> data,
+  ) async {
+    final db = await DatabaseHelper().database;
+    if (data.isEmpty) {
+      setState(() => _imageCountMap = {});
+      return;
+    }
+
+    final ids = data.map((e) => e['id'] as int).toList();
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final rows = await db.rawQuery(
+      'SELECT expense_id, COUNT(*) as cnt FROM img_notes WHERE expense_id IN ($placeholders) GROUP BY expense_id',
+      ids,
+    );
+    final Map<int, int> counts = {};
+    for (var r in rows) {
+      final eid = r['expense_id'] as int;
+      final cnt = (r['cnt'] is int)
+          ? r['cnt'] as int
+          : int.parse(r['cnt'].toString());
+      counts[eid] = cnt;
+    }
+
+    for (final id in ids) {
+      counts[id] = counts[id] ?? 0;
+    }
+
+    setState(() {
+      _imageCountMap = counts;
+    });
   }
 
   Map<String, dynamic> getCategory(String name) {
@@ -101,6 +150,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Future<void> deleteExpense(int id) async {
     final db = await DatabaseHelper().database;
     await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
+    // also delete associated img_notes
+    try {
+      await db.delete('img_notes', where: 'expense_id = ?', whereArgs: [id]);
+    } catch (_) {}
     await loadExpenses();
 
     if (mounted) {
@@ -123,12 +176,13 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Future<void> deleteMultipleExpenses(Set<int> ids) async {
     final db = await DatabaseHelper().database;
     final int deletedCount = ids.length;
-    // delete each id (simple approach—keep as-is to match your DB helper)
     for (var id in ids) {
       await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
+      try {
+        await db.delete('img_notes', where: 'expense_id = ?', whereArgs: [id]);
+      } catch (_) {}
     }
 
-    // clear selection AFTER we've captured the count and finished DB ops
     setState(() {
       selectionMode = false;
       selectedExpenses.clear();
@@ -186,7 +240,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       cancelButtonText: "Cancel",
       onTapCancel: () => Navigator.pop(context),
       onTapConfirm: () {
-        // pass the copied set
         deleteMultipleExpenses(idsCopy);
         Navigator.pop(context);
       },
@@ -238,6 +291,153 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     return amount?.toString() ?? '0.00';
   }
 
+  /// Fetch image blobs for an expense id from img_notes.
+  Future<List<Uint8List>> _fetchImagesForExpense(int expenseId) async {
+    final db = await DatabaseHelper().database;
+    final rows = await db.query(
+      'img_notes',
+      where: 'expense_id = ?',
+      whereArgs: [expenseId],
+    );
+    final List<Uint8List> images = [];
+    for (final r in rows) {
+      final img = r['image'];
+      if (img is Uint8List) {
+        images.add(img);
+      } else if (img is List<int>) {
+        images.add(Uint8List.fromList(img));
+      } else if (img != null) {
+        try {
+          images.add(Uint8List.fromList(List<int>.from(img as Iterable<int>)));
+        } catch (_) {}
+      }
+    }
+    return images;
+  }
+
+  /// Request minimal permissions needed for saving. Returns true if we can proceed.
+  Future<bool> _ensureSavePermission() async {
+    try {
+      if (Platform.isIOS) {
+        final status = await Permission.photos.request();
+        return status.isGranted;
+      } else if (Platform.isAndroid) {
+        final storage = await Permission.storage.request();
+        if (storage.isGranted) return true;
+        final photos = await Permission.photos.request();
+        return photos.isGranted;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  /// Save bytes to gallery using saver_gallery
+  Future<void> _saveBytesToGallery(Uint8List bytes) async {
+    final ok = await _ensureSavePermission();
+    if (!ok) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permission denied. Cannot save image.')),
+      );
+      return;
+    }
+
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final name = 'trackedify_$ts.jpg';
+    try {
+      final res = await SaverGallery.saveImage(
+        bytes,
+        quality: 100,
+        fileName: name,
+        skipIfExists: false,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Saved to gallery: $res')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
+    }
+  }
+
+  /// Show image viewer with Save option
+  void _showImageViewer(Uint8List bytes) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        if (bytes.isEmpty) {
+          return const Center(child: CupertinoActivityIndicator());
+        } else {
+          return Dialog(
+            insetPadding: const EdgeInsets.all(12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: InteractiveViewer(
+                    child: Image.memory(bytes, fit: BoxFit.contain),
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.save_alt,
+                            color: Colors.deepPurple,
+                          ),
+                          label: const Text('Save to gallery'),
+                          onPressed: () {
+                            Navigator.pop(context); // close viewer
+                            _saveBytesToGallery(bytes);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            side: const BorderSide(color: Colors.deepPurple),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
+
   Future<void> _showExpenseDrawer(Map<String, dynamic> expense) async {
     final note = (expense['note'] ?? '').toString();
     final hasNote = note.trim().isNotEmpty;
@@ -256,188 +456,260 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
           ),
           child: SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // header row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: StatefulBuilder(
+              builder: (ctx, modalSetState) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Expense',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // meta: category / amount / date
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                      // header row
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: getCategory(
-                              expense['category'] ?? '',
-                            )['color'],
-                            child: Icon(
-                              getCategory(expense['category'] ?? '')['icon'],
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            expense['category'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            "-\$${_formatAmount(expense['amount'])}",
-                            style: const TextStyle(
-                              fontSize: 16,
+                          const Text(
+                            'Expense',
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(
-                            expense['date'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // note content / placeholder
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: hasNote
-                        ? Text(
-                            note,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.black87,
-                            ),
-                          )
-                        : const Text(
-                            'No note to show',
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
-                          ),
-                  ),
-                  const SizedBox(height: 18),
-                  // actions
-                  Column(
-                    children: [
+                      const SizedBox(height: 8),
+                      // meta: category / amount / date
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 45,
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.blue),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          EditExpensePage(expense: expense),
-                                    ),
-                                  ).then((_) {
-                                    loadCategories();
-                                    loadExpenses();
-                                  });
-                                },
-                                child: const Text(
-                                  'Edit',
-                                  style: TextStyle(color: Colors.blue),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: getCategory(
+                                  expense['category'] ?? '',
+                                )['color'],
+                                child: Icon(
+                                  getCategory(
+                                    expense['category'] ?? '',
+                                  )['icon'],
+                                  color: Colors.white,
+                                  size: 18,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                expense['category'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: SizedBox(
-                              height: 45,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text(
-                                  'Close',
-                                  style: TextStyle(color: Colors.white),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "-\$${_formatAmount(expense['amount'])}",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
+                              Text(
+                                expense['date'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
+                      // note content / placeholder
+                      Container(
                         width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: hasNote
+                            ? Text(
+                                note,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.black87,
+                                ),
+                              )
+                            : const Text(
+                                'No note to show',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 18),
+                      // images area
+                      FutureBuilder<List<Uint8List>>(
+                        future: _fetchImagesForExpense(expense['id'] as int),
+                        builder: (context, snap) {
+                          if (!snap.hasData) {
+                            return const Column(
+                              children: [
+                                SizedBox(
+                                  height: 20,
+                                  child: Center(
+                                    child: CupertinoActivityIndicator(),
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+                              ],
+                            );
+                          }
+                          final imgs = snap.data!;
+                          if (imgs.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Images',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                height: 96,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: imgs.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 8),
+                                  itemBuilder: (context, i) {
+                                    final b = imgs[i];
+                                    return GestureDetector(
+                                      onTap: () => _showImageViewer(b),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.memory(
+                                          b,
+                                          width: 96,
+                                          height: 96,
+                                          fit: BoxFit.cover,
+                                          cacheWidth: 192,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                          );
+                        },
+                      ),
+                      // actions
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 45,
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      side: const BorderSide(
+                                        color: Colors.blue,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              EditExpensePage(expense: expense),
+                                        ),
+                                      ).then((_) {
+                                        loadCategories();
+                                        loadExpenses();
+                                      });
+                                    },
+                                    child: const Text(
+                                      'Edit',
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 45,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      'Close',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                confirmDelete(expense);
+                              },
+                              child: const Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                            confirmDelete(expense);
-                          },
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
       },
-    );
+    ).then((_) {
+      NavBarController.apply();
+    });
   }
 
   void toggleSelection(int id) {
@@ -461,7 +733,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     final visible = _visibleExpenseIds();
     setState(() {
       if (visible.isEmpty) return;
-      // if everything visible already selected -> clear
       final allSelected = visible.difference(selectedExpenses).isEmpty;
       if (allSelected) {
         selectedExpenses.removeAll(visible);
@@ -475,7 +746,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
   void showTipsDialog() {
     const tips =
-        '''Long-press an item to enter multi-select. Use the Select All (top-right) to select visible items. Swipe right to edit, swipe left to delete. Tap an item to view details and note.''';
+        '''Long-press an item to enter multi-select. Use the Select All (top-right) to select visible items. Swipe right to edit, swipe left to delete. Tap an item to view details and you can also save image notes.''';
 
     PanaraInfoDialog.show(
       context,
@@ -499,7 +770,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       child: PopScope<Object?>(
         canPop: !selectionMode,
         onPopInvokedWithResult: (didPop, result) {
-          // If selection mode is active and a pop was attempted, clear selection instead of popping.
           if (selectionMode) {
             setState(() {
               selectionMode = false;
@@ -507,7 +777,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
             });
             return;
           }
-          // If pop wasn't performed by the system for some reason, try popping manually.
           if (!didPop) Navigator.of(context).maybePop();
         },
         child: Scaffold(
@@ -547,14 +816,12 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
             actionsPadding: const EdgeInsets.only(right: 6),
             actions: selectionMode
                 ? [
-                    // Select All / Visible items
                     IconButton(
                       tooltip: 'Select all visible',
                       icon: const Icon(Icons.select_all),
                       onPressed: toggleSelectAll,
                       color: Colors.white,
                     ),
-                    // Clear selection (quick)
                     IconButton(
                       tooltip: 'Clear selection',
                       icon: const Icon(Icons.clear),
@@ -568,7 +835,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     ),
                   ]
                 : [
-                    // Tips icon in normal mode
                     IconButton(
                       tooltip: 'Tips',
                       icon: const Icon(Icons.lightbulb_outline),
@@ -636,7 +902,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   itemCount: filteredExpenses.length + (showTip ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (showTip && index == 1) {
-                      // Tip in "callout" style
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Card(
@@ -673,6 +938,82 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
                     final noteText = (expense['note'] ?? '').toString();
                     final isSelected = selectedExpenses.contains(expense['id']);
+                    final imageCount = _imageCountMap[expense['id']] ?? 0;
+
+                    // subtitle content with image indicator first
+                    final subtitleWidgets = <Widget>[];
+                    subtitleWidgets.add(
+                      Text(
+                        expense['date'] ?? '',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    );
+                    if (imageCount > 0 || noteText.isNotEmpty) {
+                      subtitleWidgets.add(const SizedBox(height: 6));
+                      subtitleWidgets.add(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (imageCount > 0) ...[
+                              GestureDetector(
+                                onTap: () {
+                                  _showExpenseDrawer(expense);
+                                },
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.image,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '$imageCount',
+                                      style: const TextStyle(
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            if (noteText.isNotEmpty) ...[
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _showExpenseDrawer(expense),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        FontAwesomeIcons.solidNoteSticky,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          noteText,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }
+
+                    final subtitle = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: subtitleWidgets,
+                    );
 
                     final itemChild = Container(
                       decoration: BoxDecoration(
@@ -723,42 +1064,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                expense['date'] ?? '',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                              if (noteText.isNotEmpty) ...[
-                                GestureDetector(
-                                  onTap: () => _showExpenseDrawer(expense),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        FontAwesomeIcons.solidNoteSticky,
-                                        size: 14,
-                                        color: Colors.grey,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          noteText,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                          subtitle: subtitle,
                           trailing: Text(
                             "-\$${_formatAmount(expense['amount'])}",
                             style: const TextStyle(
@@ -834,7 +1140,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     );
                   },
                 ),
-          // Floating action delete button when in selection mode (animated)
           floatingActionButton: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: selectionMode
@@ -859,7 +1164,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   )
                 : const SizedBox.shrink(),
           ),
-          // move FAB to the bottom-right
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
       ),
