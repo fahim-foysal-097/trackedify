@@ -34,7 +34,7 @@ class UserPageState extends State<UserPage> {
   int? userId;
   String appVersion = "";
 
-  int loadCount = 0;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -49,6 +49,10 @@ class UserPageState extends State<UserPage> {
   }
 
   Future<void> loadAppVersion() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       final info = await PackageInfo.fromPlatform();
       if (!mounted) return;
@@ -58,7 +62,9 @@ class UserPageState extends State<UserPage> {
     } catch (e) {
       if (kDebugMode) debugPrint('Failed to read package info: $e');
     }
-    loadCount++;
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<void> _launchURL(String url) async {
@@ -71,6 +77,10 @@ class UserPageState extends State<UserPage> {
   }
 
   Future<void> loadUserInfo() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final db = await DatabaseHelper().database;
     final res = await db.query('user_info', limit: 1);
 
@@ -105,8 +115,9 @@ class UserPageState extends State<UserPage> {
         whereArgs: [userId],
       );
     }
-
-    loadCount++;
+    setState(() {
+      isLoading = false;
+    });
   }
 
   /// Pick an image and copy it into app documents for stable storage.
@@ -250,7 +261,7 @@ class UserPageState extends State<UserPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (loadCount != 2) {
+    if (isLoading) {
       return const Center(child: CupertinoActivityIndicator(radius: 12));
     }
 

@@ -345,16 +345,26 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     final ts = DateTime.now().millisecondsSinceEpoch;
     final name = 'trackedify_$ts.jpg';
     try {
-      final res = await SaverGallery.saveImage(
+      await SaverGallery.saveImage(
         bytes,
         quality: 100,
         fileName: name,
         skipIfExists: false,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Saved to gallery: $res')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Saved to gallery')),
+            ],
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -962,7 +972,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 child: Row(
                                   children: [
                                     const Icon(
-                                      Icons.image,
+                                      FontAwesomeIcons.solidImage,
                                       size: 14,
                                       color: Colors.grey,
                                     ),
@@ -976,7 +986,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                             ],
                             if (noteText.isNotEmpty) ...[
                               Expanded(

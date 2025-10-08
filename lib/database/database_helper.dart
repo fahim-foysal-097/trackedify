@@ -72,6 +72,7 @@ class DatabaseHelper {
           ''');
 
           // --- Table: Image Notes (stores raw image binary as BLOB) ---
+          // ? caption is unused for now
           await txn.execute('''
             CREATE TABLE img_notes (
               id INTEGER PRIMARY KEY AUTOINCREMENT,

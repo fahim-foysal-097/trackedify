@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/shared/constants/text_constant.dart';
@@ -35,6 +39,9 @@ class HomePageState extends State<HomePage> {
 
   // guard to avoid concurrent preference reloads
   bool _prefLoadInProgress = false;
+
+  // Map expenseId -> image count
+  Map<int, int> _imageCountMap = {};
 
   final overviewKey = GlobalKey<OverviewWidgetState>();
 
@@ -134,6 +141,44 @@ class HomePageState extends State<HomePage> {
     setState(() {
       expenses = data;
     });
+
+    await _loadImageCountsForExpenses(data);
+
+    setState(() {});
+  }
+
+  /// Efficiently load counts from img_notes for all supplied expenses.
+  Future<void> _loadImageCountsForExpenses(
+    List<Map<String, dynamic>> data,
+  ) async {
+    final db = await DatabaseHelper().database;
+    if (data.isEmpty) {
+      setState(() => _imageCountMap = {});
+      return;
+    }
+
+    final ids = data.map((e) => e['id'] as int).toList();
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final rows = await db.rawQuery(
+      'SELECT expense_id, COUNT(*) as cnt FROM img_notes WHERE expense_id IN ($placeholders) GROUP BY expense_id',
+      ids,
+    );
+    final Map<int, int> counts = {};
+    for (var r in rows) {
+      final eid = r['expense_id'] as int;
+      final cnt = (r['cnt'] is int)
+          ? r['cnt'] as int
+          : int.parse(r['cnt'].toString());
+      counts[eid] = cnt;
+    }
+
+    for (final id in ids) {
+      counts[id] = counts[id] ?? 0;
+    }
+
+    setState(() {
+      _imageCountMap = counts;
+    });
   }
 
   Map<String, dynamic> getCategory(String name) {
@@ -147,6 +192,163 @@ class HomePageState extends State<HomePage> {
     final parsed = double.tryParse(amount?.toString() ?? '');
     if (parsed != null) return parsed.toStringAsFixed(2);
     return amount?.toString() ?? '0.00';
+  }
+
+  /// Fetch image blobs for an expense id from img_notes.
+  Future<List<Uint8List>> _fetchImagesForExpense(int expenseId) async {
+    final db = await DatabaseHelper().database;
+    final rows = await db.query(
+      'img_notes',
+      where: 'expense_id = ?',
+      whereArgs: [expenseId],
+    );
+    final List<Uint8List> images = [];
+    for (final r in rows) {
+      final img = r['image'];
+      if (img is Uint8List) {
+        images.add(img);
+      } else if (img is List<int>) {
+        images.add(Uint8List.fromList(img));
+      } else if (img != null) {
+        try {
+          images.add(Uint8List.fromList(List<int>.from(img as Iterable<int>)));
+        } catch (_) {}
+      }
+    }
+    return images;
+  }
+
+  /// Request minimal permissions needed for saving. Returns true if we can proceed.
+  Future<bool> _ensureSavePermission() async {
+    try {
+      if (Platform.isIOS) {
+        final status = await Permission.photos.request();
+        return status.isGranted;
+      } else if (Platform.isAndroid) {
+        final storage = await Permission.storage.request();
+        if (storage.isGranted) return true;
+        final photos = await Permission.photos.request();
+        return photos.isGranted;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  /// Save bytes to gallery using saver_gallery
+  Future<void> _saveBytesToGallery(Uint8List bytes) async {
+    final ok = await _ensureSavePermission();
+    if (!ok) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permission denied. Cannot save image.')),
+      );
+      return;
+    }
+
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final name = 'trackedify_$ts.jpg';
+    try {
+      await SaverGallery.saveImage(
+        bytes,
+        quality: 100,
+        fileName: name,
+        skipIfExists: false,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.deepPurple,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Saved to gallery')),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
+    }
+  }
+
+  /// Show image viewer with Save option
+  void _showImageViewer(Uint8List bytes) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        if (bytes.isEmpty) {
+          return const Center(child: CupertinoActivityIndicator());
+        } else {
+          return Dialog(
+            insetPadding: const EdgeInsets.all(12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: InteractiveViewer(
+                    child: Image.memory(bytes, fit: BoxFit.contain),
+                  ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(
+                            Icons.save_alt,
+                            color: Colors.deepPurple,
+                          ),
+                          label: const Text('Save to gallery'),
+                          onPressed: () {
+                            Navigator.pop(context); // close viewer
+                            _saveBytesToGallery(bytes);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            side: const BorderSide(color: Colors.deepPurple),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _showNoteSheet(Map<String, dynamic> expense) async {
@@ -262,6 +464,65 @@ class HomePageState extends State<HomePage> {
                           ),
                   ),
                   const SizedBox(height: 18),
+                  // images area
+                  FutureBuilder<List<Uint8List>>(
+                    future: _fetchImagesForExpense(expense['id'] as int),
+                    builder: (context, snap) {
+                      if (!snap.hasData) {
+                        return const Column(
+                          children: [
+                            SizedBox(
+                              height: 20,
+                              child: Center(
+                                child: CupertinoActivityIndicator(),
+                              ),
+                            ),
+                            SizedBox(height: 24),
+                          ],
+                        );
+                      }
+                      final imgs = snap.data!;
+                      if (imgs.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Images',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 96,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: imgs.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, i) {
+                                final b = imgs[i];
+                                return GestureDetector(
+                                  onTap: () => _showImageViewer(b),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.memory(
+                                      b,
+                                      width: 96,
+                                      height: 96,
+                                      fit: BoxFit.cover,
+                                      cacheWidth: 192,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+                      );
+                    },
+                  ),
                   // actions
                   Row(
                     children: [
@@ -820,6 +1081,7 @@ class HomePageState extends State<HomePage> {
                         .toString()
                         .trim()
                         .isNotEmpty;
+                    final imageCount = _imageCountMap[expense['id']] ?? 0;
 
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -854,12 +1116,35 @@ class HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
+
                                     if (hasNote) ...[
                                       const SizedBox(width: 5),
                                       const Icon(
                                         FontAwesomeIcons.solidNoteSticky,
                                         size: 16,
                                         color: Colors.grey,
+                                      ),
+                                    ],
+                                    if (imageCount > 0) ...[
+                                      const SizedBox(width: 8),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            FontAwesomeIcons.solidImage,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            '$imageCount',
+
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ],
