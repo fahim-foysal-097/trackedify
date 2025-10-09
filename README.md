@@ -4,22 +4,22 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 
 - Track & categorize your expenses
 - Analyze your spending patterns with detailed insights
-- Interactive charts & visualizations
+- Interactive charts & visualizations with predictions
 - Create custom categories
 - Simple, clean, and intuitive UI
 - Works fully offline (your data stays on your device)
 - Delete or edit expenses anytime
 - Search expenses by category, amount, date or note
+- Smart suggestions
 - Swipe feature
 - Built in Calculator
 - Import & Export Database
-- Add notes
+- Add notes and image notes
 - App Locker
 - Voice Commands
 - Daily Reminder
 - Auto Updater
-- Insight Cards
-- Beautiful Charts
+- Beautiful Insight Cards
 
 ## Screenshots
 
@@ -50,8 +50,9 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 - [x] Predictions
 - [x] Auto updater & Notifications
 - [x] Smart Suggestions (in create category)
+- [x] Save images as notes
+- [ ] Optimization
 - [ ] Make compatible with web
-- [ ] Save images as notes
 - [ ] Budget & Income functionality
 - [ ] Smart alerts (e.g., overspending warnings)
 - [ ] Cloud backup

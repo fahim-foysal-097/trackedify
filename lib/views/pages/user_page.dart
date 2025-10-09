@@ -124,7 +124,7 @@ class UserPageState extends State<UserPage> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 38,
+      imageQuality: 40,
     );
     if (!mounted) return;
 
@@ -600,7 +600,7 @@ class UserPageState extends State<UserPage> {
                   _buildActionTile(
                     icon: FontAwesomeIcons.solidClock,
                     label: 'Daily Reminder',
-                    accent: Colors.deepPurple,
+                    accent: Colors.orange,
                     onTap: () {
                       Navigator.push(
                         context,

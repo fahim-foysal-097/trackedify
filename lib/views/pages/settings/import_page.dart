@@ -137,7 +137,9 @@ class _ImportPageState extends State<ImportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CupertinoActivityIndicator()),
+        builder: (_) => const Center(
+          child: CupertinoActivityIndicator(color: Colors.white),
+        ),
       );
       spinnerShown = true;
 
@@ -295,7 +297,9 @@ class _ImportPageState extends State<ImportPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CupertinoActivityIndicator()),
+        builder: (_) => const Center(
+          child: CupertinoActivityIndicator(color: Colors.white),
+        ),
       );
       spinnerShown = true;
 

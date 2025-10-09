@@ -552,6 +552,8 @@ class _AddPageState extends State<AddPage> {
     try {
       final List<XFile> files = await _picker.pickMultiImage(
         imageQuality: _selectedImageQuality,
+        maxHeight: 1920,
+        maxWidth: 1080,
       );
 
       if (files.isEmpty) return;
@@ -1033,7 +1035,7 @@ class _AddPageState extends State<AddPage> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Slider(
-                                          activeColor: selectedCat?['color'],
+                                          activeColor: Colors.deepPurple,
                                           min: 10,
                                           max: 100,
                                           divisions: 9,

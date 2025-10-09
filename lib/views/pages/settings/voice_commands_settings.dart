@@ -93,16 +93,9 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
       ),
       body: _loading
           ? const Center(child: CupertinoActivityIndicator())
-          : Container(
+          : SizedBox(
               width: double.infinity,
               height: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFF6F8FF), Color(0xFFFFFFFF)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
               child: ListView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
