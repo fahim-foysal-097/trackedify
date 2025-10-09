@@ -51,6 +51,7 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 - [x] Auto updater & Notifications
 - [x] Smart Suggestions (in create category)
 - [x] Save images as notes
+- [ ] Predictive back gesture
 - [ ] Optimization
 - [ ] Make compatible with web
 - [ ] Budget & Income functionality
