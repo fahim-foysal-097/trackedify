@@ -9,8 +9,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
 
-// TODO : export a single CSV file
-
 class ExportPage extends StatefulWidget {
   const ExportPage({super.key});
 
@@ -34,7 +32,7 @@ class _ExportPageState extends State<ExportPage> {
 
   void showTipsDialog() {
     const tips =
-        '''You can export / backup you data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON. You can only backup image notes by exporting DB.''';
+        '''You can export / backup your data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON. You can only backup image notes by exporting DB.''';
 
     PanaraInfoDialog.show(
       context,
@@ -226,13 +224,15 @@ class _ExportPageState extends State<ExportPage> {
     }
   }
 
-  /// Export CSV: build CSV files into temp files then let user pick destination
-  /// NOTE: user_info CSV is intentionally NOT exported here.
+  /// Export CSV: single CSV file containing only expenses with columns:
+  /// id, date, category, amount, note (in that order). Excludes user_info and img_notes.
   Future<void> _exportCsvToSaveDialog() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
 
     bool dialogShown = false;
+    File? tmpFile;
+
     try {
       // Prevent exporting if there are no expenses
       if (_expenseCount == 0) {
@@ -252,62 +252,44 @@ class _ExportPageState extends State<ExportPage> {
 
       final db = await _dbHelper.database;
 
-      // ? We will create 2 CSV files in temp (expenses, categories), and call save dialog for each -- needs improvement (single file)
-
-      // expenses
+      // Query expenses ordered by date ascending (you can change ordering if needed)
       final expenses = await db.query('expenses', orderBy: 'date ASC');
-      final sbExp = StringBuffer();
-      sbExp.writeln('id,category,amount,date,note');
+
+      // Build CSV - NOTE: strict header + order requested by user
+      final sb = StringBuffer();
+      // header: id(expense) , daate,category, amount, note
+      // we'll use 'date' spelling in header to be correct
+      sb.writeln('id,date,category,amount,note');
+
       for (var row in expenses) {
-        sbExp.writeln(
+        // Ensure the exact order: id, date, category, amount, note
+        final id = row['id'];
+        final date = row['date'];
+        final category = row['category'];
+        final amount = row['amount'];
+        final note = row['note'];
+
+        sb.writeln(
           [
-            _safeCsvCell(row['id']),
-            _safeCsvCell(row['category']),
-            _safeCsvCell(row['amount']),
-            _safeCsvCell(row['date']),
-            _safeCsvCell(row['note']),
+            _safeCsvCell(id),
+            _safeCsvCell(date),
+            _safeCsvCell(category),
+            _safeCsvCell(amount),
+            _safeCsvCell(note),
           ].join(','),
         );
       }
-      final tmpExp = await _createTempFile(
-        'expenses_${timestamp()}.csv',
-        sbExp.toString(),
-      );
 
-      // categories
-      final categories = await db.query('categories', orderBy: 'id ASC');
-      final sbCat = StringBuffer();
-      sbCat.writeln('id,name,color,icon_code');
-      for (var row in categories) {
-        sbCat.writeln(
-          [
-            _safeCsvCell(row['id']),
-            _safeCsvCell(row['name']),
-            _safeCsvCell(row['color']),
-            _safeCsvCell(row['icon_code']),
-          ].join(','),
-        );
-      }
-      final tmpCat = await _createTempFile(
-        'categories_${timestamp()}.csv',
-        sbCat.toString(),
-      );
+      final fileName = 'export_csv_${timestamp()}.csv';
+      tmpFile = await _createTempFile(fileName, sb.toString());
 
-      // let user save each file (one by one)
-      final savedPaths = <String>[];
-      for (final tmp in [tmpExp, tmpCat]) {
-        final saved = await _saveFileWithDialogAndFallback(
-          tmp,
-          p.basename(tmp.path),
-        );
-        if (saved != null) savedPaths.add(saved);
-        // attempt to delete temp file
-        try {
-          await tmp.delete();
-        } catch (_) {}
-      }
+      final savedPath = await _saveFileWithDialogAndFallback(tmpFile, fileName);
 
-      // close spinner
+      // delete tmp
+      try {
+        if (tmpFile.existsSync()) await tmpFile.delete();
+      } catch (_) {}
+
       if (dialogShown && mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
         dialogShown = false;
@@ -315,10 +297,10 @@ class _ExportPageState extends State<ExportPage> {
 
       if (!mounted) return;
 
-      if (savedPaths.isEmpty) {
-        // user cancelled all
+      if (savedPath == null) {
         if (kDebugMode) debugPrint('CSV export cancelled');
       } else {
+        final bool isContentUri = savedPath.startsWith('content://');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
@@ -329,13 +311,19 @@ class _ExportPageState extends State<ExportPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'CSV export complete (${savedPaths.length} file(s) saved)',
+                    isContentUri
+                        ? 'CSV exported successfully (SAF URI).'
+                        : 'CSV exported to: ${p.basename(savedPath)}',
                   ),
                 ),
               ],
             ),
+            duration: const Duration(seconds: 4),
           ),
         );
+        if (kDebugMode) {
+          debugPrint("CSV export saved: $savedPath");
+        }
       }
     } catch (e) {
       if (dialogShown && mounted && Navigator.canPop(context)) {
@@ -357,6 +345,8 @@ class _ExportPageState extends State<ExportPage> {
     setState(() => _isExporting = true);
 
     bool dialogShown = false;
+    File? tmp;
+
     try {
       // Prevent exporting if there are no expenses
       if (_expenseCount == 0) {
@@ -386,17 +376,14 @@ class _ExportPageState extends State<ExportPage> {
       };
 
       final jsonStr = const JsonEncoder.withIndent('  ').convert(payload);
-      final tmp = await _createTempFile(
-        'export_json_${timestamp()}.json',
-        jsonStr,
-      );
+      tmp = await _createTempFile('export_json_${timestamp()}.json', jsonStr);
 
       final saved = await _saveFileWithDialogAndFallback(
         tmp,
         p.basename(tmp.path),
       );
       try {
-        await tmp.delete();
+        if (tmp.existsSync()) await tmp.delete();
       } catch (_) {}
 
       if (dialogShown && mounted && Navigator.canPop(context)) {
