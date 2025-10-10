@@ -759,7 +759,7 @@ class _ImportPageState extends State<ImportPage> {
         ],
       ),
       body: RefreshIndicator(
-        color: Colors.blueAccent,
+        color: Colors.deepPurple,
         onRefresh: _loadSummary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

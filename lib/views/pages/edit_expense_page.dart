@@ -1090,35 +1090,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Image quality',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Text('Quality'),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Slider(
-                                  activeColor: Colors.deepPurple,
-                                  min: 10,
-                                  max: 100,
-                                  divisions: 9,
-                                  label: '$_selectedImageQuality',
-                                  value: _selectedImageQuality.toDouble(),
-                                  onChanged: (v) => setState(
-                                    () => _selectedImageQuality = v.round(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text('$_selectedImageQuality'),
-                            ],
-                          ),
                           const SizedBox(height: 6),
                           Row(
                             children: [
@@ -1218,6 +1189,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                           ],
 
                           if (_newPickedImages.isNotEmpty) ...[
+                            const SizedBox(height: 6),
                             const Text(
                               'New images',
                               style: TextStyle(fontWeight: FontWeight.w700),
@@ -1278,11 +1250,42 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             ),
                             const SizedBox(height: 12),
                           ],
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Text('Quality'),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: SliderTheme(
+                                  data: SliderTheme.of(context).copyWith(
+                                    thumbColor: Colors.deepPurple,
+                                    inactiveTickMarkColor: Colors.transparent,
+                                    activeTickMarkColor: Colors.transparent,
+                                  ),
+                                  child: Slider(
+                                    min: 10,
+                                    max: 100,
+                                    divisions: 9,
+                                    label: "$_selectedImageQuality",
+                                    value: _selectedImageQuality.toDouble(),
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        _selectedImageQuality = newValue
+                                            .round();
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('$_selectedImageQuality'),
+                            ],
+                          ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
 
                     // Save button
                     SizedBox(

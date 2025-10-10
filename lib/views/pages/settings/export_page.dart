@@ -572,7 +572,7 @@ class _ExportPageState extends State<ExportPage> {
         ],
       ),
       body: RefreshIndicator(
-        color: Colors.blueAccent,
+        color: Colors.deepPurple,
         onRefresh: () async {
           await _loadSummary();
         },
