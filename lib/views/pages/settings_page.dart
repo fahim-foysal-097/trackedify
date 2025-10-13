@@ -21,7 +21,9 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const iconColor = Colors.deepPurple;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final iconColor = cs.primary;
 
     void showTipsDialog() {
       const tips =
@@ -33,7 +35,7 @@ class SettingsPage extends StatelessWidget {
         message: tips,
         buttonText: 'Got it',
         onTapDismiss: () => Navigator.pop(context),
-        textColor: Colors.black54,
+        textColor: theme.textTheme.bodySmall?.color,
         panaraDialogType: PanaraDialogType.normal,
       );
     }
@@ -52,10 +54,10 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
         child: Text(
           title,
-          style: TextStyle(
+          style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: Colors.grey.shade700,
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.85),
           ),
         ),
       );
@@ -63,7 +65,7 @@ class SettingsPage extends StatelessWidget {
 
     Widget sectionCard(List<Widget> children) {
       return Card(
-        color: Colors.deepPurple.withValues(alpha: 0.07),
+        color: cs.primary.withValues(alpha: 0.06),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0,
@@ -75,18 +77,24 @@ class SettingsPage extends StatelessWidget {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Settings'),
+          title: Text('Settings', style: theme.textTheme.titleLarge),
           centerTitle: false,
           leading: IconButton(
             tooltip: "Back",
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 25,
+              color: cs.onSurface,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actionsPadding: const EdgeInsets.only(right: 6),
+          backgroundColor: cs.surface,
+          foregroundColor: cs.onSurface,
           actions: [
             IconButton(
               tooltip: 'Tips',
-              icon: const Icon(Icons.lightbulb_outline),
+              icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
               onPressed: showTipsDialog,
             ),
           ],
@@ -207,7 +215,7 @@ class SettingsPage extends StatelessWidget {
                       title: "Import data from DB/JSON?",
                       message:
                           "This may replace all of your current data / append data (using JSON). Continue?",
-                      textColor: Colors.black54,
+                      textColor: theme.textTheme.bodySmall?.color,
                       confirmButtonText: "Confirm",
                       cancelButtonText: "Cancel",
                       onTapCancel: () => Navigator.pop(context),
@@ -248,24 +256,26 @@ class SettingsPage extends StatelessWidget {
                         if (context.mounted) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               behavior: SnackBarBehavior.floating,
-                              backgroundColor: Colors.red,
+                              backgroundColor: cs.error,
                               content: Row(
                                 children: [
                                   Icon(
                                     Icons.warning_rounded,
-                                    color: Colors.white,
+                                    color: cs.onError,
                                   ),
-                                  SizedBox(width: 12),
-                                  Expanded(child: Text('All data deleted')),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                    child: Text('All data deleted'),
+                                  ),
                                 ],
                               ),
                             ),
                           );
                         }
                       },
-                      textColor: Colors.grey.shade700,
+                      textColor: theme.textTheme.bodySmall?.color,
                       panaraDialogType: PanaraDialogType.error,
                     );
                   },
@@ -298,7 +308,7 @@ class SettingsPage extends StatelessWidget {
                       title: "Clear downloads?",
                       message:
                           "This will delete all temporary downloaded updates (safe). Continue?",
-                      textColor: Colors.black54,
+                      textColor: theme.textTheme.bodySmall?.color,
                       confirmButtonText: "Clear",
                       cancelButtonText: "Cancel",
                       onTapCancel: () => Navigator.pop(context, false),
@@ -313,7 +323,7 @@ class SettingsPage extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: cs.primary,
                         content: Row(
                           children: [
                             const Icon(
@@ -389,6 +399,7 @@ class SettingsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     const double height = 54.0;
     const double iconSize = 26.0;
+    final cs = Theme.of(context).colorScheme;
 
     return Material(
       color: Colors.transparent,
@@ -403,12 +414,17 @@ class SettingsButton extends StatelessWidget {
               Icon(icon, color: iconColor, size: iconSize),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 16)),
+                child: Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 16),
+                ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
                 size: 28,
-                color: Colors.grey.shade500,
+                color: cs.onSurface.withValues(alpha: 0.6),
               ),
             ],
           ),
