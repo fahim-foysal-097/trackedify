@@ -94,6 +94,9 @@ class OverviewWidgetState extends State<OverviewWidget> {
     const double maxCardWidth = 640; // max width on large screens
     const double horizontalPadding = 24; // outside padding
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _future,
       builder: (context, snapshot) {
@@ -137,11 +140,11 @@ class OverviewWidgetState extends State<OverviewWidget> {
                     aspectRatio: 1.75,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           colors: [
-                            Color.fromARGB(255, 74, 150, 240),
-                            Color.fromARGB(255, 74, 130, 240),
-                            Color.fromARGB(255, 43, 90, 219),
+                            cs.primary,
+                            cs.primaryContainer,
+                            // cs.secondary,
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -149,9 +152,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
                         borderRadius: BorderRadius.circular(20 * scaleFactor),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(
-                              0xFF667EEA,
-                            ).withValues(alpha: 0.3),
+                            color: cs.primary.withValues(alpha: 0.28),
                             blurRadius: 20 * scaleFactor,
                             offset: Offset(0, 8 * scaleFactor),
                           ),
@@ -166,18 +167,19 @@ class OverviewWidgetState extends State<OverviewWidget> {
                               children: [
                                 Icon(
                                   Icons.analytics_outlined,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                   size: 28 * scaleFactor,
                                 ),
                                 SizedBox(width: 12 * scaleFactor),
                                 Expanded(
                                   child: Text(
                                     'Expense Overview',
-                                    style: TextStyle(
-                                      fontSize: 18 * scaleFactor,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: cs.onPrimary,
+                                          fontSize: 18 * scaleFactor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -278,6 +280,15 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textStyleLabel = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: cs.onPrimary.withValues(alpha: 0.88),
+    );
+    final textStyleValue = Theme.of(context).textTheme.titleMedium?.copyWith(
+      color: cs.onPrimary,
+      fontWeight: FontWeight.bold,
+    );
+
     return Column(
       crossAxisAlignment: isRightAligned
           ? CrossAxisAlignment.end
@@ -291,23 +302,27 @@ class _StatItem extends StatelessWidget {
               : MainAxisAlignment.start,
           children: [
             if (!isRightAligned) ...[
-              Icon(icon, color: Colors.white70, size: 20 * scaleFactor),
+              Icon(
+                icon,
+                color: cs.onPrimary.withValues(alpha: 0.85),
+                size: 20 * scaleFactor,
+              ),
               SizedBox(width: 6 * scaleFactor),
             ],
             Flexible(
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12 * scaleFactor,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: textStyleLabel?.copyWith(fontSize: 12 * scaleFactor),
               ),
             ),
             if (isRightAligned) ...[
               SizedBox(width: 6 * scaleFactor),
-              Icon(icon, color: Colors.white70, size: 20 * scaleFactor),
+              Icon(
+                icon,
+                color: cs.onPrimary.withValues(alpha: 0.85),
+                size: 20 * scaleFactor,
+              ),
             ],
           ],
         ),
@@ -315,11 +330,7 @@ class _StatItem extends StatelessWidget {
         Text(
           value,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 20 * scaleFactor,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: textStyleValue?.copyWith(fontSize: 20 * scaleFactor),
         ),
       ],
     );

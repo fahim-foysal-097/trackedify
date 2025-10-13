@@ -147,6 +147,8 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
 
     if (!hasUser) return const OnboardingPage();
 
+    final cs = Theme.of(context).colorScheme;
+
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
@@ -178,11 +180,11 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
               });
             },
             elevation: 7,
-            backgroundColor: Colors.white,
-            shape: const CircleBorder(
-              side: BorderSide(width: 3, color: Colors.blueAccent),
+            backgroundColor: cs.primary,
+            shape: CircleBorder(
+              side: BorderSide(width: 3, color: cs.onPrimary),
             ),
-            child: const Icon(Icons.add, size: 28),
+            child: Icon(Icons.add, size: 28, color: cs.onPrimary),
           ),
         ),
 
