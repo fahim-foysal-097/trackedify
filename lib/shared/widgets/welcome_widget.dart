@@ -33,6 +33,9 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final onPrimary = cs.onPrimary;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 120, 20, 0),
       child: Row(
@@ -41,20 +44,21 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Welcome back,',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: onPrimary.withValues(alpha: 0.92),
                   fontWeight: FontWeight.w400,
+                  fontSize: 16,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
                 username,
-                style: const TextStyle(
-                  fontSize: 28,
-                  color: Colors.white,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: onPrimary,
                   fontWeight: FontWeight.w700,
+                  fontSize: 28,
                 ),
               ),
             ],
@@ -77,14 +81,10 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: onPrimary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                FontAwesomeIcons.gear,
-                color: Colors.white,
-                size: 22,
-              ),
+              child: Icon(FontAwesomeIcons.gear, color: onPrimary, size: 22),
             ),
           ),
         ],

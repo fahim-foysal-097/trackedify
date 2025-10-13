@@ -1,3 +1,5 @@
+// ---------------- NavBarWidget - themed ----------------
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/data/notifiers.dart';
@@ -8,9 +10,9 @@ class NavBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color bg = Colors.blueAccent;
-    const Color selectedIconColor = Colors.white;
-    final Color unselectedIconColor = Colors.white.withValues(alpha: 0.65);
+    final cs = Theme.of(context).colorScheme;
+    final selectedIconColor = cs.onPrimary;
+    final unselectedIconColor = cs.onPrimary.withValues(alpha: 0.65);
 
     // gap width reserved for the FAB (slightly larger than diameter so it breathes)
     const double gapWidth = FabConfig.fabDiameter * 1.1;
@@ -39,7 +41,7 @@ class NavBarWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   height: 64,
-                  color: bg,
+                  color: cs.primary,
                   child: Row(
                     children: [
                       // left side items
