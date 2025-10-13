@@ -46,7 +46,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
   // newly picked images (not yet in DB): list of Uint8List
   final List<Uint8List> _newPickedImages = [];
 
-  // UI: image quality (1-100) passed to image_picker; default 38
+  // UI: image quality (1-100) passed to image_picker; default 40
   int _selectedImageQuality = 40;
 
   final String tips =
@@ -164,13 +164,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   Future<void> deleteCategory(int id, String name) async {
+    final theme = Theme.of(context);
     await PanaraInfoDialog.show(
       context,
       title: 'Delete Category?',
       message:
           'Long-press again to confirm deletion of "$name".\n\n(Press OK to delete.)',
       buttonText: 'Delete',
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.warning,
     );
@@ -182,7 +183,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       message: 'Are you sure you want to delete "$name"?',
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: PanaraDialogType.error,
@@ -193,13 +194,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
       await db.delete("categories", where: "id = ?", whereArgs: [id]);
       await loadCategories();
       if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              const Icon(Icons.delete, color: Colors.white),
+              Icon(Icons.delete, color: cs.onError),
               const SizedBox(width: 12),
               Expanded(child: Text("Category '$name' deleted!")),
             ],
@@ -229,6 +231,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   void _showCategorySelector() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -242,19 +247,23 @@ class _EditExpensePageState extends State<EditExpensePage> {
           maxChildSize: 0.9,
           expand: false,
           builder: (dragContext, scrollController) => Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              color: Colors.white,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              color: theme.colorScheme.surface,
             ),
             child: ListView(
               controller: scrollController,
               padding: const EdgeInsets.all(18),
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 8.0),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     "Select Category",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -285,21 +294,18 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               height: 56,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.deepPurpleAccent,
-                                  width: 2,
-                                ),
+                                border: Border.all(color: cs.primary, width: 2),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.add,
-                                color: Colors.deepPurpleAccent,
+                                color: cs.primary,
                                 size: 28,
                               ),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               "Add",
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -348,7 +354,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               radius: 28,
                               child: Icon(
                                 cat['icon'],
-                                color: Colors.white,
+                                color: cs.onPrimary,
                                 size: 22,
                               ),
                             ),
@@ -362,14 +368,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               textAlign: TextAlign.center,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
                                 color: isSelected
-                                    ? Colors.deepPurple
-                                    : Colors.black87,
+                                    ? cs.primary
+                                    : theme.textTheme.bodySmall?.color,
                               ),
                             ),
                           ),
@@ -404,6 +410,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   Widget _buildPreviewCard() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final selectedCat = getSelectedCategory();
     final amountText = expenseController.text.isNotEmpty
         ? NumberFormat.currency(
@@ -419,11 +427,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFBFCFF), Color(0xFFF5F7FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -441,19 +445,24 @@ class _EditExpensePageState extends State<EditExpensePage> {
             decoration: BoxDecoration(
               color: selectedCat != null
                   ? selectedCat['color']
-                  : Colors.blueGrey,
+                  : theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
             child: selectedCat != null
                 ? Center(
                     child: Icon(
                       selectedCat['icon'],
-                      color: Colors.white,
+                      color: cs.onPrimary,
                       size: 28,
                     ),
                   )
-                : const Center(
-                    child: Icon(FontAwesomeIcons.tags, color: Colors.white38),
+                : Center(
+                    child: Icon(
+                      FontAwesomeIcons.tags,
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.6,
+                      ),
+                    ),
                   ),
           ),
           const SizedBox(width: 12),
@@ -467,7 +476,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     Flexible(
                       child: Text(
                         selectedCategoryName ?? 'Uncategorized',
-                        style: const TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -478,7 +487,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     const SizedBox(width: 8),
                     Text(
                       amountText,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                       ),
@@ -488,21 +497,24 @@ class _EditExpensePageState extends State<EditExpensePage> {
                 const SizedBox(height: 8),
                 Text(
                   DateFormat('dd MMM yyyy').format(selectedDate),
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.7,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   noteText,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.remove_red_eye_outlined),
-            color: Colors.deepPurple,
+            icon: Icon(Icons.remove_red_eye_outlined, color: cs.primary),
             onPressed: () {
               showDialog(
                 context: context,
@@ -622,7 +634,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       } else if (imgData is List<int>) {
         bytes = Uint8List.fromList(imgData);
       } else if (imgData is String) {
-        // Unlikely, but handle base64 stored strings
+        // Unlikely, but handle base64 stored strings (best-effort)
         try {
           bytes = Uint8List.fromList(List<int>.from(imgData.codeUnits));
         } catch (_) {
@@ -645,7 +657,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
   Future<void> _pickImages() async {
     try {
-      // Use user-selected image quality value
       final List<XFile> files = await _picker.pickMultiImage(
         imageQuality: _selectedImageQuality,
         maxHeight: 1920,
@@ -654,7 +665,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
       if (files.isEmpty) return;
 
-      // Show small progress modal while we read bytes
       if (!mounted) return;
       showDialog(
         context: context,
@@ -675,6 +685,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       if (mounted) setState(() {});
     } on PlatformException catch (e) {
       if (kDebugMode) debugPrint('Image pick failed: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Failed to pick images')));
@@ -682,6 +693,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   Future<void> _deleteExistingImage(int id) async {
+    final theme = Theme.of(context);
     final confirm = await PanaraConfirmDialog.show<bool>(
       context,
       title: "Delete image?",
@@ -690,7 +702,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
       cancelButtonText: "Cancel",
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.error,
     );
 
@@ -724,7 +736,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
     if (_newPickedImages.isEmpty) return;
     final dbHelper = DatabaseHelper();
     for (final bytes in _newPickedImages) {
-      // insertion expects Uint8List
       await dbHelper.insertImageNote(
         expenseId: expenseId,
         image: bytes,
@@ -740,16 +751,18 @@ class _EditExpensePageState extends State<EditExpensePage> {
   Future<void> saveChanges() async {
     FocusScope.of(context).unfocus();
 
+    final cs = Theme.of(context).colorScheme;
+
     if (selectedCategoryName == null || selectedCategoryName!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
+          backgroundColor: cs.secondary,
           content: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Please select a category')),
+              Icon(Icons.info_outline, color: cs.onSecondary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Please select a category')),
             ],
           ),
         ),
@@ -760,14 +773,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
     final amount = double.tryParse(expenseController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
+          backgroundColor: cs.secondary,
           content: Row(
             children: [
-              Icon(Icons.info, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Please enter a valid amount')),
+              Icon(Icons.info, color: cs.onSecondary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Please enter a valid amount')),
             ],
           ),
         ),
@@ -801,14 +814,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Expense updated')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Expense updated')),
             ],
           ),
         ),
@@ -828,12 +841,13 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   void _showTipsDialog() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: "Tips",
       message: tips.isNotEmpty ? tips : "No tips available right now.",
       buttonText: "Got it",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -841,6 +855,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final selectedCat = getSelectedCategory();
 
     return GestureDetector(
@@ -850,9 +866,9 @@ class _EditExpensePageState extends State<EditExpensePage> {
           child: Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFF6F8FF), Color(0xFFFFFFFF)],
+                colors: [theme.colorScheme.surface, theme.colorScheme.surface],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -870,22 +886,26 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                          icon: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: cs.onSurface,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Edit Expense',
-                            style: TextStyle(
-                              fontSize: 20,
+                            style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        // Info / tips
                         IconButton(
-                          icon: const Icon(Icons.lightbulb_outlined),
+                          icon: Icon(
+                            Icons.lightbulb_outlined,
+                            color: cs.onSurface,
+                          ),
                           onPressed: _showTipsDialog,
                         ),
                       ],
@@ -906,10 +926,10 @@ class _EditExpensePageState extends State<EditExpensePage> {
                       decoration: InputDecoration(
                         hintText: "Select Category",
                         filled: true,
-                        fillColor: Colors.white,
-                        suffixIcon: const Icon(
+                        fillColor: cs.surface,
+                        suffixIcon: Icon(
                           Icons.arrow_drop_down_rounded,
-                          color: Colors.grey,
+                          color: theme.textTheme.bodySmall?.color,
                           size: 34,
                         ),
                         prefixIcon: selectedCat != null
@@ -920,15 +940,15 @@ class _EditExpensePageState extends State<EditExpensePage> {
                                   radius: 14,
                                   child: Icon(
                                     selectedCat['icon'],
-                                    color: Colors.white,
+                                    color: cs.onPrimary,
                                     size: 18,
                                   ),
                                 ),
                               )
-                            : const Icon(
+                            : Icon(
                                 FontAwesomeIcons.tags,
                                 size: 18,
-                                color: Colors.grey,
+                                color: theme.textTheme.bodySmall?.color,
                               ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -958,13 +978,13 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             decoration: InputDecoration(
                               hintText: "Amount",
                               filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Padding(
-                                padding: EdgeInsets.all(12.0),
+                              fillColor: cs.surface,
+                              prefixIcon: Padding(
+                                padding: const EdgeInsets.all(12.0),
                                 child: Icon(
                                   FontAwesomeIcons.wallet,
                                   size: 18,
-                                  color: Colors.grey,
+                                  color: theme.textTheme.bodySmall?.color,
                                 ),
                               ),
                               border: OutlineInputBorder(
@@ -976,7 +996,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         ),
                         const SizedBox(width: 10),
                         Material(
-                          color: Colors.deepPurple,
+                          color: cs.primary,
                           borderRadius: BorderRadius.circular(12),
                           child: InkWell(
                             onTap: _showCalculator,
@@ -986,10 +1006,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                                 vertical: 14,
                                 horizontal: 14,
                               ),
-                              child: const Icon(
-                                Icons.calculate,
-                                color: Colors.white,
-                              ),
+                              child: Icon(Icons.calculate, color: cs.onPrimary),
                             ),
                           ),
                         ),
@@ -1009,11 +1026,11 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             decoration: InputDecoration(
                               hintText: "Date",
                               filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Icon(
+                              fillColor: cs.surface,
+                              prefixIcon: Icon(
                                 FontAwesomeIcons.solidClock,
                                 size: 18,
-                                color: Colors.grey,
+                                color: theme.textTheme.bodySmall?.color,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1033,20 +1050,20 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
+                            backgroundColor: cs.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 12,
                             ),
                             child: Text(
                               'Today',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: cs.onPrimary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1066,11 +1083,11 @@ class _EditExpensePageState extends State<EditExpensePage> {
                       decoration: InputDecoration(
                         hintText: "Add a note (optional)",
                         filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: const Icon(
+                        fillColor: cs.surface,
+                        prefixIcon: Icon(
                           FontAwesomeIcons.solidNoteSticky,
                           size: 18,
-                          color: Colors.grey,
+                          color: theme.textTheme.bodySmall?.color,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1083,7 +1100,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                     Container(
                       padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cs.surface,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -1094,16 +1111,16 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: _pickImages,
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.photo_library,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                 ),
-                                label: const Text(
+                                label: Text(
                                   'Attach images',
-                                  style: TextStyle(color: Colors.white),
+                                  style: TextStyle(color: cs.onPrimary),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.deepPurple,
+                                  backgroundColor: cs.primary,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -1115,19 +1132,19 @@ class _EditExpensePageState extends State<EditExpensePage> {
                                   _newPickedImages.isNotEmpty)
                                 Text(
                                   '${_existingImages.length + _newPickedImages.length} attached',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                             ],
                           ),
-
                           const SizedBox(height: 12),
-
                           if (_existingImages.isNotEmpty) ...[
-                            const Text(
+                            Text(
                               'Existing images',
-                              style: TextStyle(fontWeight: FontWeight.w700),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             SizedBox(
@@ -1186,12 +1203,13 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               ),
                             ),
                           ],
-
                           if (_newPickedImages.isNotEmpty) ...[
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'New images',
-                              style: TextStyle(fontWeight: FontWeight.w700),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             SizedBox(
@@ -1252,14 +1270,24 @@ class _EditExpensePageState extends State<EditExpensePage> {
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Text('Quality'),
+                              Text(
+                                'Quality',
+                                style: theme.textTheme.bodyMedium,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: SliderTheme(
                                   data: SliderTheme.of(context).copyWith(
-                                    thumbColor: Colors.deepPurple,
-                                    inactiveTickMarkColor: Colors.transparent,
                                     activeTickMarkColor: Colors.transparent,
+                                    inactiveTickMarkColor: Colors.transparent,
+                                    thumbColor: cs.primary,
+                                    activeTrackColor: cs.primary,
+                                    inactiveTrackColor: cs.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    overlayColor: cs.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                   ),
                                   child: Slider(
                                     min: 10,
@@ -1277,7 +1305,10 @@ class _EditExpensePageState extends State<EditExpensePage> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text('$_selectedImageQuality'),
+                              Text(
+                                '$_selectedImageQuality',
+                                style: theme.textTheme.bodyMedium,
+                              ),
                             ],
                           ),
                         ],
@@ -1293,25 +1324,24 @@ class _EditExpensePageState extends State<EditExpensePage> {
                       child: ElevatedButton(
                         onPressed: _saving ? null : saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: cs.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: _saving
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 18,
                                 width: 18,
                                 child: CupertinoActivityIndicator(
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Save Changes',
-                                style: TextStyle(
-                                  fontSize: 16,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: cs.onPrimary,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white,
                                 ),
                               ),
                       ),

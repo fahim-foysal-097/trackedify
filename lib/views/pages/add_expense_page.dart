@@ -97,6 +97,7 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> deleteCategory(int id, String name) async {
+    final theme = Theme.of(context);
     final confirm = await PanaraConfirmDialog.show<bool>(
       context,
       title: "Delete Category?",
@@ -109,7 +110,7 @@ class _AddPageState extends State<AddPage> {
       onTapConfirm: () {
         Navigator.pop(context, true);
       },
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.error,
     );
 
@@ -118,13 +119,14 @@ class _AddPageState extends State<AddPage> {
       await db.delete("categories", where: "id = ?", whereArgs: [id]);
       await loadCategories();
       if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              const Icon(Icons.delete, color: Colors.white),
+              Icon(Icons.delete, color: cs.onError),
               const SizedBox(width: 12),
               Expanded(child: Text("Category '$name' deleted!")),
             ],
@@ -162,6 +164,9 @@ class _AddPageState extends State<AddPage> {
   }
 
   void _showCategorySelector() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -175,19 +180,23 @@ class _AddPageState extends State<AddPage> {
           maxChildSize: 0.9,
           expand: false,
           builder: (dragContext, scrollController) => Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              color: Colors.white,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              color: theme.colorScheme.surface,
             ),
             child: ListView(
               controller: scrollController,
               padding: const EdgeInsets.all(18),
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 8.0),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     "Select Category",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -217,21 +226,18 @@ class _AddPageState extends State<AddPage> {
                               height: 56,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.deepPurpleAccent,
-                                  width: 2,
-                                ),
+                                border: Border.all(color: cs.primary, width: 2),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.add,
-                                color: Colors.deepPurpleAccent,
+                                color: cs.primary,
                                 size: 28,
                               ),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               "Add",
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -280,7 +286,7 @@ class _AddPageState extends State<AddPage> {
                               radius: 28,
                               child: Icon(
                                 cat['icon'],
-                                color: Colors.white,
+                                color: cs.onPrimary,
                                 size: 22,
                               ),
                             ),
@@ -295,14 +301,14 @@ class _AddPageState extends State<AddPage> {
                               textAlign: TextAlign.center,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 12,
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
                                 color: isSelected
-                                    ? Colors.deepPurple
-                                    : Colors.black87,
+                                    ? cs.primary
+                                    : theme.textTheme.bodySmall?.color,
                               ),
                             ),
                           ),
@@ -327,6 +333,10 @@ class _AddPageState extends State<AddPage> {
       initialDate: selectedDate,
       firstDate: DateTime(1975),
       lastDate: DateTime(2060),
+      builder: (context, child) {
+        // let theme handle colors
+        return child ?? const SizedBox.shrink();
+      },
     );
     if (setDate != null) {
       setState(() {
@@ -351,6 +361,8 @@ class _AddPageState extends State<AddPage> {
   }
 
   Widget _buildPreviewCard() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final selectedCat = getSelectedCategory();
     final amountText = expenseController.text.isNotEmpty
         ? NumberFormat.currency(
@@ -363,16 +375,11 @@ class _AddPageState extends State<AddPage> {
         ? 'No note'
         : noteController.text.trim();
 
-    // static Container — no AnimatedSwitcher (no flashing)
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFBFCFF), Color(0xFFF5F7FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -391,19 +398,24 @@ class _AddPageState extends State<AddPage> {
             decoration: BoxDecoration(
               color: selectedCat != null
                   ? selectedCat['color']
-                  : Colors.blueGrey,
+                  : theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
             child: selectedCat != null
                 ? Center(
                     child: Icon(
                       selectedCat['icon'],
-                      color: Colors.white,
+                      color: cs.onPrimary,
                       size: 28,
                     ),
                   )
-                : const Center(
-                    child: Icon(FontAwesomeIcons.tags, color: Colors.white38),
+                : Center(
+                    child: Icon(
+                      FontAwesomeIcons.tags,
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.6,
+                      ),
+                    ),
                   ),
           ),
 
@@ -418,11 +430,10 @@ class _AddPageState extends State<AddPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // handle long category names gracefully
                     Flexible(
                       child: Text(
                         selectedCategoryName ?? 'Uncategorized',
-                        style: const TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -433,7 +444,7 @@ class _AddPageState extends State<AddPage> {
                     const SizedBox(width: 8),
                     Text(
                       amountText,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                       ),
@@ -443,14 +454,17 @@ class _AddPageState extends State<AddPage> {
                 const SizedBox(height: 8),
                 Text(
                   DateFormat('dd MMM yyyy').format(selectedDate),
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.7,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   noteText,
-                  style: const TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 13,
-                    color: Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 2,
@@ -462,8 +476,7 @@ class _AddPageState extends State<AddPage> {
 
           // eye button (no vertical stub line)
           IconButton(
-            icon: const Icon(Icons.remove_red_eye_outlined),
-            color: Colors.deepPurple,
+            icon: Icon(Icons.remove_red_eye_outlined, color: cs.primary),
             onPressed: () {
               showDialog(
                 context: context,
@@ -627,16 +640,18 @@ class _AddPageState extends State<AddPage> {
   Future<void> _onSavePressed() async {
     FocusScope.of(context).unfocus();
 
+    final cs = Theme.of(context).colorScheme;
+
     if (selectedCategoryName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
+          backgroundColor: cs.secondary,
           content: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Please select a category')),
+              Icon(Icons.info_outline, color: cs.onSecondary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Please select a category')),
             ],
           ),
         ),
@@ -655,14 +670,14 @@ class _AddPageState extends State<AddPage> {
     final amount = double.tryParse(expenseController.text);
     if (amount == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
+          backgroundColor: cs.secondary,
           content: Row(
             children: [
-              Icon(Icons.info, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Please enter an amount')),
+              Icon(Icons.info, color: cs.onSecondary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Please enter an amount')),
             ],
           ),
         ),
@@ -672,14 +687,14 @@ class _AddPageState extends State<AddPage> {
 
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.orange,
+          backgroundColor: cs.secondary,
           content: Row(
             children: [
-              Icon(Icons.info, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Please enter a valid amount')),
+              Icon(Icons.info, color: cs.onSecondary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Please enter a valid amount')),
             ],
           ),
         ),
@@ -712,14 +727,14 @@ class _AddPageState extends State<AddPage> {
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Expense saved')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Expense saved')),
             ],
           ),
         ),
@@ -744,12 +759,13 @@ class _AddPageState extends State<AddPage> {
   }
 
   void _showTipsDialog() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: "Tips",
       message: tips.isNotEmpty ? tips : "No tips available right now.",
       buttonText: "Got it",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -757,7 +773,10 @@ class _AddPageState extends State<AddPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final selectedCat = getSelectedCategory();
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -767,9 +786,12 @@ class _AddPageState extends State<AddPage> {
             child: Container(
               width: double.infinity,
               height: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFF6F8FF), Color(0xFFFFFFFF)],
+                  colors: [
+                    theme.colorScheme.surface,
+                    theme.colorScheme.surface,
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -788,29 +810,33 @@ class _AddPageState extends State<AddPage> {
                         children: [
                           IconButton(
                             tooltip: "Back",
-                            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                            icon: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: cs.onSurface,
+                            ),
                             onPressed: () => Navigator.pop(context),
                           ),
                           const SizedBox(width: 8),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Add Expense',
-                              style: TextStyle(
-                                fontSize: 20,
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                           // Tips button -> Panara dialog
                           IconButton(
-                            icon: const Icon(Icons.lightbulb_outlined),
+                            icon: Icon(
+                              Icons.lightbulb_outlined,
+                              color: cs.onSurface,
+                            ),
                             onPressed: _showTipsDialog,
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 6),
-
                       const SizedBox(height: 6),
 
                       // Live preview card (static)
@@ -826,11 +852,10 @@ class _AddPageState extends State<AddPage> {
                         decoration: InputDecoration(
                           hintText: "Select Category",
                           filled: true,
-                          fillColor: Colors.white,
-                          suffixIcon: const Icon(
+                          fillColor: cs.surface,
+                          suffixIcon: Icon(
                             Icons.arrow_drop_down_rounded,
-                            color: Colors.grey,
-                            size: 34,
+                            color: theme.textTheme.bodySmall?.color,
                           ),
                           prefixIcon: selectedCat != null
                               ? Padding(
@@ -840,15 +865,15 @@ class _AddPageState extends State<AddPage> {
                                     radius: 14,
                                     child: Icon(
                                       selectedCat['icon'],
-                                      color: Colors.white,
+                                      color: cs.onPrimary,
                                       size: 18,
                                     ),
                                   ),
                                 )
-                              : const Icon(
+                              : Icon(
                                   FontAwesomeIcons.tags,
                                   size: 18,
-                                  color: Colors.grey,
+                                  color: theme.textTheme.bodySmall?.color,
                                 ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -880,13 +905,13 @@ class _AddPageState extends State<AddPage> {
                               decoration: InputDecoration(
                                 hintText: "Amount",
                                 filled: true,
-                                fillColor: Colors.white,
-                                prefixIcon: const Padding(
-                                  padding: EdgeInsets.all(12.0),
+                                fillColor: cs.surface,
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.all(12.0),
                                   child: Icon(
                                     FontAwesomeIcons.wallet,
                                     size: 18,
-                                    color: Colors.grey,
+                                    color: theme.textTheme.bodySmall?.color,
                                   ),
                                 ),
                                 border: OutlineInputBorder(
@@ -898,7 +923,7 @@ class _AddPageState extends State<AddPage> {
                           ),
                           const SizedBox(width: 10),
                           Material(
-                            color: Colors.deepPurple,
+                            color: cs.primary,
                             borderRadius: BorderRadius.circular(12),
                             child: InkWell(
                               onTap: _showCalculator,
@@ -908,9 +933,9 @@ class _AddPageState extends State<AddPage> {
                                   vertical: 14,
                                   horizontal: 14,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.calculate,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                 ),
                               ),
                             ),
@@ -931,11 +956,11 @@ class _AddPageState extends State<AddPage> {
                               decoration: InputDecoration(
                                 hintText: "Date",
                                 filled: true,
-                                fillColor: Colors.white,
-                                prefixIcon: const Icon(
+                                fillColor: cs.surface,
+                                prefixIcon: Icon(
                                   FontAwesomeIcons.solidClock,
                                   size: 18,
-                                  color: Colors.grey,
+                                  color: theme.textTheme.bodySmall?.color,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -947,7 +972,7 @@ class _AddPageState extends State<AddPage> {
                           const SizedBox(width: 10),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
+                              backgroundColor: cs.primary,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -962,15 +987,15 @@ class _AddPageState extends State<AddPage> {
                                 ).format(selectedDate);
                               });
                             },
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 12,
                               ),
                               child: Text(
                                 'Today',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -991,11 +1016,11 @@ class _AddPageState extends State<AddPage> {
                         decoration: InputDecoration(
                           hintText: "Add a note (optional)",
                           filled: true,
-                          fillColor: Colors.white,
-                          prefixIcon: const Icon(
+                          fillColor: cs.surface,
+                          prefixIcon: Icon(
                             FontAwesomeIcons.solidNoteSticky,
                             size: 18,
-                            color: Colors.grey,
+                            color: theme.textTheme.bodySmall?.color,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1004,10 +1029,12 @@ class _AddPageState extends State<AddPage> {
                         ),
                       ),
 
+                      const SizedBox(height: 12),
+
                       Container(
                         padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cs.surface,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -1017,16 +1044,16 @@ class _AddPageState extends State<AddPage> {
                               children: [
                                 ElevatedButton.icon(
                                   onPressed: _pickImages,
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.photo_library,
-                                    color: Colors.white,
+                                    color: cs.onPrimary,
                                   ),
-                                  label: const Text(
+                                  label: Text(
                                     "Add images",
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(color: cs.onPrimary),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepPurple,
+                                    backgroundColor: cs.primary,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -1037,7 +1064,7 @@ class _AddPageState extends State<AddPage> {
                                 if (_pickedImages.isNotEmpty)
                                   Text(
                                     "${_pickedImages.length} attached",
-                                    style: const TextStyle(
+                                    style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -1107,17 +1134,25 @@ class _AddPageState extends State<AddPage> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Text('Quality'),
+                                      Text(
+                                        'Quality',
+                                        style: theme.textTheme.bodyMedium,
+                                      ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: SliderTheme(
                                           data: SliderTheme.of(context)
                                               .copyWith(
-                                                thumbColor: Colors.deepPurple,
                                                 inactiveTickMarkColor:
                                                     Colors.transparent,
                                                 activeTickMarkColor:
                                                     Colors.transparent,
+                                                thumbColor: cs.primary,
+                                                activeTrackColor: cs.primary,
+                                                inactiveTrackColor: cs.primary
+                                                    .withValues(alpha: 0.3),
+                                                overlayColor: cs.primary
+                                                    .withValues(alpha: 0.12),
                                               ),
                                           child: Slider(
                                             min: 10,
@@ -1136,7 +1171,10 @@ class _AddPageState extends State<AddPage> {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text('$_selectedImageQuality'),
+                                      Text(
+                                        '$_selectedImageQuality',
+                                        style: theme.textTheme.bodyMedium,
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -1146,10 +1184,10 @@ class _AddPageState extends State<AddPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cs.surface,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(
@@ -1158,14 +1196,16 @@ class _AddPageState extends State<AddPage> {
                         ),
                         child: Row(
                           children: [
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 "Add another expense after saving",
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             CupertinoSwitch(
-                              activeTrackColor: Colors.deepPurple,
+                              activeTrackColor: cs.primary,
                               value: addAnotherAfterSave,
                               onChanged: (v) =>
                                   setState(() => addAnotherAfterSave = v),
@@ -1183,23 +1223,23 @@ class _AddPageState extends State<AddPage> {
                         child: ElevatedButton(
                           onPressed: _saving ? null : _onSavePressed,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
+                            backgroundColor: cs.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: _saving
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CupertinoActivityIndicator(
-                                    color: Colors.white,
+                                    color: cs.onPrimary,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   "Save Expense",
-                                  style: TextStyle(
-                                    color: Colors.white,
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: cs.onPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                   ),
