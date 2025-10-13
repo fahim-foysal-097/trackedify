@@ -157,15 +157,17 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     await loadExpenses();
 
     if (mounted) {
+      final cs = Theme.of(context).colorScheme;
+      final onError = cs.onError;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              Icon(Icons.delete, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Expense deleted')),
+              Icon(Icons.delete, color: onError),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Expense deleted')),
             ],
           ),
         ),
@@ -191,13 +193,15 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     await loadExpenses();
 
     if (mounted) {
+      final cs = Theme.of(context).colorScheme;
+      final onError = cs.onError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              const Icon(Icons.delete, color: Colors.white),
+              Icon(Icons.delete, color: onError),
               const SizedBox(width: 12),
               Expanded(child: Text('$deletedCount expense(s) deleted')),
             ],
@@ -223,7 +227,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         deleteExpense(expense['id']);
         Navigator.pop(context);
       },
-      textColor: Colors.grey.shade700,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.error,
     );
   }
@@ -243,7 +247,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         deleteMultipleExpenses(idsCopy);
         Navigator.pop(context);
       },
-      textColor: Colors.grey.shade700,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.error,
     );
   }
@@ -337,7 +341,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     if (!ok) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission denied. Cannot save image.')),
+        SnackBar(
+          content: const Text('Permission denied. Cannot save image.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
@@ -352,15 +360,16 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         skipIfExists: false,
       );
       if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Saved to gallery')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Saved to gallery')),
             ],
           ),
         ),
@@ -375,6 +384,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
   /// Show image viewer with Save option
   void _showImageViewer(Uint8List bytes) {
+    final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (context) {
@@ -406,10 +416,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: const Icon(
-                            Icons.save_alt,
-                            color: Colors.deepPurple,
-                          ),
+                          icon: Icon(Icons.save_alt, color: cs.primary),
                           label: const Text('Save to gallery'),
                           onPressed: () {
                             Navigator.pop(context); // close viewer
@@ -419,7 +426,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            side: const BorderSide(color: Colors.deepPurple),
+                            side: BorderSide(color: cs.primary),
+                            foregroundColor: cs.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.surface,
                           ),
                         ),
                       ),
@@ -427,14 +438,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: cs.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Close',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: cs.onPrimary),
                         ),
                       ),
                     ],
@@ -451,11 +462,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Future<void> _showExpenseDrawer(Map<String, dynamic> expense) async {
     final note = (expense['note'] ?? '').toString();
     final hasNote = note.trim().isNotEmpty;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final subtleBg = cs.surfaceContainerHighest;
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -478,15 +492,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Expense',
-                            style: TextStyle(
-                              fontSize: 18,
+                            style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close),
+                            icon: Icon(Icons.close, color: cs.onSurface),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
@@ -507,15 +520,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   getCategory(
                                     expense['category'] ?? '',
                                   )['icon'],
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                   size: 18,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 expense['category'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 16,
+                                style: theme.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -526,16 +538,15 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             children: [
                               Text(
                                 "-\$${_formatAmount(expense['amount'])}",
-                                style: const TextStyle(
-                                  fontSize: 16,
+                                style: theme.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Text(
                                 expense['date'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -548,22 +559,21 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: subtleBg,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: hasNote
                             ? Text(
                                 note,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black87,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: cs.onSurface,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'No note to show',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withValues(alpha: 0.8),
                                 ),
                               ),
                       ),
@@ -592,9 +602,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Images',
-                                style: TextStyle(fontWeight: FontWeight.w700),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                               const SizedBox(height: 10),
                               SizedBox(
@@ -637,10 +649,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   height: 45,
                                   child: OutlinedButton(
                                     style: OutlinedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      side: const BorderSide(
-                                        color: Colors.blue,
-                                      ),
+                                      backgroundColor: cs.surface,
+                                      side: BorderSide(color: cs.primary),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -658,9 +668,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                         loadExpenses();
                                       });
                                     },
-                                    child: const Text(
+                                    child: Text(
                                       'Edit',
-                                      style: TextStyle(color: Colors.blue),
+                                      style: TextStyle(color: cs.primary),
                                     ),
                                   ),
                                 ),
@@ -671,15 +681,15 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   height: 45,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: cs.primary,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text(
+                                    child: Text(
                                       'Close',
-                                      style: TextStyle(color: Colors.white),
+                                      style: TextStyle(color: cs.onPrimary),
                                     ),
                                   ),
                                 ),
@@ -692,7 +702,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             height: 48,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: cs.error,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -701,9 +711,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 Navigator.pop(context);
                                 confirmDelete(expense);
                               },
-                              child: const Text(
+                              child: Text(
                                 'Delete',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: cs.onPrimary),
                               ),
                             ),
                           ),
@@ -764,7 +774,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       message: tips,
       buttonText: 'Got it',
       onTapDismiss: () => Navigator.pop(context),
-      textColor: Colors.black54,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.normal,
     );
   }
@@ -774,6 +784,15 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     if (isLoading) {
       return const Scaffold(body: Center(child: CupertinoActivityIndicator()));
     }
+
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final textColorMuted =
+        theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.75) ??
+        Colors.grey;
+    final shadowColor = theme.shadowColor.withValues(
+      alpha: 0.06,
+    ); // subtle shadow used below
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -790,13 +809,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
           if (!didPop) Navigator.of(context).maybePop();
         },
         child: Scaffold(
-          backgroundColor: Colors.grey.shade100,
+          backgroundColor: cs.surface,
           appBar: AppBar(
             elevation: selectionMode ? 2 : 4,
-            backgroundColor: selectionMode
-                ? Colors.blue.shade700
-                : Colors.white,
-            foregroundColor: selectionMode ? Colors.white : Colors.black87,
+            backgroundColor: selectionMode ? cs.primary : cs.surface,
+            foregroundColor: selectionMode ? cs.onPrimary : cs.onSurface,
             title: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               transitionBuilder: (child, anim) {
@@ -806,13 +823,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   ? Text(
                       '${selectedExpenses.length} selected',
                       key: const ValueKey('selected-title'),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     )
-                  : const Text(
+                  : Text(
                       "Expense History",
-                      key: ValueKey('normal-title'),
-                      style: TextStyle(
-                        fontSize: 20,
+                      key: const ValueKey('normal-title'),
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -821,6 +839,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
             leading: IconButton(
               tooltip: "Back",
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+              color: selectionMode ? cs.onPrimary : cs.onSurface,
               onPressed: () => Navigator.pop(context),
             ),
             actionsPadding: const EdgeInsets.only(right: 6),
@@ -828,26 +847,24 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 ? [
                     IconButton(
                       tooltip: 'Select all visible',
-                      icon: const Icon(Icons.select_all),
+                      icon: Icon(Icons.select_all, color: cs.onPrimary),
                       onPressed: toggleSelectAll,
-                      color: Colors.white,
                     ),
                     IconButton(
                       tooltip: 'Clear selection',
-                      icon: const Icon(Icons.clear),
+                      icon: Icon(Icons.clear, color: cs.onPrimary),
                       onPressed: () {
                         setState(() {
                           selectionMode = false;
                           selectedExpenses.clear();
                         });
                       },
-                      color: Colors.white,
                     ),
                   ]
                 : [
                     IconButton(
                       tooltip: 'Tips',
-                      icon: const Icon(Icons.lightbulb_outline),
+                      icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
                       onPressed: showTipsDialog,
                     ),
                   ],
@@ -861,11 +878,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                 child: Container(
                   height: 46,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cs.surface,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: shadowColor,
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -875,11 +892,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     controller: _searchController,
                     onChanged: filterExpenses,
                     textInputAction: TextInputAction.search,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: "Search expenses",
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search, color: textColorMuted),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 12,
                       ),
@@ -897,12 +914,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       Icon(
                         Icons.receipt_long,
                         size: 64,
-                        color: Colors.grey.shade300,
+                        color: cs.onSurface.withValues(alpha: 0.12),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'No expenses to show',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: textColorMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -915,24 +934,20 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Card(
-                          color: Colors.lightBlue.shade50,
+                          color: cs.primaryContainer,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: ListTile(
-                            leading: const Icon(
-                              Icons.lightbulb,
-                              color: Colors.blue,
-                            ),
-                            title: const Text(
+                            leading: Icon(Icons.lightbulb, color: cs.primary),
+                            title: Text(
                               "Tip: Swipe left to delete, swipe right to edit and tap to view note!",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cs.onPrimary,
                               ),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.close, color: Colors.grey),
+                              icon: Icon(Icons.close, color: cs.onPrimary),
                               onPressed: () => setState(() => showTip = false),
                             ),
                           ),
@@ -955,7 +970,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     subtitleWidgets.add(
                       Text(
                         expense['date'] ?? '',
-                        style: const TextStyle(color: Colors.grey),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: textColorMuted,
+                        ),
                       ),
                     );
                     if (imageCount > 0 || noteText.isNotEmpty) {
@@ -971,17 +988,16 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 },
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       FontAwesomeIcons.solidImage,
                                       size: 14,
-                                      color: Colors.grey,
+                                      color: textColorMuted,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       '$imageCount',
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: cs.onSurface),
                                     ),
                                   ],
                                 ),
@@ -994,10 +1010,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   onTap: () => _showExpenseDrawer(expense),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         FontAwesomeIcons.solidNoteSticky,
                                         size: 14,
-                                        color: Colors.grey,
+                                        color: textColorMuted,
                                       ),
                                       const SizedBox(width: 6),
                                       Flexible(
@@ -1005,9 +1021,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                           noteText,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Colors.black87,
-                                          ),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(color: cs.onSurface),
                                         ),
                                       ),
                                     ],
@@ -1027,7 +1042,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
                     final itemChild = Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue.shade50 : Colors.white,
+                        color: isSelected
+                            ? cs.primary.withValues(alpha: 0.08)
+                            : cs.surface,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Container(
@@ -1054,8 +1071,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           },
                           leading: selectionMode
                               ? Checkbox(
-                                  activeColor: Colors.blue,
-                                  focusColor: Colors.blue,
+                                  activeColor: cs.primary,
+                                  focusColor: cs.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),
@@ -1065,20 +1082,18 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 )
                               : CircleAvatar(
                                   backgroundColor: cat['color'],
-                                  child: Icon(cat['icon'], color: Colors.white),
+                                  child: Icon(cat['icon'], color: cs.onPrimary),
                                 ),
                           title: Text(
                             expense['category'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           subtitle: subtitle,
                           trailing: Text(
                             "-\$${_formatAmount(expense['amount'])}",
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1099,39 +1114,39 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                         key: Key(expense['id'].toString()),
                         background: Container(
                           decoration: BoxDecoration(
-                            color: Colors.blue,
+                            color: cs.primary,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.centerLeft,
                           padding: const EdgeInsets.only(left: 20),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Icon(Icons.edit, color: Colors.white),
-                              SizedBox(width: 10),
+                              Icon(Icons.edit, color: cs.onPrimary),
+                              const SizedBox(width: 10),
                               Text(
                                 "Edit",
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: cs.onPrimary),
                               ),
                             ],
                           ),
                         ),
                         secondaryBackground: Container(
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: cs.error,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 20),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
                                 "Delete",
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(color: cs.onPrimary),
                               ),
-                              SizedBox(width: 10),
-                              Icon(Icons.delete, color: Colors.white),
+                              const SizedBox(width: 10),
+                              Icon(Icons.delete, color: cs.onPrimary),
                             ],
                           ),
                         ),
@@ -1163,14 +1178,19 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                         : () => confirmDeleteMultiple(
                             Set<int>.from(selectedExpenses),
                           ),
-                    icon: const Icon(Icons.delete, color: Colors.white),
+                    icon: Icon(
+                      Icons.delete,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                     label: Text(
                       'Delete (${selectedExpenses.length})',
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                     backgroundColor: selectedExpenses.isEmpty
-                        ? Colors.grey
-                        : Colors.red,
+                        ? Theme.of(context).disabledColor
+                        : Theme.of(context).colorScheme.error,
                   )
                 : const SizedBox.shrink(),
           ),

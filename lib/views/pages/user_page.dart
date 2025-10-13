@@ -8,7 +8,6 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
-import 'package:trackedify/shared/constants/text_constant.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
@@ -153,13 +152,14 @@ class UserPageState extends State<UserPage> {
         setState(() {});
       } catch (e) {
         if (!mounted) return;
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
+            backgroundColor: cs.error,
             content: Row(
               children: [
-                const Icon(Icons.warning_rounded, color: Colors.white),
+                Icon(Icons.warning_rounded, color: cs.onError),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Failed to save profile picture: $e')),
               ],
@@ -186,7 +186,7 @@ class UserPageState extends State<UserPage> {
       onTapConfirm: () {
         Navigator.pop(context, true);
       },
-      textColor: Colors.grey.shade700,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.warning,
     );
 
@@ -216,13 +216,14 @@ class UserPageState extends State<UserPage> {
         setState(() {});
       } catch (e) {
         if (!mounted) return;
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
+            backgroundColor: cs.error,
             content: Row(
               children: [
-                const Icon(Icons.warning_rounded, color: Colors.white),
+                Icon(Icons.warning_rounded, color: cs.onError),
                 const SizedBox(width: 12),
                 Expanded(child: Text('Failed to delete profile picture: $e')),
               ],
@@ -253,7 +254,7 @@ class UserPageState extends State<UserPage> {
       message: tips,
       buttonText: 'Got it',
       onTapDismiss: () => Navigator.pop(context),
-      textColor: Colors.black54,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.normal,
     );
   }
@@ -268,9 +269,11 @@ class UserPageState extends State<UserPage> {
         ? FileImage(File(profilePicPath!)) as ImageProvider
         : const AssetImage('assets/img/pfp.jpg');
 
-    // Color palette
-    const gradientEnd = Color(0xFF6C5CE7);
-    const gradientStart = Color(0xFF00B4D8);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final textMuted =
+        theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8) ?? Colors.grey;
+    final shadowColor = theme.shadowColor.withValues(alpha: 0.16);
 
     // Fixed tile height (pixels) - adjust for taller/shorter buttons.
     const double tileHeight = 64.0;
@@ -280,12 +283,12 @@ class UserPageState extends State<UserPage> {
         key: const PageStorageKey("UserScroll"),
         child: Column(
           children: [
-            // Top gradient header with curved bottom
+            // Top header using theme primary gradient
             Container(
               height: 240,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [gradientStart, gradientEnd],
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primaryContainer],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -295,7 +298,7 @@ class UserPageState extends State<UserPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: gradientStart.withValues(alpha: 0.25),
+                    color: cs.primary.withValues(alpha: 0.12),
                     blurRadius: 24,
                     offset: const Offset(0, 6),
                   ),
@@ -315,17 +318,13 @@ class UserPageState extends State<UserPage> {
                         const SizedBox(width: 40),
                         Text(
                           'Profile',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.95),
-                            fontSize: 20,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: cs.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.lightbulb,
-                            color: Colors.white,
-                          ),
+                          icon: Icon(Icons.lightbulb, color: cs.onPrimary),
                           onPressed: showTipsDialog,
                         ),
                       ],
@@ -356,7 +355,7 @@ class UserPageState extends State<UserPage> {
                             child: CircleAvatar(
                               radius: 72,
                               backgroundImage: imageProvider,
-                              backgroundColor: Colors.grey.shade200,
+                              backgroundColor: cs.surface,
                               child: Align(
                                 alignment: Alignment.bottomRight,
                                 child: Container(
@@ -365,7 +364,7 @@ class UserPageState extends State<UserPage> {
                                     bottom: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: cs.surfaceBright,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
@@ -376,12 +375,14 @@ class UserPageState extends State<UserPage> {
                                       ),
                                     ],
                                   ),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(8.0),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
                                     child: Icon(
                                       Icons.edit,
                                       size: 16,
-                                      color: Colors.black54,
+                                      color: cs.onSurface.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -392,8 +393,8 @@ class UserPageState extends State<UserPage> {
                         const SizedBox(height: 8),
                         Text(
                           username,
-                          style: KTextstyle.headerBlackText.copyWith(
-                            color: Colors.black87,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: cs.onSurface,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -425,30 +426,32 @@ class UserPageState extends State<UserPage> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cs.surface,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
+                                color: shadowColor,
                                 blurRadius: 6,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.lightbulb,
-                            color: Color(0xFF6C5CE7),
-                          ),
+                          child: Icon(Icons.lightbulb, color: cs.primary),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             "Tip: Tap to change profile picture and long press to delete!",
-                            style: TextStyle(fontSize: 15),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: cs.onSurface,
+                            ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.grey),
+                          icon: Icon(
+                            Icons.close,
+                            color: cs.onSurface.withValues(alpha: 0.7),
+                          ),
                           onPressed: () => setState(() => showTip = false),
                         ),
                       ],
@@ -512,25 +515,28 @@ class UserPageState extends State<UserPage> {
                               username = "User";
                               showTip = true;
                             });
+                            final cs2 = Theme.of(context).colorScheme;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 behavior: SnackBarBehavior.floating,
-                                backgroundColor: Colors.red,
+                                backgroundColor: cs2.error,
                                 content: Row(
                                   children: [
                                     Icon(
                                       Icons.warning_rounded,
-                                      color: Colors.white,
+                                      color: cs2.onError,
                                     ),
-                                    SizedBox(width: 12),
-                                    Expanded(child: Text('All data deleted')),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Text('All data deleted'),
+                                    ),
                                   ],
                                 ),
                               ),
                             );
                           }
                         },
-                        textColor: Colors.grey.shade700,
+                        textColor: Theme.of(context).textTheme.bodySmall?.color,
                         panaraDialogType: PanaraDialogType.error,
                       );
                     },
@@ -539,7 +545,7 @@ class UserPageState extends State<UserPage> {
                   _buildActionTile(
                     icon: FontAwesomeIcons.fileImport,
                     label: 'Export',
-                    accent: Colors.deepPurple,
+                    accent: cs.secondary,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -555,14 +561,14 @@ class UserPageState extends State<UserPage> {
                   _buildActionTile(
                     icon: FontAwesomeIcons.fileExport,
                     label: 'Import',
-                    accent: Colors.green,
+                    accent: cs.tertiary,
                     onTap: () {
                       PanaraConfirmDialog.show(
                         context,
                         title: "Import data from DB/JSON?",
                         message:
                             "This may replace all of your current data / append data (using JSON). Continue?",
-                        textColor: Colors.black54,
+                        textColor: Theme.of(context).textTheme.bodySmall?.color,
                         confirmButtonText: "Confirm",
                         cancelButtonText: "Cancel",
                         onTapCancel: () => Navigator.pop(context),
@@ -672,7 +678,9 @@ class UserPageState extends State<UserPage> {
                     appVersion.isNotEmpty
                         ? 'Trackedify v$appVersion'
                         : 'Trackedify',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: textMuted,
+                    ),
                   ),
                 ],
               ),
@@ -688,18 +696,22 @@ class UserPageState extends State<UserPage> {
   Widget _buildActionTile({
     required IconData icon,
     required String label,
-    required Color accent,
+    Color? accent,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final effectiveAccent = accent ?? cs.primary;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.12),
+              color: effectiveAccent.withValues(alpha: 0.12),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -713,22 +725,26 @@ class UserPageState extends State<UserPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
+                  color: effectiveAccent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: accent),
+                child: Icon(icon, size: 18, color: effectiveAccent),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey.shade400),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
