@@ -1,3 +1,4 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
@@ -71,16 +72,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Assigning the global key
       title: 'Trackedify',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigoAccent,
-          primary: Colors.deepPurple,
-          secondary: const Color(0xFF56CCF2),
-          tertiary: const Color(0xFF2F80ED),
-          brightness: Brightness.light,
-          surface: Colors.grey.shade100,
-        ),
-      ),
+      theme: FlexThemeData.light(scheme: FlexScheme.shadViolet),
+      darkTheme: FlexThemeData.dark(scheme: FlexScheme.shadViolet),
+      themeMode: ThemeMode.system,
       routes: {'/set-pin': (context) => const SetPinPage()},
       home: const AuthGate(child: WidgetTree()),
     );
