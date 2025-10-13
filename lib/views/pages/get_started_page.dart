@@ -121,7 +121,6 @@ class _GetStartedPageState extends State<GetStartedPage> {
 
       if (result == null || result.files.single.path == null) {
         // user cancelled
-        if (kDebugMode) debugPrint('DB import cancelled');
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));

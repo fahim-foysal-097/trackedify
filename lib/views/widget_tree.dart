@@ -117,7 +117,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
     } catch (e) {
       // DB failed
       if (kDebugMode) {
-        debugPrint('WidgetTree._checkUser error: $e');
+        debugPrint('checking User error from widget tree: $e');
       }
       if (!mounted) return;
       setState(() {

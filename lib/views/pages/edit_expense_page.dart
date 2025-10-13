@@ -814,7 +814,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
         ),
       );
 
-      if (kDebugMode) debugPrint('Expense updated');
       if (mounted) Navigator.pop(context);
     } catch (e, st) {
       if (kDebugMode) debugPrint('Failed to update expense: $e\n$st');

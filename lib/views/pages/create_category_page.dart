@@ -7,6 +7,7 @@ import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
 
 /// Local suggestion helper (simple on-device "AI" (not really, just rules) using Levenshtein).
+
 class CategorySuggestionHelper {
   final Map<String, CategoryData> dataset;
   CategorySuggestionHelper({required this.dataset});

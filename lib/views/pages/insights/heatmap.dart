@@ -121,7 +121,7 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
         padding: const EdgeInsets.all(16),
         child: const Center(
           child: Text(
-            'No data available for expenses heatmap calendar.',
+            'No data available for heatmap calendar.',
             style: TextStyle(color: Colors.white),
           ),
         ),
