@@ -8,7 +8,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/update_service.dart';
-import 'package:trackedify/shared/constants/text_constant.dart';
 import 'package:trackedify/shared/widgets/curvedbox_widget.dart';
 import 'package:trackedify/shared/widgets/overview_widget.dart';
 import 'package:trackedify/shared/widgets/welcome_widget.dart';
@@ -240,7 +239,11 @@ class HomePageState extends State<HomePage> {
     if (!ok) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission denied. Cannot save image.')),
+        SnackBar(
+          content: const Text('Permission denied. Cannot save image.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
@@ -256,14 +259,17 @@ class HomePageState extends State<HomePage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Saved to gallery')),
+              Icon(
+                Icons.check_circle_outline,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Saved to gallery')),
             ],
           ),
         ),
@@ -278,6 +284,7 @@ class HomePageState extends State<HomePage> {
 
   /// Show image viewer with Save option
   void _showImageViewer(Uint8List bytes) {
+    final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (context) {
@@ -309,10 +316,7 @@ class HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: const Icon(
-                            Icons.save_alt,
-                            color: Colors.deepPurple,
-                          ),
+                          icon: Icon(Icons.save_alt, color: cs.primary),
                           label: const Text('Save to gallery'),
                           onPressed: () {
                             Navigator.pop(context); // close viewer
@@ -322,7 +326,11 @@ class HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            side: const BorderSide(color: Colors.deepPurple),
+                            side: BorderSide(color: cs.primary),
+                            foregroundColor: cs.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.surface,
                           ),
                         ),
                       ),
@@ -330,14 +338,14 @@ class HomePageState extends State<HomePage> {
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: cs.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Close',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: cs.onPrimary),
                         ),
                       ),
                     ],
@@ -354,11 +362,14 @@ class HomePageState extends State<HomePage> {
   Future<void> _showNoteSheet(Map<String, dynamic> expense) async {
     final note = (expense['note'] ?? '').toString();
     final hasNote = note.trim().isNotEmpty;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final subtleBg = cs.surfaceContainerHighest;
 
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -379,15 +390,14 @@ class HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Expense',
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: cs.onSurface),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -406,15 +416,14 @@ class HomePageState extends State<HomePage> {
                             )['color'],
                             child: Icon(
                               getCategory(expense['category'] ?? '')['icon'],
-                              color: Colors.white,
+                              color: cs.onPrimary,
                               size: 18,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Text(
                             expense['category'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -425,16 +434,15 @@ class HomePageState extends State<HomePage> {
                         children: [
                           Text(
                             "-\$${_formatAmount(expense['amount'])}",
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             expense['date'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -447,20 +455,22 @@ class HomePageState extends State<HomePage> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: subtleBg,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: hasNote
                         ? Text(
                             note,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.black87,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: cs.onSurface,
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'No note to show',
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.8),
+                            ),
                           ),
                   ),
                   const SizedBox(height: 18),
@@ -488,9 +498,11 @@ class HomePageState extends State<HomePage> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Images',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
@@ -529,8 +541,8 @@ class HomePageState extends State<HomePage> {
                       Expanded(
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.blue),
+                            backgroundColor: cs.surface,
+                            side: BorderSide(color: cs.primary),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -551,9 +563,9 @@ class HomePageState extends State<HomePage> {
                               NavBarController.apply();
                             });
                           },
-                          child: const Text(
+                          child: Text(
                             'Edit',
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(color: cs.primary),
                           ),
                         ),
                       ),
@@ -561,15 +573,15 @@ class HomePageState extends State<HomePage> {
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: cs.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           onPressed: () => Navigator.pop(context),
-                          child: const Text(
+                          child: Text(
                             'Close',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: cs.onPrimary),
                           ),
                         ),
                       ),
@@ -596,16 +608,21 @@ class HomePageState extends State<HomePage> {
     // update local cache so UI reflects the latest value
     setState(() => _voiceEnabled = enabled);
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     if (!_voiceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              Icon(Icons.mic_off, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Voice commands are disabled in Settings')),
+              Icon(Icons.mic_off, color: cs.onError),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Voice commands are disabled in Settings'),
+              ),
             ],
           ),
         ),
@@ -615,14 +632,14 @@ class HomePageState extends State<HomePage> {
 
     if (!_voiceAvailable || _speech == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              Icon(Icons.mic_off, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Voice recognition not available')),
+              Icon(Icons.mic_off, color: cs.onError),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Voice recognition not available')),
             ],
           ),
         ),
@@ -674,13 +691,14 @@ class HomePageState extends State<HomePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isListening = false);
+      final cs2 = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs2.error,
           content: Row(
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white),
+              Icon(Icons.error_outline_rounded, color: cs2.onError),
               const SizedBox(width: 12),
               Expanded(child: Text('Voice error: $e')),
             ],
@@ -864,7 +882,7 @@ class HomePageState extends State<HomePage> {
         onTapDismiss: () {
           Navigator.of(context).pop();
         },
-        textColor: Colors.grey.shade700,
+        textColor: Theme.of(context).textTheme.bodySmall?.color,
         panaraDialogType: PanaraDialogType.error,
       );
       return;
@@ -925,14 +943,17 @@ class HomePageState extends State<HomePage> {
     if (amountVal == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
           content: Row(
             children: [
-              Icon(Icons.error_outline_rounded, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Invalid amount')),
+              Icon(
+                Icons.error_outline_rounded,
+                color: Theme.of(context).colorScheme.onError,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Invalid amount')),
             ],
           ),
         ),
@@ -955,10 +976,13 @@ class HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
+            Icon(
+              Icons.check_circle_outline,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -990,7 +1014,14 @@ class HomePageState extends State<HomePage> {
       _maybeRefreshVoicePref();
     });
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final textColorMuted =
+        theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.75) ??
+        Colors.grey;
+
     return Scaffold(
+      backgroundColor: cs.surface,
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -1009,7 +1040,7 @@ class HomePageState extends State<HomePage> {
               children: [
                 const Text(
                   'Recent Expenses',
-                  style: KTextstyle.headerBlackText,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 Row(
                   children: [
@@ -1027,11 +1058,11 @@ class HomePageState extends State<HomePage> {
                           NavBarController.apply();
                         });
                       },
-                      child: const Text(
+                      child: Text(
                         'Show all',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black54,
+                          color: textColorMuted,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1046,8 +1077,8 @@ class HomePageState extends State<HomePage> {
                             ? FontAwesomeIcons.microphone
                             : FontAwesomeIcons.microphoneSlash,
                         color: !_voiceEnabled
-                            ? Colors.grey
-                            : (_isListening ? Colors.red : Colors.black54),
+                            ? theme.disabledColor
+                            : (_isListening ? cs.error : textColorMuted),
                       ),
                       onPressed: _onMicPressed,
                     ),
@@ -1065,12 +1096,14 @@ class HomePageState extends State<HomePage> {
                       Icon(
                         Icons.receipt_long,
                         size: 64,
-                        color: Colors.grey.shade300,
+                        color: cs.onSurface.withValues(alpha: 0.12),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'No expenses to show',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: textColorMuted,
+                        ),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -1097,7 +1130,7 @@ class HomePageState extends State<HomePage> {
                         onTap: () => _showNoteSheet(expense),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cs.surface,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Padding(
@@ -1112,24 +1145,24 @@ class HomePageState extends State<HomePage> {
                                       backgroundColor: cat['color'],
                                       child: Icon(
                                         cat['icon'],
-                                        color: Colors.white,
+                                        color: cs.onPrimary,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       expense['category'],
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
 
                                     if (hasNote) ...[
                                       const SizedBox(width: 5),
-                                      const Icon(
+                                      Icon(
                                         FontAwesomeIcons.solidNoteSticky,
                                         size: 16,
-                                        color: Colors.grey,
+                                        color: textColorMuted,
                                       ),
                                     ],
                                     if (imageCount > 0) ...[
@@ -1137,19 +1170,18 @@ class HomePageState extends State<HomePage> {
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             FontAwesomeIcons.solidImage,
                                             size: 16,
-                                            color: Colors.grey,
+                                            color: textColorMuted,
                                           ),
                                           const SizedBox(width: 3),
                                           Text(
                                             '$imageCount',
-
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.grey,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: textColorMuted,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -1161,18 +1193,18 @@ class HomePageState extends State<HomePage> {
                                   children: [
                                     Text(
                                       "-\$${_formatAmount(expense['amount'])}",
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                     Text(
                                       expense['date'],
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: textColorMuted,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                   ],
                                 ),
