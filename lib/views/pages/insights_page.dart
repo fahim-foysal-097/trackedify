@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/insights/charts.dart';
+import 'package:trackedify/views/pages/insights/heatmap.dart';
 import 'package:trackedify/views/pages/insights/prediction_charts.dart';
 import 'package:trackedify/views/pages/insights/summary_cards.dart';
 
@@ -250,6 +251,8 @@ class InsightsPageState extends State<InsightsPage> {
                   topN: 6,
                   categoryColors: categoryColorMap,
                 ),
+                const SizedBox(height: 16),
+                ExpensesHeatmapCalendar(allExpenses: allExpenses),
               ],
             ),
           ),

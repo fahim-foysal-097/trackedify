@@ -62,6 +62,7 @@ dependencies:
   open_filex: ^4.7.0
   device_info_plus: ^12.1.0
   saver_gallery: ^4.0.1
+  flutter_heatmap_calendar: ^1.0.5
 
 dev_dependencies:
   flutter_test:
