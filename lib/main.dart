@@ -72,8 +72,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Assigning the global key
       title: 'Trackedify',
-      theme: FlexThemeData.light(scheme: FlexScheme.shadViolet),
-      darkTheme: FlexThemeData.dark(scheme: FlexScheme.shadViolet),
+      theme: FlexThemeData.light(scheme: FlexScheme.mandyRed),
+      darkTheme: FlexThemeData.dark(scheme: FlexScheme.mandyRed),
       themeMode: ThemeMode.system,
       routes: {'/set-pin': (context) => const SetPinPage()},
       home: const AuthGate(child: WidgetTree()),
