@@ -754,13 +754,16 @@ class HomePageState extends State<HomePage> {
       }
     }
 
-    // stopwords we should ignore when guessing category
+    // stopwords that should be ignored when guessing category
     final stopwords = {
       'add',
+      'write',
       'expense',
       'expenses',
       'dollar',
       'dollars',
+      'cent',
+      'cents',
       'usd',
       'taka',
       'paid',
@@ -773,6 +776,10 @@ class HomePageState extends State<HomePage> {
       'to',
       'by',
       'on',
+      'just',
+      'only',
+      'have',
+      'had',
     };
 
     String? matchedCandidate;
