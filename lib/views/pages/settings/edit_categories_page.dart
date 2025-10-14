@@ -554,10 +554,10 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           floatingActionButton: _selectionMode
               ? FloatingActionButton(
                   onPressed: _confirmAndDeleteSelected,
-                  backgroundColor: cs.error,
+                  backgroundColor: cs.primary,
                   child: Icon(
                     FontAwesomeIcons.trash,
-                    color: cs.onError,
+                    color: cs.onPrimary,
                     size: 18,
                   ),
                 )
