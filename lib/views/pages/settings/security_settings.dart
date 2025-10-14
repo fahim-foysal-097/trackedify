@@ -34,13 +34,14 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   }
 
   void _showTipsDialog() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: 'Security tips',
       message:
           'Enable App Lock (PIN) to protect your data. You can change PIN, reset it with your recovery password, or set a recovery password below.',
       buttonText: 'Got it',
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -88,15 +89,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       if (result == true) {
         await _loadAuthState();
         if (!mounted) return;
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: cs.primary,
             content: Row(
               children: [
-                Icon(Icons.check_circle_outline, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(child: Text('App lock enabled')),
+                Icon(Icons.check_circle_outline, color: cs.onPrimary),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('App lock enabled')),
               ],
             ),
           ),
@@ -104,7 +106,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       }
       return;
     }
-    // Already set — mark state
     setState(() => _pinSet = true);
   }
 
@@ -125,15 +126,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     await _auth.disablePin();
     await _loadAuthState();
     if (!mounted) return;
+    final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red,
+        backgroundColor: cs.error,
         content: Row(
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text('App lock disabled')),
+            Icon(Icons.check_circle_outline, color: cs.onError),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('App lock disabled')),
           ],
         ),
       ),
@@ -155,7 +157,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       return;
     }
 
-    // open SetPinPage for changing
     final changed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const SetPinPage(isChanging: true)),
@@ -172,7 +173,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   Future<void> _setRecoveryPassword() async {
     final pinCtl = TextEditingController();
 
-    // Ask for current PIN
     final currentPin = await showDialog<String?>(
       context: context,
       builder: (_) => AlertDialog(
@@ -199,7 +199,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
 
     if (!mounted || currentPin == null || currentPin.isEmpty) return;
 
-    // Verify the PIN
     final isValid = await _auth.verifyPin(currentPin);
     if (!mounted) return;
     if (!isValid) {
@@ -209,7 +208,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       return;
     }
 
-    // Ask for new recovery password
     final recoveryCtl = TextEditingController();
     final newRecovery = await showDialog<String?>(
       context: context,
@@ -244,17 +242,12 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     ).showSnackBar(const SnackBar(content: Text('Recovery password saved')));
   }
 
-  /// NEW: Reset PIN using recovery password flow.
-  /// Verifies recovery password, then opens SetPinPage(isChanging: false)
-  /// so user can create a new PIN without providing the current PIN.
   Future<void> _resetPinWithRecovery() async {
-    // Ask for recovery password
     final recovery = await _promptForPinOrRecovery(
       title: 'Reset PIN with recovery password',
       hint: 'Enter recovery password',
       obscure: true,
     );
-
     if (!mounted || recovery == null || recovery.isEmpty) return;
 
     final ok = await _auth.verifyRecoveryPassword(recovery);
@@ -267,7 +260,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       return;
     }
 
-    // Recovery verified — allow creating a new PIN (treat as initial set so SetPinPage won't ask for current PIN)
     final created = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const SetPinPage(isChanging: false)),
@@ -276,15 +268,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     if (created == true) {
       await _loadAuthState();
       if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('PIN has been reset')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('PIN has been reset')),
             ],
           ),
         ),
@@ -293,7 +286,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   }
 
   Future<void> _onToggleLock(bool v) async {
-    // Confirm first
+    final theme = Theme.of(context);
     final confirm = await PanaraConfirmDialog.show<bool>(
       context,
       title: v ? 'Enable App Lock?' : 'Disable App Lock?',
@@ -302,7 +295,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
           : 'Disabling lock will remove the PIN and recovery password. Are you sure?',
       confirmButtonText: "Confirm",
       cancelButtonText: "Cancel",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: v ? PanaraDialogType.success : PanaraDialogType.warning,
@@ -326,18 +319,25 @@ class _SecuritySettingsState extends State<SecuritySettings> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Security'),
         leading: IconButton(
           tooltip: "Back",
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 25,
+            color: cs.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actionsPadding: const EdgeInsets.only(right: 6),
         actions: [
           IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
+            icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
             onPressed: _showTipsDialog,
           ),
         ],
@@ -353,14 +353,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                   vertical: 20,
                 ),
                 children: [
-                  const Text(
+                  Text(
                     'Security',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
                   Card(
-                    color: Colors.purple.shade50,
+                    color: cs.surfaceContainer,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -383,12 +385,15 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                             color: Colors.deepPurple,
                           ),
                         ),
-                        title: const Text(
+                        title: Text(
                           'Enable App Lock (PIN)',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        subtitle: const Text(
+                        subtitle: Text(
                           'Protect the app with a 4+ digit PIN',
+                          style: theme.textTheme.bodySmall,
                         ),
                         trailing: _processing
                             ? const SizedBox(
@@ -401,36 +406,28 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                             : CupertinoSwitch(
                                 activeTrackColor: Colors.deepPurple,
                                 value: _pinSet,
-                                onChanged: (v) async {
-                                  await _onToggleLock(v);
-                                },
+                                onChanged: (v) async => await _onToggleLock(v),
                               ),
-                        onTap: () async {
-                          await _onToggleLock(!_pinSet);
-                        },
+                        onTap: () async => await _onToggleLock(!_pinSet),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
                   if (_pinSet)
                     Card(
-                      color: Colors.purple.shade50,
+                      color: cs.surfaceContainer,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 1,
                       child: Column(
                         children: [
-                          // Change PIN
                           ListTile(
                             title: const Text('Change PIN'),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: _changePin,
                           ),
                           const Divider(height: 1),
-                          // Change recovery password
                           ListTile(
                             title: const Text('Change recovery password'),
                             subtitle: const Text(
@@ -439,7 +436,6 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                             onTap: _setRecoveryPassword,
                           ),
                           const Divider(height: 1),
-                          // NEW: Reset PIN using recovery password
                           ListTile(
                             title: const Text(
                               'Reset PIN (use recovery password)',

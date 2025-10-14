@@ -52,6 +52,9 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     if (!mounted) return;
     setState(() => _notificationsEnabled = newValue);
 
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     if (newValue) {
       final granted = await _notificationUtil.requestPermission();
       if (!granted) {
@@ -67,7 +70,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           message:
               "We couldn't get notification permission. Please enable it from system settings.",
           buttonText: "OK",
-          textColor: Colors.black54,
+          textColor: theme.textTheme.bodySmall?.color,
           onTapDismiss: () => Navigator.pop(context),
           panaraDialogType: PanaraDialogType.normal,
         );
@@ -79,7 +82,6 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         final h = time['hour'] ?? 20;
         final m = time['minute'] ?? 0;
 
-        // scheduleDailyAt will cancel any existing noti with the same id and create the next one-shot instance.
         await _notificationUtil.scheduleDailyAt(
           id: AppConstants.dailyReminderId,
           channelKey: AppStrings.scheduledChannelKey,
@@ -91,14 +93,14 @@ class _NotificationSettingsState extends State<NotificationSettings> {
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: cs.primary,
             content: Row(
               children: [
-                Icon(Icons.check_circle_outline, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(child: Text('Daily reminder enabled')),
+                Icon(Icons.check_circle_outline, color: cs.onPrimary),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Daily reminder enabled')),
               ],
             ),
           ),
@@ -109,23 +111,22 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         if (!mounted) return;
         setState(() => _notificationsEnabled = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to schedule reminder')),
+          SnackBar(content: Text('Failed to schedule reminder: $e')),
         );
       }
     } else {
-      // Cancel by ID
       try {
         await _notificationUtil.cancelById(AppConstants.dailyReminderId);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
+            backgroundColor: cs.error,
             content: Row(
               children: [
-                Icon(Icons.check_circle_outline, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(child: Text('Daily reminder disabled')),
+                Icon(Icons.check_circle_outline, color: cs.onError),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Daily reminder disabled')),
               ],
             ),
           ),
@@ -159,6 +160,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     if (picked == null) return;
 
     setState(() => _saving = true);
+    if (!mounted) return;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     try {
       await DatabaseHelper().setNotificationTime(picked.hour, picked.minute);
       if (!mounted) return;
@@ -167,7 +172,6 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         _minute = picked.minute;
       });
 
-      // Cancel existing scheduled instance and reschedule next one-shot for the new time.
       await _notificationUtil.cancelById(AppConstants.dailyReminderId);
 
       if (_notificationsEnabled) {
@@ -185,10 +189,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: cs.primary,
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.white),
+                  Icon(Icons.check_circle_outline, color: cs.onPrimary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -209,7 +213,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             message:
                 "We couldn't get notification permission. Reminder disabled. Please enable notifications in system settings to use reminders.",
             buttonText: "OK",
-            textColor: Colors.black54,
+            textColor: theme.textTheme.bodySmall?.color,
             onTapDismiss: () => Navigator.pop(context),
             panaraDialogType: PanaraDialogType.normal,
           );
@@ -219,10 +223,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: cs.primary,
             content: Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
+                Icon(Icons.check_circle_outline, color: cs.onPrimary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -240,10 +244,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: cs.error,
           content: Row(
             children: [
-              const Icon(Icons.cancel_outlined, color: Colors.white),
+              Icon(Icons.cancel_outlined, color: cs.onError),
               const SizedBox(width: 12),
               Expanded(child: Text('Failed to save reminder time: $e')),
             ],
@@ -256,13 +260,14 @@ class _NotificationSettingsState extends State<NotificationSettings> {
   }
 
   void _showTips() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: "Tips - Notifications",
       message:
           "Turn on daily reminders to get a quick reminder to add expenses. If notifications don't appear, check system permissions.",
       buttonText: "Got it",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -270,20 +275,27 @@ class _NotificationSettingsState extends State<NotificationSettings> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
         centerTitle: false,
         leading: IconButton(
           tooltip: "Back",
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 25,
+            color: cs.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actionsPadding: const EdgeInsets.only(right: 6),
         actions: [
           IconButton(
             tooltip: 'Tips',
-            icon: const Icon(Icons.lightbulb_outline),
+            icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
             onPressed: _showTips,
           ),
         ],
@@ -299,13 +311,15 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                   vertical: 20,
                 ),
                 children: [
-                  const Text(
+                  Text(
                     'Notifications',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Card(
-                    color: Colors.blue.shade50,
+                    color: cs.surfaceContainer,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -335,12 +349,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                             ),
                             title: Text(
                               'Daily reminder at ${_formatTime(_hour, _minute)}',
-                              style: const TextStyle(
+                              style: theme.textTheme.bodyLarge?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            subtitle: const Text(
+                            subtitle: Text(
                               'Receive a daily reminder to review/add expenses',
+                              style: theme.textTheme.bodySmall,
                             ),
                             trailing: _saving
                                 ? const SizedBox(
@@ -369,28 +384,27 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.access_time,
                                     size: 18,
-                                    color: Colors.black54,
+                                    color: theme.textTheme.bodySmall?.color,
                                   ),
                                   const SizedBox(width: 8),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Reminder time',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         _formatTime(_hour, _minute),
-                                        style: const TextStyle(
-                                          color: Colors.black54,
-                                        ),
+                                        style: theme.textTheme.bodySmall,
                                       ),
                                     ],
                                   ),
@@ -399,11 +413,15 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                               TextButton.icon(
                                 onPressed: _saving
                                     ? null
-                                    : () async {
-                                        await _pickTime();
-                                      },
-                                icon: const Icon(Icons.edit_calendar_outlined),
-                                label: const Text('Change'),
+                                    : () async => await _pickTime(),
+                                icon: const Icon(
+                                  Icons.edit_calendar_outlined,
+                                  color: Colors.blue,
+                                ),
+                                label: const Text(
+                                  'Change',
+                                  style: TextStyle(color: Colors.blue),
+                                ),
                               ),
                             ],
                           ),

@@ -87,13 +87,20 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Change Username'),
         centerTitle: false,
         leading: IconButton(
           tooltip: "Back",
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 25,
+            color: cs.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -110,10 +117,10 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                     decoration: InputDecoration(
                       hintText: 'New Username',
                       filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(
+                      fillColor: theme.colorScheme.surface,
+                      prefixIcon: Icon(
                         FontAwesomeIcons.pen,
-                        color: Colors.grey,
+                        color: theme.textTheme.bodySmall?.color,
                         size: 20,
                       ),
                       border: OutlineInputBorder(
@@ -126,17 +133,20 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                   SizedBox(
                     width: double.infinity,
                     height: kToolbarHeight,
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: _saveUsername,
-                      child: const Text(
+                      child: Text(
                         'Save Username',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: cs.onPrimary,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                   ),
