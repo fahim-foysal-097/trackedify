@@ -193,30 +193,39 @@ class InsightsPageState extends State<InsightsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: bg,
         appBar: AppBar(
           centerTitle: true,
-          title: const Text(
+          title: Text(
             "Insights",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
-        body: const Center(child: CupertinoActivityIndicator(radius: 12)),
+        body: Center(
+          child: CupertinoActivityIndicator(radius: 12, color: cs.primary),
+        ),
       );
     } else {
       return Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: bg,
         appBar: AppBar(
           centerTitle: true,
-          title: const Text(
+          title: Text(
             "Insights",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
         body: RefreshIndicator(
-          color: Colors.deepPurple,
+          color: cs.primary,
           onRefresh: fetchExpenses,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

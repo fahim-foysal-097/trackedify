@@ -13,17 +13,20 @@ class Last30DaysChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
+
     if (last30DaysExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for last 30 days chart.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -56,15 +59,15 @@ class Last30DaysChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text(
+          Text(
             "Expenses Trend - Last 30 Days",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: textStyle.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -79,11 +82,15 @@ class Last30DaysChart extends StatelessWidget {
                   horizontalInterval: intervalY,
                   verticalInterval: 3,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.18),
                     strokeWidth: 1,
                   ),
                   getDrawingVerticalLine: (value) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.18),
                     strokeWidth: 1,
                   ),
                 ),
@@ -134,7 +141,7 @@ class Last30DaysChart extends StatelessWidget {
                     preventCurveOvershootingThreshold: 0,
                     isStrokeJoinRound: true,
                     isStrokeCapRound: true,
-                    color: Colors.deepPurpleAccent,
+                    color: Colors.deepPurpleAccent, // unchanged (chart color)
                     barWidth: 3,
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
@@ -189,17 +196,20 @@ class TopCategoryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
+
     if (categoryExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for categories.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -221,15 +231,15 @@ class TopCategoryChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text(
+          Text(
             "Top Categories Spending",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: textStyle.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -313,7 +323,7 @@ class TopCategoryChart extends StatelessWidget {
                     barRods: [
                       BarChartRodData(
                         toY: amount,
-                        color: color,
+                        color: color, // unchanged category color
                         width: 16,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(4),
@@ -391,17 +401,20 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
+
     if (widget.availableMonths.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for month comparison.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -410,16 +423,16 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
     if (widget.availableMonths.length < 2) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.errorContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Center(
+            Center(
               child: Text(
                 'Need at least two months for comparison.',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: cs.onErrorContainer),
               ),
             ),
             Lottie.asset('assets/lotties/chart.json', height: 250),
@@ -427,6 +440,9 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
         ),
       );
     }
+
+    // Ensure selections are valid (in case availableMonths provided after build)
+    _updateSelections();
 
     final month1Formatted = DateFormat(
       'MMM yyyy',
@@ -437,17 +453,19 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(
+          Center(
             child: Text(
               "Monthly Comparison (Daily Trend)",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: textStyle.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -665,11 +683,11 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                 horizontalInterval: intervalY,
                 verticalInterval: 3,
                 getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.18),
                   strokeWidth: 1,
                 ),
                 getDrawingVerticalLine: (value) => FlLine(
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.18),
                   strokeWidth: 1,
                 ),
               ),
@@ -719,7 +737,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                   preventCurveOvershootingThreshold: 0,
                   isStrokeJoinRound: true,
                   isStrokeCapRound: true,
-                  color: Colors.blue,
+                  color: Colors.blue, // unchanged
                   barWidth: 2.5,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
@@ -734,7 +752,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                   preventCurveOvershootingThreshold: 0,
                   isStrokeJoinRound: true,
                   isStrokeCapRound: true,
-                  color: Colors.amber,
+                  color: Colors.amber, // unchanged
                   barWidth: 2.5,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(
@@ -909,6 +927,9 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     // Recompute totals each build (cheap)
     final monthlyTotals = _monthlyTotalsForYear(selectedYear);
 
@@ -925,7 +946,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
     if (!hasYearData) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(14),
@@ -934,27 +955,27 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Yearly Trend',
-                    style: TextStyle(
-                      fontSize: 18,
+                    style: tt.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: cs.onErrorContainer,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 DropdownButton<int>(
-                  iconEnabledColor: Colors.white,
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  iconEnabledColor: cs.inversePrimary,
+                  style: TextStyle(color: cs.onSurface, fontSize: 16),
                   value: selectedYear,
+                  // dropdownColor: cs.surface,
                   items: availableYears.map((y) {
                     return DropdownMenuItem(
                       value: y,
                       child: Text(
                         y.toString(),
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: cs.onSurface),
                       ),
                     );
                   }).toList(),
@@ -975,13 +996,17 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                   Lottie.asset("assets/lotties/list.json", height: 200),
                   Text(
                     'No expenses recorded for ${selectedYear.toString()}.',
-                    style: const TextStyle(fontSize: 14, color: Colors.white70),
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onErrorContainer.withValues(alpha: 0.9),
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Add some expenses or choose another year to view the yearly trend.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.white60),
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onErrorContainer.withValues(alpha: 0.8),
+                    ),
                   ),
                 ],
               ),
@@ -1029,7 +1054,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(14),
@@ -1039,10 +1064,10 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
           // header + year selector
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Yearly Trend',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1075,7 +1100,9 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                   show: true,
                   horizontalInterval: intervalY,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.22),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.22),
                     strokeWidth: 1,
                   ),
                 ),
@@ -1147,16 +1174,13 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
             children: [
               Text(
                 'Total (${selectedYear.toString()})',
-                style: const TextStyle(fontSize: 14, color: Colors.black54),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
                 formatter.format(
                   monthlyTotals.values.fold(0.0, (p, e) => p + e),
                 ),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -1173,17 +1197,20 @@ class CategoryPieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (categoryExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No category data to show.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -1239,7 +1266,7 @@ class CategoryPieChart extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '$name • \$${amount.toStringAsFixed(0)}',
-                style: const TextStyle(fontSize: 12),
+                style: tt.bodySmall,
               ),
             ],
           );
@@ -1249,16 +1276,16 @@ class CategoryPieChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Category Distribution',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -1291,7 +1318,7 @@ class CategoryPieChart extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Total: \$${total.toStringAsFixed(2)}',
-            style: const TextStyle(color: Colors.black54),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -1306,23 +1333,22 @@ class WeekdayBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (last30DaysExpenses.isEmpty) {
-      return Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: const Center(
-              child: Text(
-                'No data available for weekday breakdown.',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            'No data available for weekday breakdown.',
+            style: TextStyle(color: cs.onSurface),
           ),
-        ],
+        ),
       );
     }
 
@@ -1382,7 +1408,7 @@ class WeekdayBarChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(14),
@@ -1390,10 +1416,10 @@ class WeekdayBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 6),
-          const Center(
+          Center(
             child: Text(
               'Spending by Weekday',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 12),
@@ -1406,7 +1432,9 @@ class WeekdayBarChart extends StatelessWidget {
                   show: true,
                   horizontalInterval: intervalY,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.18),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.18),
                     strokeWidth: 1,
                   ),
                 ),
@@ -1491,7 +1519,7 @@ class WeekdayBarChart extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text(labels[i], style: const TextStyle(fontSize: 12)),
+                  Text(labels[i], style: tt.bodySmall),
                 ],
               );
             }),
@@ -1509,17 +1537,20 @@ class CumulativeAreaChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (last30DaysExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data for cumulative chart.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -1554,17 +1585,17 @@ class CumulativeAreaChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(
+          Center(
             child: Text(
               'Cumulative Expenses (30 days)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 12),
@@ -1578,7 +1609,9 @@ class CumulativeAreaChart extends StatelessWidget {
                   show: true,
                   horizontalInterval: intervalY,
                   getDrawingHorizontalLine: (v) => FlLine(
-                    color: Colors.grey.withValues(alpha: 0.18),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.18),
                     strokeWidth: 1,
                   ),
                 ),
@@ -1625,7 +1658,7 @@ class CumulativeAreaChart extends StatelessWidget {
                     spots: spots,
                     isCurved: true,
                     barWidth: 3,
-                    color: Colors.green,
+                    color: Colors.green, // unchanged
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
@@ -1666,7 +1699,7 @@ class CumulativeAreaChart extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Current cumulative (30D): \$${spots.last.y.toStringAsFixed(2)}',
-            style: const TextStyle(color: Colors.black54),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -1688,17 +1721,20 @@ class TopExpensesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (allExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No expenses recorded yet.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -1757,16 +1793,16 @@ class TopExpensesList extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Top Expenses',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Column(
@@ -1798,16 +1834,14 @@ class TopExpensesList extends StatelessWidget {
                         children: [
                           Text(
                             cat,
-                            style: const TextStyle(
-                              fontSize: 14,
+                            style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             DateFormat('MMM d, yyyy').format(date),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -1818,8 +1852,7 @@ class TopExpensesList extends StatelessWidget {
                       children: [
                         Text(
                           '\$${amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 14,
+                          style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
