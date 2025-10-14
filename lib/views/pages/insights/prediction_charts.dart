@@ -161,17 +161,19 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     if (allExpenses.isEmpty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for prediction chart.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -218,14 +220,14 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
     if (n < 1) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.error,
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for prediction chart.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onError),
           ),
         ),
       );
@@ -264,7 +266,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
 
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
@@ -587,7 +589,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),

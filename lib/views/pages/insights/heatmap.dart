@@ -38,6 +38,7 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
   void _computeDailyTotals() {
     dailyTotals = {};
     minDate = null;
+    datasets = {}; // reset
 
     for (var e in widget.allExpenses) {
       DateTime dt = DateTime.parse(e['date'] as String);
@@ -112,17 +113,20 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     if (widget.allExpenses.isEmpty || minDate == null) {
+      // Use theme surface for the container background but keep the message text readable
       return Container(
         decoration: BoxDecoration(
-          color: Colors.red,
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
+        child: Center(
           child: Text(
             'No data available for heatmap calendar.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: cs.onSurface),
           ),
         ),
       );
@@ -140,22 +144,26 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text(
+          Text(
             "Expenses Heatmap",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_left),
+                icon: Icon(Icons.arrow_left, color: cs.onSurface),
                 onPressed: currentStartDate.isAfter(minStart)
                     ? _previousPeriod
                     : null,
@@ -164,14 +172,15 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
                 child: Text(
                   rangeText,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
+                    color: cs.onSurface,
                   ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_right),
+                icon: Icon(Icons.arrow_right, color: cs.onSurface),
                 onPressed: currentStartDate.isBefore(maxStart)
                     ? _nextPeriod
                     : null,
@@ -187,8 +196,10 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
               showText: false,
               scrollable: true,
               colorsets: const {100: Colors.red},
-              defaultColor: Colors.grey[200],
-              textColor: Colors.black,
+              defaultColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              textColor: Theme.of(context).colorScheme.onSurface,
               showColorTip: true,
               size: cellSize,
               fontSize: fontSize,
