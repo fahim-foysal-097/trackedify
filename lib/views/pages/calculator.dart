@@ -91,46 +91,85 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
     }
   }
 
-  Widget _buildButton(
-    String text, {
-    Color bgColor = Colors.grey,
-    Color textColor = Colors.black,
-    Function()? onTap,
-  }) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: Material(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: onTap ?? () => _append(text),
+  @override
+  Widget build(BuildContext context) {
+    // Theme-aware colors
+    final ColorScheme cs = Theme.of(context).colorScheme;
+
+    // Primary operator color (uses primary)
+    final Color opBg = cs.primary;
+    final Color opText = cs.onPrimary;
+
+    // Accent for "=" button
+    final Color equalsBg = cs.secondary;
+    final Color equalsText = cs.onSecondary;
+
+    // Danger / clear
+    final Color clearBg = cs.error;
+    final Color clearText = cs.onError;
+
+    // Backspace - use tertiary or fallback to orange-like
+    final Color backBg = (cs.tertiary != Colors.transparent)
+        ? cs.tertiary
+        : Colors.orange;
+    final Color backText = cs.onTertiary;
+
+    // Number button background & text
+    final Color numberBg = cs.surface;
+    final Color numberText = cs.onSurface;
+
+    // Bracket / dot buttons slightly muted
+    final Color mutedBg = cs.surfaceContainer;
+    final Color mutedText = cs.onSurfaceVariant;
+
+    // Container background
+    final Color containerBg = cs.surface;
+
+    // Divider color
+    final Color dividerColor = cs.onSurface.withValues(alpha: 0.12);
+
+    // Button height adapt to width (small responsiveness)
+    final width = MediaQuery.of(context).size.width;
+    final buttonHeight = width > 420 ? 70.0 : 60.0;
+
+    Widget themedButton(
+      String text, {
+      required Color bg,
+      required Color fg,
+      Function()? onTap,
+    }) {
+      return Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Material(
+            color: bg,
             borderRadius: BorderRadius.circular(12),
-            child: Container(
-              height: 60,
-              alignment: Alignment.center,
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
+            child: InkWell(
+              onTap: onTap ?? () => _append(text),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                height: buttonHeight,
+                alignment: Alignment.center,
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: fg,
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: containerBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -145,40 +184,42 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
                 children: [
                   Text(
                     _expression.isEmpty ? '0' : _expression,
-                    style: const TextStyle(fontSize: 20, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _result,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
+                      color: cs.onSurface,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(thickness: 1),
+            Divider(thickness: 1, color: dividerColor),
             Column(
               children: [
                 Row(
                   children: [
-                    _buildButton(
+                    // Clear
+                    themedButton(
                       'C',
-                      bgColor: Colors.redAccent,
-                      textColor: Colors.white,
+                      bg: clearBg,
+                      fg: clearText,
                       onTap: _clear,
                     ),
-                    _buildButton(
-                      '⌫',
-                      bgColor: Colors.orange,
-                      textColor: Colors.white,
-                      onTap: _delete,
-                    ),
-                    _buildButton(
+                    // Backspace
+                    themedButton('⌫', bg: backBg, fg: backText, onTap: _delete),
+                    // Percent
+                    themedButton(
                       '%',
-                      bgColor: Colors.blueAccent,
-                      textColor: Colors.white,
+                      bg: opBg,
+                      fg: opText,
                       onTap: () {
                         if (_expression.isNotEmpty) {
                           _append('%');
@@ -186,64 +227,68 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
                         }
                       },
                     ),
-                    _buildButton(
-                      '÷',
-                      bgColor: Colors.blueAccent,
-                      textColor: Colors.white,
-                    ),
+                    // Divide
+                    themedButton('÷', bg: opBg, fg: opText),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildButton('7', bgColor: Colors.white),
-                    _buildButton('8', bgColor: Colors.white),
-                    _buildButton('9', bgColor: Colors.white),
-                    _buildButton(
-                      '×',
-                      bgColor: Colors.blueAccent,
-                      textColor: Colors.white,
-                    ),
+                    themedButton('7', bg: numberBg, fg: numberText),
+                    themedButton('8', bg: numberBg, fg: numberText),
+                    themedButton('9', bg: numberBg, fg: numberText),
+                    themedButton('×', bg: opBg, fg: opText),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildButton('4', bgColor: Colors.white),
-                    _buildButton('5', bgColor: Colors.white),
-                    _buildButton('6', bgColor: Colors.white),
-                    _buildButton(
-                      '-',
-                      bgColor: Colors.blueAccent,
-                      textColor: Colors.white,
-                    ),
+                    themedButton('4', bg: numberBg, fg: numberText),
+                    themedButton('5', bg: numberBg, fg: numberText),
+                    themedButton('6', bg: numberBg, fg: numberText),
+                    themedButton('-', bg: opBg, fg: opText),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildButton('1', bgColor: Colors.white),
-                    _buildButton('2', bgColor: Colors.white),
-                    _buildButton('3', bgColor: Colors.white),
-                    _buildButton(
-                      '+',
-                      bgColor: Colors.blueAccent,
-                      textColor: Colors.white,
-                    ),
+                    themedButton('1', bg: numberBg, fg: numberText),
+                    themedButton('2', bg: numberBg, fg: numberText),
+                    themedButton('3', bg: numberBg, fg: numberText),
+                    themedButton('+', bg: opBg, fg: opText),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildButton('(', bgColor: Colors.grey.shade200),
-                    _buildButton('0', bgColor: Colors.white),
-                    _buildButton('.', bgColor: Colors.white),
-                    _buildButton(')', bgColor: Colors.grey.shade200),
+                    themedButton('(', bg: mutedBg, fg: mutedText),
+                    themedButton('0', bg: numberBg, fg: numberText),
+                    themedButton('.', bg: numberBg, fg: numberText),
+                    themedButton(')', bg: mutedBg, fg: mutedText),
                   ],
                 ),
                 Row(
                   children: [
-                    _buildButton(
-                      '=',
-                      bgColor: Colors.green,
-                      textColor: Colors.white,
-                      onTap: _calculate,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Material(
+                          color: equalsBg,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: _calculate,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              height: buttonHeight,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '=',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: equalsText,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
