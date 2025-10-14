@@ -177,11 +177,6 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       if (!userPickedColor && aiSuggestedColor != null) {
         selectedColor = aiSuggestedColor!;
       }
-
-      // We purposefully do NOT automatically set selectedIcon. We show AI suggestion
-      // visually (star overlay). But if you want AI to auto-apply icon as default,
-      // uncomment the following line:
-      // if (!userPickedIcon && aiSuggestedIcon != null) selectedIcon = aiSuggestedIcon;
     });
   }
 
@@ -320,8 +315,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 ),
                 if (showStar)
                   const Positioned(
-                    right: -2,
-                    top: -2,
+                    right: -3,
+                    top: -3,
                     child: Icon(Icons.star, size: 16, color: Colors.amber),
                   ),
               ],

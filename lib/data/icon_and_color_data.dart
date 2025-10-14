@@ -25,7 +25,6 @@ final Map<String, List<IconData>> iconCategories = {
     Icons.takeout_dining,
     Icons.set_meal,
     Icons.emoji_food_beverage,
-    Icons.restaurant_menu,
     Icons.local_dining,
   ],
 
@@ -157,7 +156,7 @@ final Map<String, List<IconData>> iconCategories = {
   ],
 
   'Home & Utilities': [
-    Icons.home_outlined,
+    Icons.home_rounded,
     Icons.bed,
     Icons.cleaning_services,
     Icons.lightbulb,
@@ -391,6 +390,5 @@ final List<Color> predefinedColors = [
   Colors.teal,
   Colors.tealAccent,
   Colors.brown,
-  Colors.black,
   Colors.grey,
 ];

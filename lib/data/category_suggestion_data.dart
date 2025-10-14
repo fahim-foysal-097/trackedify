@@ -53,7 +53,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Food & Drink', 20),
     Colors.orange.shade300,
   ),
-  'coffee': CategoryData(_iconFromCategory('Food & Drink', 12), Colors.brown),
+  'coffee': CategoryData(_iconFromCategory('Food & Drink', 13), Colors.brown),
   'cafe': CategoryData(_iconFromCategory('Food & Drink', 2), Colors.brown),
   'tea': CategoryData(_iconFromCategory('Food & Drink', 12), Colors.brown),
   'bakery': CategoryData(_iconFromCategory('Food & Drink', 11), Colors.amber),
@@ -80,6 +80,10 @@ final Map<String, CategoryData> categoryDataset = {
   // ---------------- Transport & Travel ----------------
   'transport': CategoryData(
     _iconFromCategory('Travel & Transport', 1),
+    Colors.blue,
+  ),
+  'travel': CategoryData(
+    _iconFromCategory('Travel & Transport', 0),
     Colors.yellow.shade700,
   ),
   'transportation': CategoryData(
@@ -99,7 +103,7 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.yellow.shade700,
   ),
   'bus': CategoryData(
-    _iconFromCategory('Travel & Transport', 2),
+    _iconFromCategory('Travel & Transport', 3),
     Colors.yellow.shade700,
   ),
   'train': CategoryData(
@@ -131,15 +135,15 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.blueGrey,
   ),
   'ferry': CategoryData(
-    _iconFromCategory('Travel & Transport', 11),
+    _iconFromCategory('Travel & Transport', 10),
     Colors.blue,
   ),
   'boat': CategoryData(
-    _iconFromCategory('Travel & Transport', 11),
+    _iconFromCategory('Travel & Transport', 10),
     Colors.lightBlue,
   ),
   'parking': CategoryData(
-    _iconFromCategory('Travel & Transport', 23),
+    _iconFromCategory('Home & Utilities', 16),
     Colors.blueGrey,
   ),
   'toll': CategoryData(
@@ -147,6 +151,10 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.brown,
   ),
   'fuel': CategoryData(
+    _iconFromCategory('Travel & Transport', 5),
+    Colors.deepOrange,
+  ),
+  'diesel': CategoryData(
     _iconFromCategory('Travel & Transport', 5),
     Colors.deepOrange,
   ),
@@ -166,11 +174,11 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.lightBlue,
   ),
   'electricity': CategoryData(
-    _iconFromCategory('Home & Utilities', 8),
+    _iconFromCategory('Home & Utilities', 19),
     Colors.yellow,
   ),
   'water': CategoryData(
-    _iconFromCategory('Home & Utilities', 19),
+    _iconFromCategory('Health & Fitness', 12),
     Colors.lightBlue,
   ),
   'internet': CategoryData(
@@ -186,21 +194,19 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Home & Utilities', 16),
     Colors.grey,
   ),
-  'trash': CategoryData(_iconFromCategory('Home & Utilities', 16), Colors.grey),
+  'trash': CategoryData(_iconFromCategory('Other', 14), Colors.grey),
   'repair': CategoryData(
-    _iconFromCategory('Home & Utilities', 20),
+    _iconFromCategory('Home & Utilities', 21),
     Colors.brown,
   ),
   'maintenance': CategoryData(
-    _iconFromCategory('Home & Utilities', 20),
+    _iconFromCategory('Home & Utilities', 21),
     Colors.brown,
   ),
   'cleaning': CategoryData(
     _iconFromCategory('Home & Utilities', 2),
     Colors.brown,
-  ),
-
-  // ---------------- Health & Personal Care ----------------
+  ), // ---------------- Health & Personal Care ----------------
   'health': CategoryData(
     _iconFromCategory('Health & Fitness', 0),
     Colors.purple,
@@ -246,9 +252,7 @@ final Map<String, CategoryData> categoryDataset = {
   'wellness': CategoryData(
     _iconFromCategory('Health & Fitness', 0),
     Colors.deepPurple,
-  ),
-
-  // ---------------- Finance ----------------
+  ), // ---------------- Finance ----------------
   'income': CategoryData(
     _iconFromCategory('Finance', 12),
     Colors.green.shade700,
@@ -268,9 +272,10 @@ final Map<String, CategoryData> categoryDataset = {
   // 'insurance': CategoryData(_iconFromCategory('Other', 0), Colors.blueGrey),
   'bank': CategoryData(_iconFromCategory('Finance', 5), Colors.blueGrey),
   'atm': CategoryData(_iconFromCategory('Finance', 11), Colors.blueGrey),
-  'payment': CategoryData(_iconFromCategory('Shopping', 9), Colors.deepPurple),
-
-  // ---------------- Shopping & Services ----------------
+  'payment': CategoryData(
+    _iconFromCategory('Shopping', 9),
+    Colors.deepPurple,
+  ), // ---------------- Shopping & Services ----------------
   'shopping': CategoryData(_iconFromCategory('Shopping', 0), Colors.pinkAccent),
   'online shopping': CategoryData(
     _iconFromCategory('Shopping', 15),
@@ -282,7 +287,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Technology', 0),
     Colors.blueGrey,
   ),
-  'hardware': CategoryData(_iconFromCategory('Other', 5), Colors.brown),
+  'hardware': CategoryData(_iconFromCategory('Other', 10), Colors.brown),
   'beauty': CategoryData(
     _iconFromCategory('Beauty & Grooming', 0),
     Colors.purpleAccent,
@@ -295,9 +300,7 @@ final Map<String, CategoryData> categoryDataset = {
   'grocery delivery': CategoryData(
     _iconFromCategory('Shopping', 16),
     Colors.green,
-  ),
-
-  // ---------------- Entertainment & Leisure ----------------
+  ), // ---------------- Entertainment & Leisure ----------------
   'entertainment': CategoryData(
     _iconFromCategory('Entertainment', 0),
     Colors.deepPurple,
@@ -314,6 +317,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Entertainment', 1),
     Colors.deepPurple,
   ),
+  'steam': CategoryData(
+    _iconFromCategory('Entertainment', 1),
+    Colors.deepPurple,
+  ),
   'concert': CategoryData(
     _iconFromCategory('Entertainment', 20),
     Colors.indigo,
@@ -322,13 +329,16 @@ final Map<String, CategoryData> categoryDataset = {
   'theatre': CategoryData(
     _iconFromCategory('Entertainment', 3),
     Colors.deepPurple,
-  ),
-
-  // ---------------- Education & Work ----------------
+  ), // ---------------- Education & Work ----------------
   'education': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
   'books': CategoryData(_iconFromCategory('Education', 1), Colors.indigo),
   'courses': CategoryData(_iconFromCategory('Education', 3), Colors.indigo),
   'school fees': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
+  'college fees': CategoryData(
+    _iconFromCategory('Education', 0),
+    Colors.indigo,
+  ),
+  'tution fees': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
   'office': CategoryData(
     _iconFromCategory('Work & Office', 0),
     Colors.blueGrey,
@@ -336,9 +346,7 @@ final Map<String, CategoryData> categoryDataset = {
   'supplies': CategoryData(
     _iconFromCategory('Work & Office', 4),
     Colors.deepOrange,
-  ),
-
-  // ---------------- Family & Kids ----------------
+  ), // ---------------- Family & Kids ----------------
   'childcare': CategoryData(
     _iconFromCategory('Family & Personal', 2),
     Colors.purple,
@@ -348,7 +356,7 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.purple,
   ),
   'kids': CategoryData(
-    _iconFromCategory('Family & Personal', 3),
+    _iconFromCategory('Family & Personal', 2),
     Colors.pinkAccent,
   ),
   'baby': CategoryData(
@@ -360,9 +368,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Family & Personal', 0),
     Colors.teal,
   ),
-  'school': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
-
-  // ---------------- Home & Garden ----------------
+  'school': CategoryData(
+    _iconFromCategory('Education', 0),
+    Colors.indigo,
+  ), // ---------------- Home & Garden ----------------
   'garden': CategoryData(
     _iconFromCategory('Gardening & Outdoor', 0),
     Colors.green,
@@ -390,9 +399,7 @@ final Map<String, CategoryData> categoryDataset = {
   'decor': CategoryData(
     _iconFromCategory('Home & Utilities', 11),
     Colors.purple,
-  ),
-
-  // ---------------- Subscriptions & Digital ----------------
+  ), // ---------------- Subscriptions & Digital ----------------
   'subscription': CategoryData(
     _iconFromCategory('Subscriptions', 0),
     Colors.deepPurple,
@@ -403,9 +410,10 @@ final Map<String, CategoryData> categoryDataset = {
   ),
   'software': CategoryData(_iconFromCategory('Technology', 0), Colors.blueGrey),
   'apps': CategoryData(_iconFromCategory('Technology', 1), Colors.blueGrey),
-  'hosting': CategoryData(_iconFromCategory('Technology', 16), Colors.indigo),
-
-  // ---------------- Sports & Fitness ----------------
+  'hosting': CategoryData(
+    _iconFromCategory('Technology', 16),
+    Colors.indigo,
+  ), // ---------------- Sports & Fitness ----------------
   'sports': CategoryData(_iconFromCategory('Sports', 0), Colors.orange),
   'fitness class': CategoryData(_iconFromCategory('Sports', 17), Colors.teal),
   'gym membership': CategoryData(
@@ -419,9 +427,7 @@ final Map<String, CategoryData> categoryDataset = {
   'tickets': CategoryData(
     _iconFromCategory('Entertainment', 22),
     Colors.deepPurple,
-  ),
-
-  // ---------------- Gifts & Charity ----------------
+  ), // ---------------- Gifts & Charity ----------------
   'gift': CategoryData(
     _iconFromCategory('Gifts & Donations', 0),
     Colors.pinkAccent,
@@ -433,9 +439,7 @@ final Map<String, CategoryData> categoryDataset = {
   'donation': CategoryData(
     _iconFromCategory('Gifts & Donations', 2),
     Colors.green,
-  ),
-
-  // ---------------- Insurance & Legal ----------------
+  ), // ---------------- Insurance & Legal ----------------
   'insurance': CategoryData(
     _iconFromCategory('Insurance & Legal', 0),
     Colors.blueGrey,
@@ -444,9 +448,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Insurance & Legal', 0),
     Colors.blueGrey,
   ),
-  'legal': CategoryData(_iconFromCategory('Insurance & Legal', 1), Colors.grey),
-
-  // ---------------- Auto & Vehicle ----------------
+  'legal': CategoryData(
+    _iconFromCategory('Insurance & Legal', 1),
+    Colors.grey,
+  ), // ---------------- Auto & Vehicle ----------------
   'auto': CategoryData(
     _iconFromCategory('Auto & Vehicle', 0),
     Colors.yellow.shade700,
@@ -462,10 +467,9 @@ final Map<String, CategoryData> categoryDataset = {
   'ev charging': CategoryData(
     _iconFromCategory('Auto & Vehicle', 3),
     Colors.teal,
-  ),
-
-  // ---------------- Technology & Gadgets ----------------
+  ), // ---------------- Technology & Gadgets ----------------
   'computer': CategoryData(_iconFromCategory('Technology', 0), Colors.blueGrey),
+  'pc': CategoryData(_iconFromCategory('Technology', 0), Colors.blueGrey),
   'laptop': CategoryData(_iconFromCategory('Technology', 5), Colors.blueGrey),
   'phone bill': CategoryData(
     _iconFromCategory('Technology', 1),
@@ -474,9 +478,7 @@ final Map<String, CategoryData> categoryDataset = {
   'internet bill': CategoryData(
     _iconFromCategory('Technology', 9),
     Colors.blueAccent,
-  ),
-
-  // ---------------- Hobbies & Crafts ----------------
+  ), // ---------------- Hobbies & Crafts ----------------
   'hobby': CategoryData(_iconFromCategory('Hobbies & Crafts', 0), Colors.teal),
   'crafts': CategoryData(
     _iconFromCategory('Hobbies & Crafts', 0),
@@ -485,9 +487,7 @@ final Map<String, CategoryData> categoryDataset = {
   'craft supplies': CategoryData(
     _iconFromCategory('Hobbies & Crafts', 0),
     Colors.deepOrange,
-  ),
-
-  // ---------------- Other / Misc ----------------
+  ), // ---------------- Other / Misc ----------------
   'other': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
   'misc': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
   'fee': CategoryData(_iconFromCategory('Other', 24), Colors.brown),
@@ -495,9 +495,10 @@ final Map<String, CategoryData> categoryDataset = {
   'refund': CategoryData(_iconFromCategory('Other', 11), Colors.green),
   'exchange': CategoryData(_iconFromCategory('Other', 15), Colors.deepPurple),
   'unknown': CategoryData(_iconFromCategory('Other', 0), Colors.grey),
-  'miscellaneous': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
-
-  // ---------------- Extended / many synonyms (A LOT LOT) ----------------
+  'miscellaneous': CategoryData(
+    _iconFromCategory('Other', 1),
+    Colors.grey,
+  ), // ---------------- Extended / many synonyms (A LOT LOT) ----------------
   // Food synonyms
   'deli': CategoryData(
     _iconFromCategory('Food & Drink', 0),
@@ -507,15 +508,15 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Food & Drink', 0),
     Colors.red.shade400,
   ),
-  'seafood': CategoryData(_iconFromCategory('Food & Drink', 8), Colors.blue),
-  'sushi': CategoryData(_iconFromCategory('Food & Drink', 12), Colors.teal),
-  'ramen': CategoryData(_iconFromCategory('Food & Drink', 13), Colors.orange),
+  'seafood': CategoryData(_iconFromCategory('Food & Drink', 21), Colors.blue),
+  'sushi': CategoryData(_iconFromCategory('Food & Drink', 21), Colors.teal),
+  'ramen': CategoryData(_iconFromCategory('Food & Drink', 14), Colors.orange),
   'kebab': CategoryData(
-    _iconFromCategory('Food & Drink', 14),
+    _iconFromCategory('Food & Drink', 15),
     Colors.deepOrange,
   ),
   'brunch': CategoryData(
-    _iconFromCategory('Food & Drink', 11),
+    _iconFromCategory('Food & Drink', 12),
     Colors.orange.shade200,
   ),
   'breakfast': CategoryData(
@@ -523,15 +524,13 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.yellow.shade600,
   ),
   'lunch': CategoryData(
-    _iconFromCategory('Food & Drink', 17),
+    _iconFromCategory('Food & Drink', 18),
     Colors.orange.shade300,
   ),
   'dinner': CategoryData(
-    _iconFromCategory('Food & Drink', 18),
+    _iconFromCategory('Food & Drink', 19),
     Colors.deepOrange.shade400,
-  ),
-
-  // Shopping synonyms
+  ), // Shopping synonyms
   'grocerystore': CategoryData(_iconFromCategory('Shopping', 7), Colors.green),
   'convenience': CategoryData(
     _iconFromCategory('Shopping', 6),
@@ -542,9 +541,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Shopping', 4),
     Colors.indigo.shade700,
   ),
-  'coupon': CategoryData(_iconFromCategory('Shopping', 11), Colors.amber),
-
-  // Transport synonyms
+  'coupon': CategoryData(
+    _iconFromCategory('Shopping', 11),
+    Colors.amber,
+  ), // Transport synonyms
   'ride share': CategoryData(
     _iconFromCategory('Travel & Transport', 1),
     Colors.yellow.shade700,
@@ -558,11 +558,9 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.orange,
   ),
   'car rental': CategoryData(
-    _iconFromCategory('Travel & Transport', 25),
+    _iconFromCategory('Travel & Transport', 26),
     Colors.blueGrey,
-  ),
-
-  // Finance synonyms
+  ), // Finance synonyms
   'bank fees': CategoryData(_iconFromCategory('Finance', 8), Colors.brown),
   'cash withdrawal': CategoryData(
     _iconFromCategory('Finance', 11),
@@ -610,11 +608,11 @@ final Map<String, CategoryData> categoryDataset = {
 
   // Large catch-all many words to improve coverage (you can continue adding)
   'coffee beans': CategoryData(
-    _iconFromCategory('Food & Drink', 12),
+    _iconFromCategory('Food & Drink', 13),
     Colors.brown,
   ),
   'energy': CategoryData(
-    _iconFromCategory('Home & Utilities', 8),
+    _iconFromCategory('Home & Utilities', 19),
     Colors.yellow,
   ),
   'internet service': CategoryData(
@@ -645,13 +643,11 @@ final Map<String, CategoryData> categoryDataset = {
   'charity donation': CategoryData(
     _iconFromCategory('Gifts & Donations', 2),
     Colors.green,
-  ),
-
-  // final safety fallback (already covered but explicit)
-  'default': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
-
-  // ---------------- Additional rules data for unused or underused icons ----------------
-  // Added entries to cover every single icon in each category by providing at least one rule (key) per icon.
+  ), // final safety fallback (already covered but explicit)
+  'default': CategoryData(
+    _iconFromCategory('Other', 1),
+    Colors.grey,
+  ), // ---------------- Additional rules data for unused or underused icons ----------------
   // Food & Drink additions (covering missing indices like 4,5,6,15,19,21,22,23,24 and reinforcing others)
   'fast food': CategoryData(
     _iconFromCategory('Food & Drink', 0),
@@ -730,10 +726,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Food & Drink', 22),
     Colors.brown,
   ),
-  'food menu': CategoryData(_iconFromCategory('Food & Drink', 23), Colors.grey),
-  'eat out': CategoryData(_iconFromCategory('Food & Drink', 24), Colors.orange),
-
-  // Shopping additions (covering missing 2,3,8,9,10,12,13,14,17,18)
+  'eat out': CategoryData(_iconFromCategory('Food & Drink', 23), Colors.orange),
   'gift card': CategoryData(_iconFromCategory('Shopping', 2), Colors.pink),
   'wallet purchase': CategoryData(
     _iconFromCategory('Shopping', 3),
@@ -746,14 +739,17 @@ final Map<String, CategoryData> categoryDataset = {
   'qr scan': CategoryData(_iconFromCategory('Shopping', 13), Colors.black),
   'barcode scan': CategoryData(_iconFromCategory('Shopping', 14), Colors.black),
   'sell item': CategoryData(_iconFromCategory('Shopping', 17), Colors.green),
-  'price tag': CategoryData(_iconFromCategory('Shopping', 18), Colors.amber),
-
-  // Entertainment additions (covering missing 2,4,5,6,8,9,10,11,12,13,16,17,18,21,23,24)
+  'price tag': CategoryData(
+    _iconFromCategory('Shopping', 18),
+    Colors.amber,
+  ), // Entertainment additions (covering missing 2,4,5,6,8,9,10,11,12,13,16,17,18,21,23,24)
   'music': CategoryData(_iconFromCategory('Entertainment', 2), Colors.indigo),
+  'song': CategoryData(_iconFromCategory('Entertainment', 2), Colors.indigo),
   'video games': CategoryData(
     _iconFromCategory('Entertainment', 4),
     Colors.deepPurple,
   ),
+  'tv': CategoryData(_iconFromCategory('Entertainment', 5), Colors.grey),
   'television': CategoryData(
     _iconFromCategory('Entertainment', 5),
     Colors.grey,
@@ -771,6 +767,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Entertainment', 10),
     Colors.black,
   ),
+  'piano': CategoryData(_iconFromCategory('Entertainment', 10), Colors.black),
   'microphone': CategoryData(
     _iconFromCategory('Entertainment', 11),
     Colors.black,
@@ -806,9 +803,7 @@ final Map<String, CategoryData> categoryDataset = {
   'video music': CategoryData(
     _iconFromCategory('Entertainment', 24),
     Colors.indigo,
-  ),
-
-  // Health & Fitness additions (covering all, including underused)
+  ), // Health & Fitness additions (covering all, including underused)
   'safety': CategoryData(
     _iconFromCategory('Health & Fitness', 0),
     Colors.purple,
@@ -853,7 +848,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Health & Fitness', 10),
     Colors.redAccent,
   ),
-  'florist health': CategoryData(
+  'aromatherapy': CategoryData(
     _iconFromCategory('Health & Fitness', 11),
     Colors.green,
   ),
@@ -890,12 +885,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Health & Fitness', 20),
     Colors.teal,
   ),
-  'morning coffee health': CategoryData(
+  'healthy breakfast': CategoryData(
     _iconFromCategory('Health & Fitness', 21),
     Colors.brown,
-  ),
-
-  // Education additions (covering all)
+  ), // Education additions (covering all)
   // 'school': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
   'reading': CategoryData(_iconFromCategory('Education', 1), Colors.indigo),
   'lab': CategoryData(_iconFromCategory('Education', 2), Colors.blue),
@@ -920,8 +913,6 @@ final Map<String, CategoryData> categoryDataset = {
   'biology': CategoryData(_iconFromCategory('Education', 15), Colors.green),
   'test': CategoryData(_iconFromCategory('Education', 16), Colors.grey),
   'stories': CategoryData(_iconFromCategory('Education', 17), Colors.indigo),
-
-  // Travel & Transport additions (covering missing like 3,4,6,7,9,10,13,15,16,17,18,19,20,25,26,27)
   'air travel': CategoryData(
     _iconFromCategory('Travel & Transport', 0),
     Colors.indigo,
@@ -1027,9 +1018,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Travel & Transport', 26),
     Colors.blueGrey,
   ),
-  'gps': CategoryData(_iconFromCategory('Travel & Transport', 27), Colors.blue),
-
-  // Home & Utilities additions (covering all)
+  'gps': CategoryData(
+    _iconFromCategory('Travel & Transport', 27),
+    Colors.blue,
+  ), // Home & Utilities additions (covering all)
   'home': CategoryData(_iconFromCategory('Home & Utilities', 0), Colors.indigo),
   'bedroom': CategoryData(
     _iconFromCategory('Home & Utilities', 1),
@@ -1111,8 +1103,6 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Home & Utilities', 23),
     Colors.indigo,
   ),
-
-  // Finance additions (covering missing like 3,4,6,7,9,10,13,16,17,18,19)
   'growth': CategoryData(_iconFromCategory('Finance', 0), Colors.green),
   'save money': CategoryData(_iconFromCategory('Finance', 1), Colors.teal),
   'card': CategoryData(_iconFromCategory('Finance', 2), Colors.blue),
@@ -1150,9 +1140,7 @@ final Map<String, CategoryData> categoryDataset = {
   'track finance': CategoryData(
     _iconFromCategory('Finance', 19),
     Colors.indigo,
-  ),
-
-  // Family & Personal additions (covering all)
+  ), // Family & Personal additions (covering all)
   'pet': CategoryData(_iconFromCategory('Family & Personal', 0), Colors.teal),
   'family room': CategoryData(
     _iconFromCategory('Family & Personal', 1),
@@ -1174,6 +1162,7 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Family & Personal', 5),
     Colors.green,
   ),
+  'cake': CategoryData(_iconFromCategory('Family & Personal', 6), Colors.pink),
   'birthday cake': CategoryData(
     _iconFromCategory('Family & Personal', 6),
     Colors.pink,
@@ -1224,8 +1213,6 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Family & Personal', 19),
     Colors.indigo,
   ),
-
-  // Technology additions (covering all)
   'desktop': CategoryData(_iconFromCategory('Technology', 0), Colors.blueGrey),
   'mobile': CategoryData(_iconFromCategory('Technology', 1), Colors.blueAccent),
   'camera': CategoryData(_iconFromCategory('Technology', 2), Colors.grey),
@@ -1264,9 +1251,10 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.blueAccent,
   ),
   'ram': CategoryData(_iconFromCategory('Technology', 22), Colors.grey),
-  'robot': CategoryData(_iconFromCategory('Technology', 23), Colors.teal),
-
-  // Sports additions (covering all)
+  'robot': CategoryData(
+    _iconFromCategory('Technology', 23),
+    Colors.teal,
+  ), // Sports additions (covering all)
   'soccer': CategoryData(_iconFromCategory('Sports', 0), Colors.green),
   'basketball': CategoryData(_iconFromCategory('Sports', 1), Colors.orange),
   'tennis': CategoryData(_iconFromCategory('Sports', 2), Colors.green),
@@ -1289,9 +1277,8 @@ final Map<String, CategoryData> categoryDataset = {
   ),
   'gym fitness': CategoryData(_iconFromCategory('Sports', 17), Colors.teal),
   'yoga fitness': CategoryData(_iconFromCategory('Sports', 18), Colors.green),
-
-  // Other additions (covering all)
   'more': CategoryData(_iconFromCategory('Other', 0), Colors.grey),
+  'others': CategoryData(_iconFromCategory('Other', 0), Colors.grey),
   'categories': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
   'access': CategoryData(_iconFromCategory('Other', 2), Colors.blue),
   'alarm clock': CategoryData(_iconFromCategory('Other', 3), Colors.red),
@@ -1320,9 +1307,10 @@ final Map<String, CategoryData> categoryDataset = {
   'adjust': CategoryData(_iconFromCategory('Other', 23), Colors.grey),
   'time line': CategoryData(_iconFromCategory('Other', 24), Colors.blue),
   'past': CategoryData(_iconFromCategory('Other', 25), Colors.brown),
-  'location map': CategoryData(_iconFromCategory('Other', 26), Colors.blueGrey),
-
-  // Beauty & Grooming additions (covering all)
+  'location map': CategoryData(
+    _iconFromCategory('Other', 26),
+    Colors.blueGrey,
+  ), // Beauty & Grooming additions (covering all)
   'makeup': CategoryData(
     _iconFromCategory('Beauty & Grooming', 0),
     Colors.purpleAccent,
@@ -1350,9 +1338,7 @@ final Map<String, CategoryData> categoryDataset = {
   'bath shower': CategoryData(
     _iconFromCategory('Beauty & Grooming', 6),
     Colors.blue,
-  ),
-
-  // Gifts & Donations additions (covering all)
+  ), // Gifts & Donations additions (covering all)
   'giftcard': CategoryData(
     _iconFromCategory('Gifts & Donations', 0),
     Colors.pinkAccent,
@@ -1369,10 +1355,12 @@ final Map<String, CategoryData> categoryDataset = {
   'donate money': CategoryData(
     _iconFromCategory('Gifts & Donations', 4),
     Colors.green,
-  ),
-
-  // Subscriptions additions (covering all)
+  ), // Subscriptions additions (covering all)
   'subscribe': CategoryData(
+    _iconFromCategory('Subscriptions', 0),
+    Colors.deepPurple,
+  ),
+  'netflix': CategoryData(
     _iconFromCategory('Subscriptions', 0),
     Colors.deepPurple,
   ),
@@ -1387,9 +1375,7 @@ final Map<String, CategoryData> categoryDataset = {
   'subscription card': CategoryData(
     _iconFromCategory('Subscriptions', 3),
     Colors.blue,
-  ),
-
-  // Auto & Vehicle additions (covering all)
+  ), // Auto & Vehicle additions (covering all)
   'vehicle': CategoryData(
     _iconFromCategory('Auto & Vehicle', 0),
     Colors.yellow.shade700,
@@ -1417,9 +1403,7 @@ final Map<String, CategoryData> categoryDataset = {
   'bus transport': CategoryData(
     _iconFromCategory('Auto & Vehicle', 6),
     Colors.yellow.shade700,
-  ),
-
-  // Work & Office additions (covering all)
+  ), // Work & Office additions (covering all)
   'job work': CategoryData(
     _iconFromCategory('Work & Office', 0),
     Colors.blueGrey,
@@ -1455,9 +1439,7 @@ final Map<String, CategoryData> categoryDataset = {
   'play local': CategoryData(
     _iconFromCategory('Hobbies & Crafts', 4),
     Colors.green,
-  ),
-
-  // Gardening & Outdoor additions (covering all)
+  ), // Gardening & Outdoor additions (covering all)
   'nature outdoor': CategoryData(
     _iconFromCategory('Gardening & Outdoor', 0),
     Colors.green,
@@ -1478,8 +1460,6 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Gardening & Outdoor', 4),
     Colors.pinkAccent,
   ),
-
-  // Insurance & Legal additions (covering all)
   'coverage': CategoryData(
     _iconFromCategory('Insurance & Legal', 0),
     Colors.blueGrey,
