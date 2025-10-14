@@ -18,7 +18,7 @@ class _SetPinPageState extends State<SetPinPage> {
   final AuthService _auth = AuthService();
 
   bool _saving = false;
-  bool _showPin = false;
+  bool _obscure = true;
   String? _error;
 
   @override
@@ -30,9 +30,7 @@ class _SetPinPageState extends State<SetPinPage> {
   }
 
   Future<void> _save() async {
-    setState(() {
-      _error = null;
-    });
+    setState(() => _error = null);
 
     final pin = _pinCtl.text.trim();
     final confirm = _confirmCtl.text.trim();
@@ -42,17 +40,18 @@ class _SetPinPageState extends State<SetPinPage> {
       setState(() => _error = 'PIN must be at least 4 digits.');
       return;
     }
-
+    if (!RegExp(r'^\d+$').hasMatch(pin)) {
+      setState(() => _error = 'PIN must contain digits only.');
+      return;
+    }
     if (pin != confirm) {
       setState(() => _error = 'PINs do not match.');
       return;
     }
-
     if (recovery.isEmpty) {
       setState(() => _error = 'Recovery password is required.');
       return;
     }
-
     if (recovery.length < 6) {
       setState(
         () => _error = 'Recovery password should be at least 6 characters.',
@@ -62,30 +61,43 @@ class _SetPinPageState extends State<SetPinPage> {
 
     setState(() => _saving = true);
 
-    // Save PIN securely
-    await _auth.setPin(pin, recoveryPassword: recovery);
-
-    if (!mounted) return;
-    setState(() => _saving = false);
-
-    // inform caller of success
-    Navigator.of(context).pop(true);
+    try {
+      await _auth.setPin(pin, recoveryPassword: recovery);
+      if (!mounted) return;
+      // success
+      if (widget.isChanging) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('PIN changed')));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('PIN set')));
+      }
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Failed to save PIN: $e');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final title = widget.isChanging ? 'Change PIN' : 'Set PIN';
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
           title: Text(title),
-          centerTitle: false,
           leading: IconButton(
             tooltip: "Back",
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
             onPressed: () => Navigator.pop(context),
           ),
+          elevation: 0,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -94,22 +106,21 @@ class _SetPinPageState extends State<SetPinPage> {
               TextField(
                 controller: _pinCtl,
                 keyboardType: TextInputType.number,
-                obscureText: !_showPin,
+                obscureText: _obscure,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   hintText: widget.isChanging ? 'Enter new PIN' : 'Enter PIN',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _showPin ? Icons.visibility_off : Icons.visibility,
+                      _obscure ? Icons.visibility : Icons.visibility_off,
                     ),
-                    onPressed: () => setState(() => _showPin = !_showPin),
+                    onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: theme.colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
@@ -120,17 +131,16 @@ class _SetPinPageState extends State<SetPinPage> {
               TextField(
                 controller: _confirmCtl,
                 keyboardType: TextInputType.number,
-                obscureText: !_showPin,
+                obscureText: _obscure,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Confirm PIN',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(
+                  fillColor: theme.colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
@@ -140,16 +150,15 @@ class _SetPinPageState extends State<SetPinPage> {
               TextField(
                 controller: _recoveryCtl,
                 keyboardType: TextInputType.text,
-                obscureText: !_showPin,
-                decoration: const InputDecoration(
+                obscureText: _obscure,
+                decoration: InputDecoration(
                   hintText: 'Recovery password',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(
+                  fillColor: theme.colorScheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
@@ -159,25 +168,25 @@ class _SetPinPageState extends State<SetPinPage> {
                 const SizedBox(height: 12),
                 Text(_error!, style: const TextStyle(color: Colors.red)),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 height: kToolbarHeight,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                child: ElevatedButton(
+                  onPressed: _saving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: _saving ? null : _save,
                   child: _saving
                       ? const CupertinoActivityIndicator(color: Colors.white)
                       : Text(
                           widget.isChanging ? 'Change PIN' : 'Set PIN',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontSize: 16,
                           ),
                         ),
                 ),

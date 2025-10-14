@@ -52,8 +52,9 @@ class _LockScreenState extends State<LockScreen> {
       context: context,
       builder: (context) {
         final ctl = TextEditingController();
+        final cs = Theme.of(context).colorScheme;
         return AlertDialog(
-          backgroundColor: Colors.purple[40],
+          backgroundColor: cs.surface,
           title: const Text('Recover PIN'),
           content: TextField(
             controller: ctl,
@@ -61,7 +62,7 @@ class _LockScreenState extends State<LockScreen> {
             decoration: InputDecoration(
               hintText: 'Enter recovery password',
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.8),
+              fillColor: cs.onSurface.withValues(alpha: 0.06),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -114,19 +115,42 @@ class _LockScreenState extends State<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Gradient using primary/secondary with slight opacity for dark/light balance
+    final Gradient backgroundGradient = LinearGradient(
+      colors: [cs.primary, cs.primaryContainer],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    final cardColor = cs.surface;
+    final cardElevationShadow = isDark
+        ? Colors.black.withValues(alpha: 0.45)
+        : Colors.black.withValues(alpha: 0.12);
+
+    final iconCircleBg = cs.primaryContainer;
+    final iconColor = cs.onPrimaryContainer;
+
+    final titleColor = cs.onSurface;
+    final subtitleColor = cs.onSurface.withValues(alpha: 0.7);
+
+    final inputFill = cs.surfaceContainer.withValues(alpha: 0.85);
+    final inputTextColor = cs.onSurface;
+
+    final buttonColor = cs.primary;
+    final buttonTextColor = cs.onPrimary;
+
+    final linkColor = cs.primary;
+
     return PopScope(
       canPop: false,
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
+            decoration: BoxDecoration(gradient: backgroundGradient),
             child: SafeArea(
               child: Center(
                 child: Padding(
@@ -137,7 +161,8 @@ class _LockScreenState extends State<LockScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       elevation: 12,
-                      color: Colors.white.withValues(alpha: 0.95),
+                      color: cardColor,
+                      shadowColor: cardElevationShadow,
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Column(
@@ -146,36 +171,36 @@ class _LockScreenState extends State<LockScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.purple[50],
+                                color: iconCircleBg,
                                 shape: BoxShape.circle,
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black26,
+                                    color: cs.onSurface.withValues(alpha: 0.08),
                                     blurRadius: 12,
-                                    offset: Offset(0, 6),
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.lock,
                                 size: 72,
-                                color: Color(0xFF6A11CB),
+                                color: iconColor,
                               ),
                             ),
                             const SizedBox(height: 18),
-                            const Text(
+                            Text(
                               'Unlock Trackedify',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4A148C),
+                                color: titleColor,
                               ),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'Enter your PIN to continue',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: subtitleColor,
                                 fontSize: 14,
                               ),
                             ),
@@ -191,7 +216,7 @@ class _LockScreenState extends State<LockScreen> {
                                 hintText: 'Enter PIN',
                                 errorText: _error,
                                 filled: true,
-                                fillColor: Colors.purple[50],
+                                fillColor: inputFill,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(14),
                                   borderSide: BorderSide.none,
@@ -201,6 +226,7 @@ class _LockScreenState extends State<LockScreen> {
                                   vertical: 16,
                                 ),
                               ),
+                              style: TextStyle(color: inputTextColor),
                             ),
                             const SizedBox(height: 22),
                             SizedBox(
@@ -208,7 +234,7 @@ class _LockScreenState extends State<LockScreen> {
                               height: 52,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6A11CB),
+                                  backgroundColor: buttonColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
@@ -216,17 +242,17 @@ class _LockScreenState extends State<LockScreen> {
                                 ),
                                 onPressed: _isChecking ? null : _submitPin,
                                 child: _isChecking
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 24,
                                         height: 24,
                                         child: CupertinoActivityIndicator(
-                                          color: Colors.white,
+                                          color: buttonTextColor,
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Unlock',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: buttonTextColor,
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -236,10 +262,10 @@ class _LockScreenState extends State<LockScreen> {
                             const SizedBox(height: 16),
                             TextButton(
                               onPressed: _forgotFlow,
-                              child: const Text(
+                              child: Text(
                                 'Forgot PIN? Use recovery password',
                                 style: TextStyle(
-                                  color: Color(0xFF6A11CB),
+                                  color: linkColor,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

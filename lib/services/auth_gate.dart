@@ -37,16 +37,16 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     if (_locked == null) {
       return const Scaffold(
-        body: Center(
-          child: CupertinoActivityIndicator(radius: 15, color: Colors.blue),
-        ),
+        body: Center(child: CupertinoActivityIndicator(radius: 15)),
       );
     }
+
     if (_locked == true) {
       // show LockScreen; on unlock it calls onUnlocked -> show child
-      NavBarController.apply;
+      NavBarController.apply();
       return LockScreen(onUnlocked: _onUnlocked);
     }
+
     // unlocked -> show the protected child
     return widget.child;
   }
