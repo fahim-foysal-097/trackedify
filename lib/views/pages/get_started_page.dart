@@ -262,7 +262,9 @@ class _GetStartedPageState extends State<GetStartedPage> {
                       decoration: InputDecoration(
                         hintText: "Your Name",
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainer,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,

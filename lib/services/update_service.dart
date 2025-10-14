@@ -126,7 +126,7 @@ class UpdateService {
             title: "Update Check Failed",
             message:
                 "Couldn't check for updates (GitHub returned ${res.statusCode}).",
-            textColor: Colors.black54,
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
             buttonText: "OK",
             onTapDismiss: () => Navigator.of(context).pop(),
             panaraDialogType: PanaraDialogType.error,
@@ -156,7 +156,7 @@ class UpdateService {
             context,
             title: "No Release Found",
             message: "Couldn't get the latest release information.",
-            textColor: Colors.black54,
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
             buttonText: "OK",
             onTapDismiss: () => Navigator.of(context).pop(),
             panaraDialogType: PanaraDialogType.error,
@@ -177,7 +177,7 @@ class UpdateService {
             context,
             title: "Up to Date",
             message: "You are on the latest version (v$currentVersion)",
-            textColor: Colors.black54,
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
             buttonText: "OK",
             onTapDismiss: () => Navigator.of(context).pop(),
             panaraDialogType: PanaraDialogType.success,
@@ -194,7 +194,7 @@ class UpdateService {
             title: "You are ahead of releases",
             message:
                 "Your installed version is v$currentVersion which is newer than the latest GitHub release (v$latestVersion). This can happen if the release was removed or you installed a pre-release build. No update is available.",
-            textColor: Colors.black54,
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
             buttonText: "OK",
             onTapDismiss: () => Navigator.of(context).pop(),
             panaraDialogType: PanaraDialogType.normal,
@@ -235,7 +235,7 @@ class UpdateService {
             title: "Update Available (no installer)",
             message:
                 "A new version v$latestVersion is available, but no installer matching your device ABI ($arch) was found for automatic download. Please check the release page on GitHub.",
-            textColor: Colors.black54,
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
             buttonText: "Open Release Page",
             onTapDismiss: () {
               Navigator.of(context).pop();
@@ -262,7 +262,7 @@ class UpdateService {
         title: "Update Available",
         message:
             "A new version v$latestVersion is available (you are on v$currentVersion). Do you want to update?",
-        textColor: Colors.black54,
+        textColor: Theme.of(context).textTheme.bodySmall?.color,
         confirmButtonText: "Update",
         cancelButtonText: "Later",
         onTapCancel: () => Navigator.of(context).pop(),
@@ -282,7 +282,7 @@ class UpdateService {
           title: "Update Check Failed",
           message:
               "An error occurred while checking for updates. Check your Internet connection and try again.",
-          textColor: Colors.black54,
+          textColor: Theme.of(context).textTheme.bodySmall?.color,
           buttonText: "OK",
           onTapDismiss: () => Navigator.of(context).pop(),
           panaraDialogType: PanaraDialogType.error,
