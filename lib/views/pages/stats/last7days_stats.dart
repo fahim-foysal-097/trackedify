@@ -107,12 +107,14 @@ class Last7daysStatsState extends State<Last7daysStats> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     if (isLoading) {
       return Center(
         child: Column(
           children: [
             SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
-            const CupertinoActivityIndicator(radius: 12),
+            CupertinoActivityIndicator(radius: 12, color: cs.primary),
           ],
         ),
       );
@@ -127,22 +129,23 @@ class Last7daysStatsState extends State<Last7daysStats> {
           alignment: Alignment.center,
           children: [
             SizedBox(height: MediaQuery.of(context).size.height / 2),
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'No data for the chart',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: cs.onSurface.withValues(alpha:0.75),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6),
-                Center(
-                  child: Text(
-                    'Please add some expenses to view the chart.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                const SizedBox(height: 6),
+                Text(
+                  'Please add some expenses to view the chart.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: cs.onSurface.withValues(alpha:0.7),
                   ),
                 ),
               ],
@@ -171,7 +174,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
         icon: Icons.receipt_long,
         title: 'Transactions',
         value: totalTransactions7.toString(),
-        color: Colors.blue,
+        color: cs.primary,
       ),
       _buildStatCard(
         icon: Icons.event_available,
@@ -184,14 +187,14 @@ class Last7daysStatsState extends State<Last7daysStats> {
         title: 'Largest Single',
         value: largestSingleCategory7 ?? 'None',
         subValue: '\$${largestSingleExpense7.toStringAsFixed(2)}',
-        color: Colors.red,
+        color: Colors.redAccent,
       ),
       _buildStatCard(
         icon: Icons.cached_rounded,
         title: 'Most Used Category',
         value: mostUsedCategory7 ?? 'None',
         subValue: '$mostUsedCategoryCount7 tx',
-        color: Colors.purple,
+        color: cs.secondary,
       ),
       _buildStatCard(
         icon: Icons.trending_up,
@@ -222,7 +225,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                     title: 'Total',
                     value: currency.format(total7),
                     subtitle: '7d',
-                    backgroundColor: Colors.blue.shade100,
+                    backgroundColor: cs.primary.withValues(alpha:0.08),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -232,7 +235,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                     title: 'Avg / day',
                     value: currency.format(avg7),
                     subtitle: '7d',
-                    backgroundColor: Colors.green.shade100,
+                    backgroundColor: cs.secondary.withValues(alpha:0.08),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -244,7 +247,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                         ? DateFormat('MM/dd').format(maxDay)
                         : '-',
                     subtitle: "7d",
-                    backgroundColor: Colors.orange.shade100,
+                    backgroundColor: Colors.orange.withValues(alpha:0.08),
                   ),
                 ),
               ],
@@ -268,11 +271,11 @@ class Last7daysStatsState extends State<Last7daysStats> {
                     horizontalInterval: (computedMaxY / 5).ceilToDouble(),
                     verticalInterval: 1,
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.18),
+                      color: cs.onSurface.withValues(alpha:0.08),
                       strokeWidth: 1,
                     ),
                     getDrawingVerticalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.12),
+                      color: cs.onSurface.withValues(alpha:0.06),
                       strokeWidth: 1,
                     ),
                   ),
@@ -295,7 +298,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                           padding: const EdgeInsets.only(right: 6.0),
                           child: Text(
                             '\$${value.toInt()}',
-                            style: const TextStyle(fontSize: 10),
+                            style: TextStyle(fontSize: 10, color: cs.onSurface),
                           ),
                         ),
                       ),
@@ -317,24 +320,24 @@ class Last7daysStatsState extends State<Last7daysStats> {
                       preventCurveOverShooting: true,
                       isStrokeJoinRound: true,
                       isStrokeCapRound: true,
-                      color: Colors.lightBlue.shade700,
+                      color: cs.primary,
                       barWidth: 3,
                       dotData: FlDotData(
                         show: true,
                         getDotPainter: (spot, percent, bar, index) =>
                             FlDotCirclePainter(
                               radius: 3, // smaller dots
-                              color: Colors.white,
+                              color: cs.surface,
                               strokeWidth: 1.2,
-                              strokeColor: Colors.blue.shade700,
+                              strokeColor: cs.primary,
                             ),
                       ),
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(
                           colors: [
-                            Colors.blue.shade300.withValues(alpha: 0.45),
-                            Colors.blue.shade300.withValues(alpha: 0.12),
+                            cs.primary.withValues(alpha:0.45),
+                            cs.primary.withValues(alpha:0.12),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -345,7 +348,8 @@ class Last7daysStatsState extends State<Last7daysStats> {
                   lineTouchData: LineTouchData(
                     enabled: true,
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (touchedSpot) => Colors.black87,
+                      getTooltipColor: (touchedSpot) =>
+                          cs.onSurface.withValues(alpha:0.9),
                       tooltipPadding: const EdgeInsets.all(8),
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((lineBarSpot) {
@@ -363,7 +367,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                           final y = lineBarSpot.y;
                           return LineTooltipItem(
                             '$dateStr\n\$${y.toStringAsFixed(2)}',
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                            TextStyle(color: cs.onPrimary, fontSize: 12),
                           );
                         }).toList();
                       },
@@ -382,10 +386,14 @@ class Last7daysStatsState extends State<Last7daysStats> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
+                Center(
                   child: Text(
                     'Last 7 Days Insights',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -412,8 +420,9 @@ class Last7daysStatsState extends State<Last7daysStats> {
   }
 
   Widget getTitles(double value, TitleMeta meta) {
+    final cs = Theme.of(context).colorScheme;
     final style = TextStyle(
-      color: Colors.blue[800],
+      color: cs.primary,
       fontWeight: FontWeight.bold,
       fontSize: 12,
     );
@@ -442,14 +451,14 @@ class Last7daysStatsState extends State<Last7daysStats> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
+          colors: [color.withValues(alpha:0.4), color.withValues(alpha:0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
+            color: color.withValues(alpha:0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -511,6 +520,7 @@ class _InsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -519,7 +529,7 @@ class _InsightCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: cs.onSurface.withValues(alpha:0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -530,7 +540,11 @@ class _InsightCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
           ),
           const Spacer(),
           Row(
@@ -538,14 +552,18 @@ class _InsightCard extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
                 ),
               ),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha:0.7),
+                ),
               ),
             ],
           ),

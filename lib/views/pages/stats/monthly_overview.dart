@@ -135,6 +135,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       return const SizedBox.shrink();
     }
 
+    final cs = Theme.of(context).colorScheme;
+
     final totals = dailyTotalsForMonth(selectedMonth!);
     final daysInMonth = totals.length;
     final allZero = totals.values.every((v) => v == 0.0);
@@ -152,7 +154,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     // If month has no data -> show friendly empty card (keeps dropdown above)
     if (allZero) {
       return Card(
-        color: Colors.white,
+        color: cs.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 6,
         child: Column(
@@ -168,6 +170,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         vertical: 10,
                         horizontal: 12,
                       ),
+                      filled: true,
+                      fillColor: cs.surfaceContainer,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -191,18 +195,21 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 IconButton(
                   tooltip: 'Refresh',
                   onPressed: loadMonthlyData,
-                  icon: const Icon(Icons.refresh),
+                  icon: Icon(Icons.refresh, color: cs.primary),
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.all(14),
+            Padding(
+              padding: const EdgeInsets.all(14),
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 18.0),
+                  padding: const EdgeInsets.symmetric(vertical: 18.0),
                   child: Text(
                     'No expenses recorded for this month yet.',
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ),
               ),
@@ -230,7 +237,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     if (intervalY <= 0) intervalY = 1.0;
 
     return Card(
-      color: Colors.white,
+      color: cs.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -248,6 +255,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         vertical: 10,
                         horizontal: 12,
                       ),
+                      filled: true,
+                      fillColor: cs.surfaceContainer,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -271,7 +280,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 IconButton(
                   tooltip: 'Refresh',
                   onPressed: loadMonthlyData,
-                  icon: const Icon(Icons.refresh),
+                  icon: Icon(Icons.refresh, color: cs.primary),
                 ),
               ],
             ),
@@ -289,7 +298,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                     drawVerticalLine: false,
                     horizontalInterval: intervalY,
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.16),
+                      color: cs.onSurface.withValues(alpha: 0.08),
                       strokeWidth: 1,
                     ),
                   ),
@@ -308,7 +317,10 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                             padding: const EdgeInsets.only(top: 6.0),
                             child: Text(
                               intVal.toString(),
-                              style: const TextStyle(fontSize: 10),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: cs.onSurface,
+                              ),
                             ),
                           );
                         },
@@ -322,7 +334,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '\$${value.toInt()}',
-                            style: const TextStyle(fontSize: 10),
+                            style: TextStyle(fontSize: 10, color: cs.onSurface),
                           );
                         },
                       ),
@@ -344,14 +356,14 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                       isStrokeJoinRound: true,
                       isStrokeCapRound: true,
                       barWidth: 3,
-                      color: Colors.teal,
+                      color: cs.primary,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(
                           colors: [
-                            Colors.teal.withValues(alpha: 0.5),
-                            Colors.teal.withValues(alpha: 0.2),
+                            cs.primary.withValues(alpha: 0.5),
+                            cs.primary.withValues(alpha: 0.2),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -363,14 +375,15 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                     enabled: true,
                     handleBuiltInTouches: true,
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (touchedSpot) => Colors.black87,
+                      getTooltipColor: (touchedSpot) =>
+                          cs.onSurface.withValues(alpha: 0.9),
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((t) {
                           final day = t.x.toInt();
                           final value = t.y;
                           return LineTooltipItem(
                             'Day $day\n\$${value.toStringAsFixed(2)}',
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                            TextStyle(color: cs.onPrimary, fontSize: 12),
                           );
                         }).toList();
                       },
@@ -386,6 +399,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   }
 
   Widget _buildMonthCard(Map<String, dynamic> monthInfo) {
+    final cs = Theme.of(context).colorScheme;
     final total = (monthInfo['total'] as num).toDouble();
     final month = monthInfo['month'] as String;
     final topCats = monthInfo['topCategories'] as List;
@@ -395,13 +409,16 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(
-          colors: [Colors.purple.shade400, Colors.indigo.shade600],
+          colors: [
+            cs.primary.withValues(alpha: 0.95),
+            cs.primaryContainer.withValues(alpha: 0.9),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withValues(alpha: 0.3),
+            color: cs.primary.withValues(alpha: 0.22),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -415,14 +432,14 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
             // Month header with icon
             Row(
               children: [
-                const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                Icon(Icons.calendar_today, color: cs.onPrimary, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   formatMonth(month),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: cs.onPrimary,
                   ),
                 ),
               ],
@@ -432,13 +449,17 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
             // Total with icon
             Row(
               children: [
-                const Icon(Icons.attach_money, color: Colors.white70, size: 18),
+                Icon(
+                  Icons.attach_money,
+                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  size: 18,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   "Total: \$${total.toStringAsFixed(2)}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
+                    color: cs.onPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -447,16 +468,20 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
             const SizedBox(height: 16),
 
             // Top Categories header
-            const Row(
+            Row(
               children: [
-                Icon(Icons.pie_chart, color: Colors.white70, size: 18),
-                SizedBox(width: 6),
+                Icon(
+                  Icons.pie_chart,
+                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
                 Text(
                   "Top 3 Categories",
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                    color: Colors.white,
+                    color: cs.onPrimary,
                   ),
                 ),
               ],
@@ -468,12 +493,16 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               final value = (catEntry.value as num).toDouble();
               final percent = total > 0 ? (value / total) : 0.0;
 
+              final progressColor = percent * 100 <= 50
+                  ? cs.onPrimary
+                  : cs.onPrimary;
+
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: cs.onPrimary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -485,8 +514,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           Expanded(
                             child: Text(
                               category,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: cs.onPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -494,8 +523,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           ),
                           Text(
                             "\$${value.toStringAsFixed(2)}",
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: cs.onPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -511,13 +540,11 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                               child: LinearProgressIndicator(
                                 value: percent.clamp(0.0, 1.0),
                                 minHeight: 6,
-                                backgroundColor: Colors.white24,
+                                backgroundColor: cs.onPrimary.withValues(
+                                  alpha: 0.12,
+                                ),
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  percent * 100 <= 50
-                                      ? Colors.limeAccent.withValues(alpha: 0.9)
-                                      : Colors.amberAccent.withValues(
-                                          alpha: 0.9,
-                                        ),
+                                  progressColor,
                                 ),
                               ),
                             ),
@@ -525,8 +552,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           const SizedBox(width: 8),
                           Text(
                             "${(percent * 100).toStringAsFixed(1)}%",
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: cs.onPrimary.withValues(alpha: 0.8),
                               fontSize: 12,
                             ),
                           ),
@@ -545,19 +572,19 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     if (isLoading) {
       return Center(
         child: Column(
           children: [
             SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
-            const CupertinoActivityIndicator(radius: 12),
+            CupertinoActivityIndicator(radius: 12, color: cs.primary),
           ],
         ),
       );
     }
 
-    // If there is absolutely no monthly data and selectedMonth is null,
-    // show the same empty placeholder used previously.
     final hasAnyData = monthlyData.isNotEmpty || groupedByMonth.isNotEmpty;
     if (!hasAnyData) {
       return Center(
@@ -565,21 +592,24 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
           alignment: Alignment.center,
           children: [
             SizedBox(height: MediaQuery.of(context).size.height / 2),
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'No monthly expenses to show',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: cs.onSurface.withValues(alpha: 0.8),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
                   'Please add some expenses.',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
               ],
             ),

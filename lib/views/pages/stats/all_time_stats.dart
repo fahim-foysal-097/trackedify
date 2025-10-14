@@ -184,12 +184,16 @@ class AllTimeStatsState extends State<AllTimeStats> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textColor = cs.onSurface;
+    final subtitleColor = cs.onSurface.withValues(alpha: 0.7);
+
     if (isLoading) {
       return Center(
         child: Column(
           children: [
             SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
-            const CupertinoActivityIndicator(radius: 12),
+            CupertinoActivityIndicator(radius: 12, color: cs.primary),
           ],
         ),
       );
@@ -201,23 +205,21 @@ class AllTimeStatsState extends State<AllTimeStats> {
           alignment: Alignment.center,
           children: [
             SizedBox(height: MediaQuery.of(context).size.height / 2),
-            const Column(
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'No data for pie chart',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: subtitleColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6),
-                Center(
-                  child: Text(
-                    'Please add some expenses to view the chart.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  'Please add some expenses to view the chart.',
+                  style: TextStyle(fontSize: 14, color: subtitleColor),
                 ),
               ],
             ),
@@ -260,7 +262,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
       final data = entry.value; // MapEntry<String, double>
       final cat =
           categoryMap[data.key] ??
-          {'color': Colors.grey, 'icon': Icons.category};
+          {'color': cs.primary, 'icon': Icons.category};
 
       final isTouched = index == touchedIndex;
 
@@ -269,13 +271,13 @@ class AllTimeStatsState extends State<AllTimeStats> {
         value: data.value,
         radius: isTouched ? touchedRadius : baseRadius,
         title: isTouched ? '\$${data.value.toStringAsFixed(2)}' : '',
-        titleStyle: const TextStyle(
+        titleStyle: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: cs.onPrimary,
         ),
         borderSide: isTouched
-            ? BorderSide(color: Colors.black.withValues(alpha: 0.12), width: 2)
+            ? BorderSide(color: cs.onSurface.withValues(alpha: 0.12), width: 2)
             : BorderSide.none,
       );
     }).toList();
@@ -286,52 +288,52 @@ class AllTimeStatsState extends State<AllTimeStats> {
         icon: Icons.numbers,
         title: 'Total Spent',
         value: '\$${totalExpense.toStringAsFixed(2)}',
-        color: Colors.green,
+        color: cs.primary,
       ),
       _buildStatCard(
         icon: Icons.receipt_long,
         title: 'Transactions',
         value: totalTransactions.toString(),
-        color: Colors.blue,
+        color: cs.secondary,
       ),
       _buildStatCard(
         icon: Icons.trending_up,
         title: 'Avg per Tx',
         value: '\$${averageExpense.toStringAsFixed(2)}',
-        color: Colors.orange,
+        color: cs.tertiary,
       ),
       _buildStatCard(
         icon: Icons.calendar_today,
         title: 'This Month',
         value: '\$${totalThisMonth.toStringAsFixed(2)}',
-        color: Colors.purple,
+        color: cs.primaryContainer,
       ),
       _buildStatCard(
         icon: Icons.date_range,
         title: 'Avg Daily',
         value: '\$${avgDailySpend.toStringAsFixed(2)}',
-        color: Colors.cyan,
+        color: cs.secondaryContainer,
       ),
       _buildStatCard(
         icon: Icons.warning_rounded,
         title: 'Largest',
         value: largestExpenseCategory ?? 'None',
         subValue: '\$${largestSingleExpense.toStringAsFixed(2)}',
-        color: Colors.red,
+        color: Colors.redAccent,
       ),
       _buildStatCard(
         icon: Icons.savings,
         title: 'Smallest',
         value: smallestExpenseCategory ?? 'None',
         subValue: '\$${smallestExpense.toStringAsFixed(2)}',
-        color: Colors.lightGreen,
+        color: Colors.green,
       ),
       _buildStatCard(
         icon: Icons.event,
         title: 'Busiest Day',
         value: '$mostActiveDay',
         subValue: '($mostActiveDayCount tx)',
-        color: Colors.indigo,
+        color: cs.primaryContainer,
       ),
       _buildStatCard(
         icon: trendIcon,
@@ -345,7 +347,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
         value: topCategory ?? 'None',
         subValue:
             '\$${topAmount.toStringAsFixed(2)} (${topPercentage.toStringAsFixed(0)}%)',
-        color: Colors.teal,
+        color: cs.secondary,
       ),
       _buildStatCard(
         icon: Icons.cached_rounded,
@@ -358,7 +360,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
         icon: Icons.layers,
         title: 'Unique Categories',
         value: categoryTotals.length.toString(),
-        color: Colors.pink,
+        color: Colors.pinkAccent,
       ),
     ];
 
@@ -367,10 +369,14 @@ class AllTimeStatsState extends State<AllTimeStats> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(
+          Center(
             child: Text(
               'Expenses by Category',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
           ),
           // Pie chart area (fixed height to avoid unbounded height)
@@ -406,21 +412,21 @@ class AllTimeStatsState extends State<AllTimeStats> {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Total',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.black54,
+                        color: cs.onSurface.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '\$${totalExpense.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: textColor,
                       ),
                     ),
                   ],
@@ -442,7 +448,10 @@ class AllTimeStatsState extends State<AllTimeStats> {
                 final data = entry.value;
                 final cat =
                     categoryMap[data.key] ??
-                    {'color': Colors.grey, 'icon': Icons.category};
+                    {
+                      'color': cs.onSurface.withValues(alpha: 0.6),
+                      'icon': Icons.category,
+                    };
                 final isSelected = touchedIndex == index;
 
                 return GestureDetector(
@@ -458,7 +467,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.amberAccent.withValues(alpha: 0.3)
+                          ? cs.primary.withValues(alpha: 0.12)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -472,7 +481,10 @@ class AllTimeStatsState extends State<AllTimeStats> {
                             color: cat['color'] as Color,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(width: 2, color: Colors.black26)
+                                ? Border.all(
+                                    width: 2,
+                                    color: cs.onSurface.withValues(alpha: 0.12),
+                                  )
                                 : null,
                           ),
                         ),
@@ -484,9 +496,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
                             fontWeight: isSelected
                                 ? FontWeight.w700
                                 : FontWeight.normal,
-                            color: isSelected
-                                ? Colors.black87
-                                : Colors.grey[800],
+                            color: isSelected ? textColor : subtitleColor,
                           ),
                         ),
                       ],
@@ -505,10 +515,14 @@ class AllTimeStatsState extends State<AllTimeStats> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
+                Center(
                   child: Text(
                     'Quick Insights',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -542,17 +556,18 @@ Widget _buildStatCard({
   String? subValue,
   required Color color,
 }) {
+  // Keep the same card layout but use color provided (color is now theme-aware in places)
   return Container(
     decoration: BoxDecoration(
       gradient: LinearGradient(
-        colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
+        colors: [color.withValues(alpha: 0.38), color.withValues(alpha: 0.78)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: 0.25),
           blurRadius: 8,
           offset: const Offset(0, 4),
         ),

@@ -34,26 +34,33 @@ class StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text(
+          title: Text(
             "Statistics",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 24,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          bottom: const TabBar(
-            indicatorColor: Colors.deepPurpleAccent,
-            labelColor: Colors.deepPurple,
+          bottom: TabBar(
+            indicatorColor: cs.primary,
+            labelColor: cs.primary,
+            unselectedLabelColor: cs.onSurface.withValues(alpha: 0.7),
             automaticIndicatorColorAdjustment: true,
-
-            tabs: [
+            tabs: const [
               Tab(text: "All Time"),
               Tab(text: "Monthly"),
               Tab(text: "Last 7 Days"),
             ],
           ),
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          elevation: Theme.of(context).appBarTheme.elevation ?? 4,
         ),
         body: TabBarView(
           children: [
@@ -63,7 +70,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurple,
+                    color: cs.primary,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -91,7 +98,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurple,
+                    color: cs.primary,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -123,7 +130,7 @@ class StatsPageState extends State<StatsPage> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return RefreshIndicator(
-                    color: Colors.deepPurple,
+                    color: cs.primary,
                     onRefresh: refreshAll,
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
