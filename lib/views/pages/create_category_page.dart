@@ -194,19 +194,25 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       message: tips,
       buttonText: 'Got it',
       onTapDismiss: () => Navigator.pop(context),
-      textColor: Colors.black54,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.normal,
     );
   }
 
   Future<void> _openColorPicker() async {
+    final theme = Theme.of(context);
     Color picked = selectedColor;
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Select Custom Color', textAlign: TextAlign.center),
+        title: Center(
+          child: Text(
+            'Select Custom Color',
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: selectedColor,
@@ -220,7 +226,10 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.colorScheme.onSurface),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -231,7 +240,10 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               });
               Navigator.pop(context);
             },
-            child: const Text('Select'),
+            child: Text(
+              'Select',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -253,15 +265,21 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     );
 
     if (!mounted) return;
+    final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: cs.primary,
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
+            Icon(Icons.check_circle_outline, color: cs.onPrimary),
             const SizedBox(width: 12),
-            Expanded(child: Text('Category "$name" added!')),
+            Expanded(
+              child: Text(
+                'Category "$name" added!',
+                style: TextStyle(color: cs.onPrimary),
+              ),
+            ),
           ],
         ),
       ),
@@ -301,9 +319,11 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     final displayIcon =
         selectedIcon ?? aiSuggestedIcon ?? FontAwesomeIcons.tags;
     final showStar = selectedIcon == null && aiSuggestedIcon != null;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Card(
-      color: Colors.blue.shade50,
+      color: theme.colorScheme.surfaceContainer,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
@@ -335,15 +355,18 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                     _nameController.text.trim().isEmpty
                         ? 'Category preview'
                         : _nameController.text.trim(),
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Icon & color preview',
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.9,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -351,7 +374,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
             IconButton(
               tooltip: 'Pick color',
               onPressed: _openColorPicker,
-              icon: const Icon(Icons.color_lens_outlined),
+              icon: Icon(Icons.color_lens_outlined, color: cs.onSurface),
             ),
           ],
         ),
@@ -408,7 +431,9 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               decoration: BoxDecoration(
                 color: _effectiveColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: _effectiveColor.withValues(alpha: 0.18),
@@ -429,6 +454,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     final isSelected = icon == selectedIcon;
     final isSuggested =
         (aiSuggestedIcon != null && icon == aiSuggestedIcon && !isSelected);
+    final double pulse = _pulseAnim.value;
+    final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: () => setState(() {
@@ -439,10 +466,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
       child: AnimatedBuilder(
         animation: _pulseAnim,
         builder: (context, child) {
-          final double borderWidth = isSelected
-              ? (2.0 + _pulseAnim.value * 4.0)
-              : 0.0;
-          final double blur = isSelected ? (4.0 + _pulseAnim.value * 6.0) : 0.0;
+          final double borderWidth = isSelected ? (2.0 + pulse * 4.0) : 0.0;
+          final double blur = isSelected ? (4.0 + pulse * 6.0) : 0.0;
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 220),
@@ -478,7 +503,9 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               children: [
                 CircleAvatar(
                   radius: 26,
-                  backgroundColor: isSelected ? _effectiveColor : Colors.white,
+                  backgroundColor: isSelected
+                      ? _effectiveColor
+                      : theme.colorScheme.surface,
                   child: Icon(
                     icon,
                     color: isSelected ? Colors.white : Colors.grey.shade700,
@@ -559,13 +586,15 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final bool canSave =
         _nameController.text.trim().isNotEmpty && _hasIconForSave;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: cs.surface,
         appBar: AppBar(
           forceMaterialTransparency: true,
           toolbarHeight: 70,
@@ -583,6 +612,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               onPressed: showTipsDialog,
             ),
           ],
+          backgroundColor: Colors.transparent,
         ),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(right: 12.0, bottom: 12.0),
@@ -594,8 +624,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 onPressed: _scrollToTop,
                 icon: const Icon(Icons.arrow_upward),
                 label: const Text('Top'),
-                backgroundColor: const Color(0xFF2563EB),
-                foregroundColor: Colors.white,
+                backgroundColor: cs.primary,
+                foregroundColor: cs.onPrimary,
                 elevation: 4,
               ),
               const SizedBox(width: 12),
@@ -604,10 +634,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 onPressed: canSave ? _saveCategory : null,
                 icon: const Icon(Icons.check),
                 label: Text(canSave ? 'Save' : 'Enter name & icon'),
-                backgroundColor: canSave
-                    ? const Color(0xFF2563EB)
-                    : Colors.grey.shade300,
-                foregroundColor: canSave ? Colors.white : Colors.grey.shade700,
+                backgroundColor: canSave ? cs.primary : Colors.grey,
+                foregroundColor: canSave ? cs.onPrimary : theme.disabledColor,
                 elevation: 4,
               ),
             ],
@@ -625,11 +653,11 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
               const SizedBox(height: 18),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(8),
+                      color: theme.shadowColor.withValues(alpha: 0.04),
                       blurRadius: 10,
                       spreadRadius: 0.6,
                     ),
@@ -641,13 +669,17 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 ),
                 child: TextField(
                   controller: _nameController,
-                  style: const TextStyle(
+                  style: theme.textTheme.bodyLarge?.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Category name',
-                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    hintStyle: TextStyle(
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.6,
+                      ),
+                    ),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                       child: CircleAvatar(
@@ -684,23 +716,27 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 ),
               ),
               const SizedBox(height: 22),
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     'Pick Color',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
               _buildColorChips(),
               const SizedBox(height: 20),
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     'Pick Icon',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

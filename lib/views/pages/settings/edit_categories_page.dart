@@ -30,13 +30,6 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   late final List<IconData> availableIcons;
   late final List<Color> colorOptions;
 
-  // shared gradient for AppBar + header container
-  static const LinearGradient _headerGradient = LinearGradient(
-    colors: [Color(0xFF5B2AF5), Color(0xFF8A46FF)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
   @override
   void initState() {
     super.initState();
@@ -46,12 +39,13 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   void _showTips() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: "Tips",
       message: "You can delete multiple categories at once by long-pressing.",
       buttonText: "Got it",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -106,12 +100,13 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   Future<void> _confirmAndDeleteSingle(int id, String name) async {
+    final theme = Theme.of(context);
     final confirmed = await PanaraConfirmDialog.show<bool>(
       context,
       title: "Delete category?",
       message:
           "Delete \"$name\"? Existing expenses that used this category will keep the text value.",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
       onTapCancel: () => Navigator.pop(context, false),
@@ -125,15 +120,16 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     await db.delete('categories', where: 'id = ?', whereArgs: [id]);
 
     if (!mounted) return;
+    final cs = theme.colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.redAccent,
+        backgroundColor: cs.error,
         content: Row(
           children: [
-            Icon(FontAwesomeIcons.trash, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text('Category deleted')),
+            Icon(FontAwesomeIcons.trash, color: cs.onError),
+            const SizedBox(width: 12),
+            const Expanded(child: Text('Category deleted')),
           ],
         ),
       ),
@@ -145,12 +141,13 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   Future<void> _confirmAndDeleteSelected() async {
     if (_selectedIds.isEmpty) return;
 
+    final theme = Theme.of(context);
     final confirmed = await PanaraConfirmDialog.show<bool>(
       context,
       title: "Delete selected categories?",
       message:
           "Delete ${_selectedIds.length} selected categories? This action cannot be undone. Existing expenses that used these categories will keep their text value.",
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
       onTapCancel: () => Navigator.pop(context, false),
@@ -170,13 +167,14 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     );
 
     if (!mounted) return;
+    final cs = theme.colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.redAccent,
+        backgroundColor: cs.error,
         content: Row(
           children: [
-            const Icon(FontAwesomeIcons.trash, color: Colors.white),
+            Icon(FontAwesomeIcons.trash, color: cs.onError),
             const SizedBox(width: 12),
             Expanded(child: Text('Deleted ${ids.length} categories')),
           ],
@@ -220,15 +218,16 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     if (result == true) {
       await _reload();
       if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Category saved')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              const Expanded(child: Text('Category saved')),
             ],
           ),
         ),
@@ -240,6 +239,8 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   Widget _buildSearch() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: TextField(
@@ -247,7 +248,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           hintText: 'Search categories',
           prefixIcon: const Icon(Icons.search),
           filled: true,
-          fillColor: Colors.grey.shade100,
+          fillColor: theme.inputDecorationTheme.fillColor ?? cs.surface,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -265,6 +266,9 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   Widget _buildList() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     if (_loading) {
       return const Column(
         children: [
@@ -280,16 +284,28 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
         child: Column(
           children: [
             const SizedBox(height: 28),
-            Icon(FontAwesomeIcons.tags, size: 64, color: Colors.grey.shade400),
+            Icon(
+              FontAwesomeIcons.tags,
+              size: 64,
+              color: cs.onSurface.withValues(alpha: 0.35),
+            ),
             const SizedBox(height: 18),
             Text(
               'No categories found',
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.textTheme.bodyMedium?.color?.withValues(
+                  alpha: 0.8,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Tap Add to create your first category.',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              ),
             ),
           ],
         ),
@@ -306,7 +322,11 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
         final row = _filtered[index];
         final id = row['id'] as int;
         final name = row['name']?.toString() ?? '';
-        final colorInt = row['color'] as int? ?? Colors.blue.toARGB32();
+
+        // DB stores color as int; fallback to primary color
+        final colorInt =
+            row['color'] as int? ??
+            Theme.of(context).colorScheme.primary.toARGB32();
         final iconCode = row['icon_code'] as int? ?? Icons.label.codePoint;
 
         final icon = IconData(iconCode, fontFamily: 'MaterialIcons');
@@ -315,7 +335,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
         final selected = _selectedIds.contains(id);
 
         return Material(
-          color: Colors.white,
+          color: cs.surface,
           elevation: 0,
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
@@ -337,13 +357,11 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: selected
-                      ? Colors.deepPurple.withValues(alpha: 0.3)
-                      : Colors.grey.shade100,
-                  width: selected ? 4 : 3,
+                      ? cs.primary.withValues(alpha: 0.3)
+                      : cs.surfaceContainer,
+                  width: selected ? 4 : 1.2,
                 ),
-                color: selected
-                    ? Colors.deepPurple.withValues(alpha: 0.04)
-                    : null,
+                color: selected ? cs.primary.withValues(alpha: 0.04) : null,
               ),
               child: Row(
                 children: [
@@ -355,12 +373,12 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                         child: Icon(icon, color: color, size: 22),
                       ),
                       if (selected)
-                        const Positioned(
+                        Positioned(
                           right: 0,
                           bottom: 0,
                           child: Icon(
                             Icons.check_circle,
-                            color: Colors.deepPurple,
+                            color: cs.primary,
                             size: 20,
                           ),
                         ),
@@ -370,7 +388,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                   Expanded(
                     child: Text(
                       name,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -387,7 +405,11 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                         _openEditSheet(row);
                       }
                     },
-                    icon: const Icon(FontAwesomeIcons.pen, size: 16),
+                    icon: Icon(
+                      FontAwesomeIcons.pen,
+                      size: 16,
+                      color: theme.iconTheme.color,
+                    ),
                     splashRadius: 22,
                   ),
                   IconButton(
@@ -399,8 +421,11 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                         _confirmAndDeleteSingle(id, name);
                       }
                     },
-                    icon: const Icon(FontAwesomeIcons.trash, size: 16),
-                    color: Colors.red.shade400,
+                    icon: Icon(
+                      FontAwesomeIcons.trash,
+                      size: 16,
+                      color: cs.error,
+                    ),
                     splashRadius: 22,
                   ),
                 ],
@@ -412,12 +437,13 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow(LinearGradient gradient) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _headerGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       child: Row(
         children: [
@@ -425,15 +451,14 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
             child: _selectionMode
                 ? Text(
                     '${_selectedIds.length} selected',
-                    style: const TextStyle(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
-                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                     ),
                   )
-                : const Text(
+                : Text(
                     'Categories',
-                    style: TextStyle(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -460,7 +485,16 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // AppBar uses same gradient via flexibleSpace to visually match the header container
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    // shared gradient for AppBar + header container
+    LinearGradient headerGradient = LinearGradient(
+      colors: [cs.primary, cs.primaryContainer],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+    );
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: PopScope<Object?>(
@@ -477,7 +511,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           if (!didPop) Navigator.of(context).maybePop();
         },
         child: Scaffold(
-          backgroundColor: Colors.grey.shade50,
+          backgroundColor: cs.surface,
           appBar: AppBar(
             title: Text(
               _selectionMode ? 'Delete Multiple' : 'Edit Categories',
@@ -495,7 +529,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: Container(
-              decoration: const BoxDecoration(gradient: _headerGradient),
+              decoration: BoxDecoration(gradient: headerGradient),
             ),
             backgroundColor: Colors.transparent,
             actionsPadding: const EdgeInsets.only(right: 2),
@@ -520,20 +554,20 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           floatingActionButton: _selectionMode
               ? FloatingActionButton(
                   onPressed: _confirmAndDeleteSelected,
-                  backgroundColor: Colors.red.shade600,
-                  child: const Icon(
+                  backgroundColor: cs.error,
+                  child: Icon(
                     FontAwesomeIcons.trash,
-                    color: Colors.white,
+                    color: cs.onError,
                     size: 18,
                   ),
                 )
               : null,
           body: RefreshIndicator(
-            color: Colors.deepPurple,
+            color: cs.primary,
             onRefresh: _reload,
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(child: _buildHeaderRow()),
+                SliverToBoxAdapter(child: _buildHeaderRow(headerGradient)),
                 SliverToBoxAdapter(child: _buildSearch()),
                 SliverToBoxAdapter(child: _buildList()),
                 const SliverFillRemaining(
@@ -549,7 +583,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 }
 
-/// Shared Edit bottom sheet (kept visually identical; internals fixed to use .value and withOpacity)
+/// Shared Edit bottom sheet (theming applied)
 class EditCategorySheet extends StatefulWidget {
   final Map<String, dynamic>? category;
   final List<IconData> availableIcons;
@@ -630,7 +664,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
         message: "A category with that name already exists. Pick another name.",
         buttonText: "OK",
         onTapDismiss: () => Navigator.pop(context),
-        textColor: Colors.black54,
+        textColor: Theme.of(context).textTheme.bodySmall?.color,
         panaraDialogType: PanaraDialogType.normal,
       );
       return;
@@ -664,12 +698,15 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
 
   Future<void> _openColorPicker() async {
     Color picked = _selectedColor;
+    final theme = Theme.of(context);
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Select Custom Color', textAlign: TextAlign.center),
+        title: Center(
+          child: Text('Select Custom Color', style: theme.textTheme.titleSmall),
+        ),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: _selectedColor,
@@ -683,7 +720,10 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.colorScheme.onSurface),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -692,7 +732,10 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
               });
               Navigator.pop(context);
             },
-            child: const Text('Select'),
+            child: Text(
+              'Select',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
           ),
         ],
       ),
@@ -700,6 +743,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
   }
 
   Widget _buildIconGrid() {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -720,7 +764,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
               child: Icon(
                 IconData(ic.codePoint, fontFamily: 'MaterialIcons'),
                 size: selected ? 28 : 24,
-                color: selected ? _selectedColor : Colors.grey.shade700,
+                color: selected ? _selectedColor : theme.iconTheme.color,
               ),
             ),
           ),
@@ -773,7 +817,11 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
             decoration: BoxDecoration(
               color: isCustom ? _selectedColor : Colors.transparent,
               shape: BoxShape.circle,
-              border: isCustom ? null : Border.all(color: Colors.grey.shade300),
+              border: isCustom
+                  ? null
+                  : Border.all(
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                    ),
               boxShadow: isCustom
                   ? [
                       BoxShadow(
@@ -787,7 +835,9 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
             child: Center(
               child: Icon(
                 Icons.color_lens,
-                color: isCustom ? Colors.white : Colors.grey.shade700,
+                color: isCustom
+                    ? Colors.white
+                    : Theme.of(context).iconTheme.color,
               ),
             ),
           ),
@@ -798,6 +848,9 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.82,
       minChildSize: 0.45,
@@ -805,9 +858,9 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
       builder: (context, scrollCtrl) {
         return Container(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
           ),
           child: SingleChildScrollView(
             controller: scrollCtrl,
@@ -820,19 +873,25 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                     width: 60,
                     margin: const EdgeInsets.only(bottom: 18),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: theme.dividerColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
-                const Text(
+                Text(
                   'Edit Category',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Name, icon and color help categorize expenses.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.9,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Form(
@@ -860,9 +919,13 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                             child: TextFormField(
                               controller: _nameController,
                               textCapitalization: TextCapitalization.words,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'Category Name',
-                                border: OutlineInputBorder(),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                filled: true,
+                                fillColor: cs.surfaceContainer,
                               ),
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
@@ -884,8 +947,11 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                                   ? null
                                   : () => Navigator.pop(context, false),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.grey.shade800,
-                                side: BorderSide(color: Colors.grey.shade300),
+                                foregroundColor:
+                                    theme.textTheme.bodyLarge?.color,
+                                side: BorderSide(
+                                  color: theme.colorScheme.surfaceContainer,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
@@ -893,7 +959,10 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text('Cancel'),
+                              child: Text(
+                                'Cancel',
+                                style: theme.textTheme.bodyLarge,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -901,7 +970,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                             child: ElevatedButton(
                               onPressed: _saving ? null : _save,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
+                                backgroundColor: cs.primary,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
@@ -910,18 +979,19 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                                 ),
                               ),
                               child: _saving
-                                  ? const Center(
+                                  ? Center(
                                       child: SizedBox(
                                         height: 18,
                                         width: 18,
                                         child: CupertinoActivityIndicator(
-                                          color: Colors.white,
+                                          color: cs.onPrimary,
                                         ),
                                       ),
                                     )
-                                  : const Text(
+                                  : Text(
                                       'Save changes',
-                                      style: TextStyle(color: Colors.white),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(color: cs.onPrimary),
                                     ),
                             ),
                           ),
@@ -932,7 +1002,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Pick a color',
-                          style: TextStyle(color: Colors.grey.shade700),
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -942,7 +1012,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Pick an icon',
-                          style: TextStyle(color: Colors.grey.shade700),
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ),
                       const SizedBox(height: 10),
