@@ -131,7 +131,7 @@ class _LockScreenState extends State<LockScreen> {
         : Colors.black.withValues(alpha: 0.12);
 
     final iconCircleBg = cs.primaryContainer;
-    final iconColor = cs.onPrimaryContainer;
+    final iconColor = cs.onPrimary;
 
     final titleColor = cs.onSurface;
     final subtitleColor = cs.onSurface.withValues(alpha: 0.7);
