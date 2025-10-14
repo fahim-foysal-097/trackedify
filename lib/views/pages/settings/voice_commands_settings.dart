@@ -40,13 +40,14 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
     });
 
     if (!mounted) return;
+    final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: cs.primary,
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
+            Icon(Icons.check_circle_outline, color: cs.onPrimary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -60,13 +61,14 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
   }
 
   void _showTipsDialog() {
+    final theme = Theme.of(context);
     PanaraInfoDialog.show(
       context,
       title: 'Hints & Tips',
       message:
           'You can use voice to add expenses. Say for example: "Add food 20" or "Shopping 500". If it fails, check microphone permission and language settings.',
       buttonText: 'Got it',
-      textColor: Colors.black54,
+      textColor: theme.textTheme.bodySmall?.color,
       onTapDismiss: () => Navigator.pop(context),
       panaraDialogType: PanaraDialogType.normal,
     );
@@ -74,19 +76,26 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Voice Commands'),
         centerTitle: false,
         leading: IconButton(
           tooltip: "Back",
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 25,
+            color: cs.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actionsPadding: const EdgeInsets.only(right: 6),
         actions: [
           IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
+            icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
             onPressed: _showTipsDialog,
           ),
         ],
@@ -102,13 +111,15 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
                   vertical: 20,
                 ),
                 children: [
-                  const Text(
+                  Text(
                     'Voice Commands',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Card(
-                    color: Colors.green.shade50,
+                    color: cs.surfaceContainer,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -128,12 +139,15 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
                           ),
                           child: const Icon(Icons.mic, color: Colors.green),
                         ),
-                        title: const Text(
+                        title: Text(
                           'Enable voice commands',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        subtitle: const Text(
+                        subtitle: Text(
                           'Use voice to add expenses (e.g., "add food 20")',
+                          style: theme.textTheme.bodySmall,
                         ),
                         trailing: _saving
                             ? const SizedBox(
@@ -150,9 +164,7 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
                                   await _toggleVoice(v);
                                 },
                               ),
-                        onTap: () async {
-                          await _toggleVoice(!_voiceEnabled);
-                        },
+                        onTap: () async => await _toggleVoice(!_voiceEnabled),
                       ),
                     ),
                   ),
