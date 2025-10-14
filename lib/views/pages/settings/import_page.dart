@@ -38,7 +38,7 @@ class _ImportPageState extends State<ImportPage> {
       message: tips,
       buttonText: 'Got it',
       onTapDismiss: () => Navigator.pop(context),
-      textColor: Colors.black54,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.normal,
     );
   }
@@ -696,19 +696,21 @@ class _ImportPageState extends State<ImportPage> {
   }
 
   Widget _buildNotesCard() {
+    final cs = Theme.of(context).colorScheme;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
         decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.12),
+          color: cs.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Row(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline, color: Colors.blueAccent),
-            SizedBox(width: 12),
+            const Icon(Icons.info_outline, color: Colors.blueAccent),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -718,15 +720,15 @@ class _ImportPageState extends State<ImportPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: cs.onPrimaryContainer,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     '1. Importing a .db file replaces the app database. Use with caution.\n\n'
                     '2. Importing JSON can either append data (safe) or replace tables (destructive).\n\n'
                     '3. JSON should follow the export format produced by the app.',
-                    style: TextStyle(color: Colors.black87, height: 1.4),
+                    style: TextStyle(color: cs.onPrimaryContainer, height: 1.4),
                   ),
                 ],
               ),

@@ -40,7 +40,7 @@ class _ExportPageState extends State<ExportPage> {
       message: tips,
       buttonText: 'Got it',
       onTapDismiss: () => Navigator.pop(context),
-      textColor: Colors.black54,
+      textColor: Theme.of(context).textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.normal,
     );
   }
