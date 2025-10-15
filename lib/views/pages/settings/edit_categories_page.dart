@@ -490,7 +490,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
 
     // shared gradient for AppBar + header container
     LinearGradient headerGradient = LinearGradient(
-      colors: [cs.primary, cs.primaryContainer],
+      colors: [cs.primaryContainer, cs.primaryContainer],
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
     );
