@@ -1,10 +1,11 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/services.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:trackedify/services/notification_service.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
+import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
 import 'package:trackedify/services/auth_gate.dart';
@@ -58,24 +59,51 @@ Future<void> main() async {
     if (kDebugMode) debugPrint('Notification init failed: $e');
   }
 
+  // Load theme controller & options
+  await ThemeController.instance.load();
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final navKey = GlobalKey<NavigatorState>();
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final ThemeController ctrl = ThemeController.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    ctrl.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ctrl.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey, // Assigning the global key
+      navigatorKey: MyApp.navKey,
       title: 'Trackedify',
-      theme: FlexThemeData.light(scheme: FlexScheme.mandyRed),
-      darkTheme: FlexThemeData.dark(scheme: FlexScheme.mandyRed),
-      themeMode: ThemeMode.system,
-      routes: {'/set-pin': (context) => const SetPinPage()},
+      theme: ctrl.getLightThemeData(),
+      darkTheme: ctrl.getDarkThemeData(),
+      themeMode: ctrl.themeMode,
+      routes: {
+        '/set-pin': (ctx) => const SetPinPage(),
+        '/theme-settings': (ctx) => const ThemeSettingsPage(),
+      },
       home: const AuthGate(child: WidgetTree()),
     );
   }
