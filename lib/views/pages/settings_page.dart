@@ -10,6 +10,7 @@ import 'package:trackedify/views/pages/settings/import_page.dart';
 import 'package:trackedify/views/pages/settings/change_username_page.dart';
 import 'package:trackedify/views/pages/settings/notification_settings.dart';
 import 'package:trackedify/views/pages/settings/security_settings.dart';
+import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/pages/settings/voice_commands_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -116,6 +117,21 @@ class SettingsPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const ChangeUsernamePage(),
+                      ),
+                    ).then((_) {
+                      NavBarController.apply();
+                    });
+                  },
+                ),
+                SettingsButton(
+                  icon: Icons.color_lens_outlined,
+                  title: 'Theme Settings',
+                  iconColor: iconColor,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ThemeSettingsPage(),
                       ),
                     ).then((_) {
                       NavBarController.apply();

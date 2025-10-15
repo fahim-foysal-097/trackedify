@@ -8,6 +8,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
@@ -271,6 +272,7 @@ class UserPageState extends State<UserPage> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final ctrl = ThemeController.instance;
     final textMuted =
         theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8) ?? Colors.grey;
     final shadowColor = theme.shadowColor.withValues(alpha: 0.16);
@@ -288,7 +290,10 @@ class UserPageState extends State<UserPage> {
               height: 240,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [cs.primary, cs.primaryContainer],
+                  colors: [
+                    ctrl.effectiveColorForRole(context, 'user-container-1'),
+                    ctrl.effectiveColorForRole(context, 'user-container-2'),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -299,7 +304,7 @@ class UserPageState extends State<UserPage> {
                 boxShadow: [
                   BoxShadow(
                     color: cs.primary.withValues(alpha: 0.12),
-                    blurRadius: 24,
+                    blurRadius: 2,
                     offset: const Offset(0, 6),
                   ),
                 ],
@@ -712,8 +717,8 @@ class UserPageState extends State<UserPage> {
           boxShadow: [
             BoxShadow(
               color: effectiveAccent.withValues(alpha: 0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              blurRadius: 2,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
