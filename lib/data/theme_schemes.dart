@@ -127,13 +127,19 @@ const ColorScheme myDarkCustom = ColorScheme(
 
 final List<FlexScheme> curatedBuiltInSchemes = [
   FlexScheme.mandyRed,
-  FlexScheme.materialBaseline,
+  FlexScheme.flutterDash,
   FlexScheme.deepBlue,
   FlexScheme.aquaBlue,
   FlexScheme.hippieBlue,
-  FlexScheme.blueM3,
+  FlexScheme.amber,
+  FlexScheme.red,
   FlexScheme.bigStone,
   FlexScheme.deepPurple,
-  FlexScheme.amber,
   FlexScheme.shadBlue,
+  FlexScheme.cyanM3,
+  FlexScheme.green,
+  FlexScheme.deepOrangeM3,
+
+  FlexScheme.blueM3,
+  FlexScheme.materialBaseline,
 ];
