@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 
 class OverviewWidget extends StatefulWidget {
   const OverviewWidget({super.key});
@@ -94,6 +95,8 @@ class OverviewWidgetState extends State<OverviewWidget> {
     const double maxCardWidth = 640; // max width on large screens
     const double horizontalPadding = 24; // outside padding
 
+    final ctrl = ThemeController.instance;
+
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -142,9 +145,9 @@ class OverviewWidgetState extends State<OverviewWidget> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            cs.primary,
-                            cs.primaryContainer,
-                            // cs.secondary,
+                            ctrl.effectiveColorForRole(context, 'overview-1'),
+                            ctrl.effectiveColorForRole(context, 'overview-2'),
+                            ctrl.effectiveColorForRole(context, 'overview-3'),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -153,7 +156,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
                         boxShadow: [
                           BoxShadow(
                             color: cs.primary.withValues(alpha: 0.28),
-                            blurRadius: 20 * scaleFactor,
+                            blurRadius: 5 * scaleFactor,
                             offset: Offset(0, 8 * scaleFactor),
                           ),
                         ],

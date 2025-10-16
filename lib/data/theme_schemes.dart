@@ -6,6 +6,7 @@ ColorScheme defaultLight = ColorScheme.fromSeed(
   seedColor: Colors.indigoAccent,
   primary: Colors.deepPurple,
   onPrimary: const Color(0xFFFFFFFF),
+  primaryContainer: Colors.blueAccent.shade400,
   secondary: const Color(0xFF56CCF2),
   tertiary: const Color(0xFF2F80ED),
   surface: Colors.grey.shade100,
@@ -17,6 +18,7 @@ ColorScheme defaultDark = ColorScheme.fromSeed(
   seedColor: Colors.indigoAccent,
   primary: Colors.deepPurple,
   onPrimary: const Color(0xFFFFFFFF),
+  primaryContainer: Colors.blue.shade700,
   secondary: const Color(0xFF56CCF2),
   tertiary: const Color(0xFF2F80ED),
   surface: const Color.fromARGB(255, 14, 14, 14),
@@ -131,4 +133,7 @@ final List<FlexScheme> curatedBuiltInSchemes = [
   FlexScheme.hippieBlue,
   FlexScheme.blueM3,
   FlexScheme.bigStone,
+  FlexScheme.deepPurple,
+  FlexScheme.amber,
+  FlexScheme.shadBlue,
 ];

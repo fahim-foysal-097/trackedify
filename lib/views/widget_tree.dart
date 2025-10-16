@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackedify/data/notifiers.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
 import 'package:trackedify/shared/widgets/navbar_widget.dart';
 import 'package:trackedify/views/pages/home_page.dart';
@@ -147,7 +148,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
 
     if (!hasUser) return const OnboardingPage();
 
-    final cs = Theme.of(context).colorScheme;
+    final ctrl = ThemeController.instance;
 
     return Listener(
       behavior: HitTestBehavior.translucent,
@@ -180,11 +181,18 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
               });
             },
             elevation: 7,
-            backgroundColor: cs.primary,
+            backgroundColor: ctrl.effectiveColorForRole(context, 'fab-bg'),
             shape: CircleBorder(
-              side: BorderSide(width: 3, color: cs.onPrimary),
+              side: BorderSide(
+                width: 3,
+                color: ctrl.effectiveColorForRole(context, 'nav'),
+              ),
             ),
-            child: Icon(Icons.add, size: 28, color: cs.onPrimary),
+            child: Icon(
+              Icons.add,
+              size: 28,
+              color: ctrl.effectiveColorForRole(context, 'nav'),
+            ),
           ),
         ),
 
