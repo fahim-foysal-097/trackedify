@@ -335,8 +335,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                 ),
                 if (showStar)
                   const Positioned(
-                    right: -3,
-                    top: -3,
+                    right: 1,
+                    top: 0,
                     child: Icon(Icons.star, size: 16, color: Colors.amber),
                   ),
               ],

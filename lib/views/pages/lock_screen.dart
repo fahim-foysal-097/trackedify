@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackedify/services/auth_service.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
 
 class LockScreen extends StatefulWidget {
@@ -115,12 +116,16 @@ class _LockScreenState extends State<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = ThemeController.instance;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Gradient using primary/secondary with slight opacity for dark/light balance
     final Gradient backgroundGradient = LinearGradient(
-      colors: [cs.primary, cs.primaryContainer],
+      colors: [
+        ctrl.effectiveColorForRole(context, 'primary'),
+        ctrl.effectiveColorForRole(context, 'lock-bg'),
+      ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
@@ -139,10 +144,10 @@ class _LockScreenState extends State<LockScreen> {
     final inputFill = cs.surfaceContainer.withValues(alpha: 0.85);
     final inputTextColor = cs.onSurface;
 
-    final buttonColor = cs.primary;
+    final buttonColor = ctrl.effectiveColorForRole(context, 'primary');
     final buttonTextColor = cs.onPrimary;
 
-    final linkColor = cs.primary;
+    final linkColor = ctrl.effectiveColorForRole(context, 'primary');
 
     return PopScope(
       canPop: false,
@@ -176,7 +181,7 @@ class _LockScreenState extends State<LockScreen> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: cs.onSurface.withValues(alpha: 0.08),
-                                    blurRadius: 12,
+                                    blurRadius: 3,
                                     offset: const Offset(0, 6),
                                   ),
                                 ],

@@ -242,6 +242,9 @@ class ThemeController extends ChangeNotifier {
       case 'primary':
         if (isDefault) return Colors.blue;
         return cs.primary;
+      case 'lock-bg':
+        if (isDefault) return const Color.fromARGB(255, 49, 96, 199);
+        return cs.primaryContainer;
       default:
         // fallback to primary if unknown role
         return isDefault ? Colors.blueAccent : cs.primary;

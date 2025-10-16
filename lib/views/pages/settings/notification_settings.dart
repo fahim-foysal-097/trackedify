@@ -68,7 +68,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           context,
           title: "Permission denied",
           message:
-              "We couldn't get notification permission. Please enable it from system settings.",
+              "We couldn't get notification permission. Please enable it from system settings if you change your mind.",
           buttonText: "OK",
           textColor: theme.textTheme.bodySmall?.color,
           onTapDismiss: () => Navigator.pop(context),
@@ -100,7 +100,14 @@ class _NotificationSettingsState extends State<NotificationSettings> {
               children: [
                 Icon(Icons.check_circle_outline, color: cs.onPrimary),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Daily reminder enabled')),
+                Expanded(
+                  child: Text(
+                    'Daily reminder enabled',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -126,7 +133,14 @@ class _NotificationSettingsState extends State<NotificationSettings> {
               children: [
                 Icon(Icons.check_circle_outline, color: cs.onError),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('Daily reminder disabled')),
+                Expanded(
+                  child: Text(
+                    'Daily reminder disabled',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onError,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -197,6 +211,9 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                   Expanded(
                     child: Text(
                       'Reminder set for ${_formatTime(_hour, _minute)}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -206,7 +223,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         } else {
           await DatabaseHelper().setNotificationEnabled(false);
           if (!mounted) return;
-          setState(() => _notificationsEnabled = false);
+          setState(() {
+            _notificationsEnabled = false;
+            _saving = false;
+          });
           PanaraInfoDialog.show(
             context,
             title: "Permission denied",
@@ -231,6 +251,9 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                 Expanded(
                   child: Text(
                     'Reminder time saved: ${_formatTime(_hour, _minute)}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -249,7 +272,14 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             children: [
               Icon(Icons.cancel_outlined, color: cs.onError),
               const SizedBox(width: 12),
-              Expanded(child: Text('Failed to save reminder time: $e')),
+              Expanded(
+                child: Text(
+                  'Failed to save reminder time: $e',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onError,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

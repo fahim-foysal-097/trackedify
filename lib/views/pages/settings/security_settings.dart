@@ -98,7 +98,14 @@ class _SecuritySettingsState extends State<SecuritySettings> {
               children: [
                 Icon(Icons.check_circle_outline, color: cs.onPrimary),
                 const SizedBox(width: 12),
-                const Expanded(child: Text('App lock enabled')),
+                Expanded(
+                  child: Text(
+                    'App lock enabled',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -135,7 +142,12 @@ class _SecuritySettingsState extends State<SecuritySettings> {
           children: [
             Icon(Icons.check_circle_outline, color: cs.onError),
             const SizedBox(width: 12),
-            const Expanded(child: Text('App lock disabled')),
+            Expanded(
+              child: Text(
+                'App lock disabled',
+                style: TextStyle(color: Theme.of(context).colorScheme.onError),
+              ),
+            ),
           ],
         ),
       ),
@@ -277,7 +289,14 @@ class _SecuritySettingsState extends State<SecuritySettings> {
             children: [
               Icon(Icons.check_circle_outline, color: cs.onPrimary),
               const SizedBox(width: 12),
-              const Expanded(child: Text('PIN has been reset')),
+              Expanded(
+                child: Text(
+                  'PIN has been reset',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
