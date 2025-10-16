@@ -7,6 +7,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'edit_expense_page.dart';
 
@@ -787,6 +788,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final ctrl = ThemeController.instance;
     final textColorMuted =
         theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.75) ??
         Colors.grey;
@@ -812,8 +814,12 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
           backgroundColor: cs.surface,
           appBar: AppBar(
             elevation: selectionMode ? 2 : 4,
-            backgroundColor: selectionMode ? cs.primary : cs.surface,
-            foregroundColor: selectionMode ? cs.onPrimary : cs.onSurface,
+            backgroundColor: selectionMode
+                ? ctrl.effectiveColorForRole(context, 'primary')
+                : cs.surface,
+            foregroundColor: selectionMode
+                ? ctrl.effectiveColorForRole(context, 'primary')
+                : cs.onSurface,
             title: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               transitionBuilder: (child, anim) {
@@ -825,6 +831,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       key: const ValueKey('selected-title'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: cs.onPrimary,
                       ),
                     )
                   : Text(
@@ -1043,7 +1050,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     final itemChild = Container(
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? cs.primary.withValues(alpha: 0.08)
+                            ? (ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              )).withValues(alpha: 0.08)
                             : cs.surface,
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1071,8 +1081,14 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           },
                           leading: selectionMode
                               ? Checkbox(
-                                  activeColor: cs.primary,
-                                  focusColor: cs.primary,
+                                  activeColor: ctrl.effectiveColorForRole(
+                                    context,
+                                    'primary',
+                                  ),
+                                  focusColor: ctrl.effectiveColorForRole(
+                                    context,
+                                    'primary',
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),

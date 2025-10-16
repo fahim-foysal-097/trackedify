@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/data/notifiers.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
 
 class NavBarWidget extends StatelessWidget {
@@ -13,6 +14,8 @@ class NavBarWidget extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final selectedIconColor = cs.onPrimary;
     final unselectedIconColor = cs.onPrimary.withValues(alpha: 0.65);
+
+    final ctrl = ThemeController.instance;
 
     // gap width reserved for the FAB (slightly larger than diameter so it breathes)
     const double gapWidth = FabConfig.fabDiameter * 1.1;
@@ -41,7 +44,7 @@ class NavBarWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   height: 64,
-                  color: cs.primary,
+                  color: ctrl.effectiveColorForRole(context, 'nav'),
                   child: Row(
                     children: [
                       // left side items
