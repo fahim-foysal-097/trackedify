@@ -203,7 +203,12 @@ class _EditExpensePageState extends State<EditExpensePage> {
             children: [
               Icon(Icons.delete, color: cs.onError),
               const SizedBox(width: 12),
-              Expanded(child: Text("Category '$name' deleted!")),
+              Expanded(
+                child: Text(
+                  "Category '$name' deleted!",
+                  style: TextStyle(color: cs.onError),
+                ),
+              ),
             ],
           ),
         ),

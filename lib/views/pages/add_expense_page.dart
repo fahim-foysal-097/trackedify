@@ -131,7 +131,12 @@ class _AddPageState extends State<AddPage> {
             children: [
               Icon(Icons.delete, color: cs.onError),
               const SizedBox(width: 12),
-              Expanded(child: Text("Category '$name' deleted!")),
+              Expanded(
+                child: Text(
+                  "Category '$name' deleted!",
+                  style: TextStyle(color: cs.onError),
+                ),
+              ),
             ],
           ),
         ),
@@ -737,7 +742,12 @@ class _AddPageState extends State<AddPage> {
             children: [
               Icon(Icons.check_circle_outline, color: cs.onPrimary),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Expense saved')),
+              Expanded(
+                child: Text(
+                  'Expense saved',
+                  style: TextStyle(color: cs.onPrimary),
+                ),
+              ),
             ],
           ),
         ),
