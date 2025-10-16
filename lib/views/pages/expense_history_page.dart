@@ -27,6 +27,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
   bool isLoading = true;
 
+  final ctrl = ThemeController.instance;
+
   // Multi-select state
   bool selectionMode = false;
   Set<int> selectedExpenses = {};
@@ -417,7 +419,13 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: Icon(Icons.save_alt, color: cs.primary),
+                          icon: Icon(
+                            Icons.save_alt,
+                            color: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
+                          ),
                           label: const Text('Save to gallery'),
                           onPressed: () {
                             Navigator.pop(context); // close viewer
@@ -427,8 +435,16 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            side: BorderSide(color: cs.primary),
-                            foregroundColor: cs.primary,
+                            side: BorderSide(
+                              color: ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              ),
+                            ),
+                            foregroundColor: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
                             backgroundColor: Theme.of(
                               context,
                             ).colorScheme.surface,
@@ -439,7 +455,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: cs.primary,
+                          backgroundColor: ctrl.effectiveColorForRole(
+                            context,
+                            'primary',
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -651,7 +670,12 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   child: OutlinedButton(
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: cs.surface,
-                                      side: BorderSide(color: cs.primary),
+                                      side: BorderSide(
+                                        color: ctrl.effectiveColorForRole(
+                                          context,
+                                          'primary',
+                                        ),
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -671,7 +695,12 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                     },
                                     child: Text(
                                       'Edit',
-                                      style: TextStyle(color: cs.primary),
+                                      style: TextStyle(
+                                        color: ctrl.effectiveColorForRole(
+                                          context,
+                                          'primary',
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -682,7 +711,11 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   height: 45,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: cs.primary,
+                                      backgroundColor: ctrl
+                                          .effectiveColorForRole(
+                                            context,
+                                            'primary',
+                                          ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -1130,7 +1163,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                         key: Key(expense['id'].toString()),
                         background: Container(
                           decoration: BoxDecoration(
-                            color: cs.primary,
+                            color: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.centerLeft,

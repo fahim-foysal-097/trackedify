@@ -541,7 +541,10 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                     ).format(DateFormat('yyyy-MM').parse(month));
                     return DropdownMenuItem(
                       value: month,
-                      child: Text(formatted),
+                      child: Text(
+                        formatted,
+                        style: const TextStyle(color: Colors.black),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {

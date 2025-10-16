@@ -7,6 +7,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/shared/widgets/curvedbox_widget.dart';
 import 'package:trackedify/shared/widgets/overview_widget.dart';
@@ -41,6 +42,8 @@ class HomePageState extends State<HomePage> {
 
   // Map expenseId -> image count
   Map<int, int> _imageCountMap = {};
+
+  final ctrl = ThemeController.instance;
 
   final overviewKey = GlobalKey<OverviewWidgetState>();
 
@@ -316,7 +319,13 @@ class HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: Icon(Icons.save_alt, color: cs.primary),
+                          icon: Icon(
+                            Icons.save_alt,
+                            color: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
+                          ),
                           label: const Text('Save to gallery'),
                           onPressed: () {
                             Navigator.pop(context); // close viewer
@@ -326,8 +335,16 @@ class HomePageState extends State<HomePage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            side: BorderSide(color: cs.primary),
-                            foregroundColor: cs.primary,
+                            side: BorderSide(
+                              color: ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              ),
+                            ),
+                            foregroundColor: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
                             backgroundColor: Theme.of(
                               context,
                             ).colorScheme.surface,
@@ -338,7 +355,10 @@ class HomePageState extends State<HomePage> {
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: cs.primary,
+                          backgroundColor: ctrl.effectiveColorForRole(
+                            context,
+                            'primary',
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -542,7 +562,12 @@ class HomePageState extends State<HomePage> {
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             backgroundColor: cs.surface,
-                            side: BorderSide(color: cs.primary),
+                            side: BorderSide(
+                              color: ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              ),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -565,7 +590,12 @@ class HomePageState extends State<HomePage> {
                           },
                           child: Text(
                             'Edit',
-                            style: TextStyle(color: cs.primary),
+                            style: TextStyle(
+                              color: ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -573,7 +603,10 @@ class HomePageState extends State<HomePage> {
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: cs.primary,
+                            backgroundColor: ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
