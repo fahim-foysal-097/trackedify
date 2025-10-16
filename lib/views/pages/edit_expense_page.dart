@@ -514,7 +514,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.remove_red_eye_outlined, color: cs.primary),
+            icon: Icon(Icons.remove_red_eye_outlined, color: cs.onPrimary),
             onPressed: () {
               showDialog(
                 context: context,
@@ -821,7 +821,12 @@ class _EditExpensePageState extends State<EditExpensePage> {
             children: [
               Icon(Icons.check_circle_outline, color: cs.onPrimary),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Expense updated')),
+              Expanded(
+                child: Text(
+                  'Expense updated',
+                  style: TextStyle(color: cs.onPrimary),
+                ),
+              ),
             ],
           ),
         ),

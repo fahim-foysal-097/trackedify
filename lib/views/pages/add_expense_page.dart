@@ -8,6 +8,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:trackedify/database/add_expense.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
@@ -43,6 +44,8 @@ class _AddPageState extends State<AddPage> {
 
   // Image quality (1-100) to pass to platform picker. Mutable so slider can change it.
   int _selectedImageQuality = 40;
+
+  final ctrl = ThemeController.instance;
 
   // Single-string tips (shown every time the user taps the tips/info button)
   final String tips =
@@ -476,7 +479,7 @@ class _AddPageState extends State<AddPage> {
 
           // eye button (no vertical stub line)
           IconButton(
-            icon: Icon(Icons.remove_red_eye_outlined, color: cs.primary),
+            icon: Icon(Icons.remove_red_eye_outlined, color: cs.onPrimary),
             onPressed: () {
               showDialog(
                 context: context,
