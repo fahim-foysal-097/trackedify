@@ -51,6 +51,7 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 - [x] Auto updater & Notifications
 - [x] Smart Suggestions (in create category)
 - [x] Save images as notes
+- [x] Light/Dark theme
 - [ ] Predictive back gesture
 - [ ] Optimization
 - [ ] Make compatible with web
@@ -58,7 +59,6 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 - [ ] Smart alerts (e.g., overspending warnings)
 - [ ] Cloud backup
 - [ ] AI integration
-- [ ] Light/Dark theme
 - [ ] Export reports as PDF/Image
 
 ## Test/Build
@@ -77,9 +77,12 @@ first run :
 flutter build apk --split-per-abi --no-tree-shake-icons
 ```
 
-Then install compatible apk from build forlder.
+Then install compatible apk from build folder.
 
-[Learn More](https://docs.flutter.dev/deployment/android)
+If you don't want to sign the app, then remove `signingConfigs{}` block and `signingConfig` property from `buildTypes{}` in `android/app/build.gradle.kts`
+
+If you want to sign the app follow the flutter build tutorial -
+[Learn More ](https://docs.flutter.dev/deployment/android)
 
 #### Structure
 
