@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackedify/services/auth_service.dart';
@@ -66,13 +67,13 @@ class _SetPinPageState extends State<SetPinPage> {
       if (!mounted) return;
       // success
       if (widget.isChanging) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('PIN changed')));
+        if (kDebugMode) {
+          print("PIN Changed");
+        }
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('PIN set')));
+        if (kDebugMode) {
+          print("PIN Set");
+        }
       }
       Navigator.of(context).pop(true);
     } catch (e) {

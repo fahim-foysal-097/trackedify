@@ -394,7 +394,7 @@ class _AboutPageState extends State<AboutPage> {
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () => _launchURL(
-                            'https://github.com/fahim-foysal-097/Trackedify',
+                            'https://github.com/fahim-foysal-097/trackedify',
                           ),
                           icon: const Icon(Icons.code),
                           label: const Text('Source (GitHub)'),

@@ -56,8 +56,6 @@ class NotificationUtil {
   }
 
   /// Schedules exactly *one* notification for the next upcoming [hour]:[minute].
-  /// The notification created has a payload with hour/minute so the background
-  /// listener can reschedule the next day after the notification is displayed.
   Future<void> scheduleDailyAt({
     required int id,
     required String channelKey,
@@ -69,7 +67,6 @@ class NotificationUtil {
     // Cancel any existing scheduled/active notification with this id first.
     await awesomeNotifications.cancel(id);
 
-    // Compose payload so the background handler can reschedule the next day.
     final payload = {'hour': hour.toString(), 'minute': minute.toString()};
 
     final next = _nextInstanceOfTime(hour, minute);
@@ -78,7 +75,6 @@ class NotificationUtil {
       date: next,
       preciseAlarm: true,
       allowWhileIdle: true,
-      // repeats: false  -> default for fromDate is one-shot
     );
 
     await awesomeNotifications.createNotification(
@@ -112,6 +108,8 @@ class NotificationUtil {
     await awesomeNotifications.dismissAllNotifications();
   }
 
+  /// Request permission from the OS to show notifications.
+  /// Returns true if allowed, false otherwise.
   Future<bool> requestPermission() async {
     final allowed = await awesomeNotifications.isNotificationAllowed();
     if (allowed) return true;

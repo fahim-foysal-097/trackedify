@@ -648,7 +648,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Report Bug',
                     accent: Colors.red,
                     onTap: () => _launchURL(
-                      "https://github.com/fahim-foysal-097/Trackedify/issues/new?template=bug_report.md",
+                      "https://github.com/fahim-foysal-097/trackedify/issues/new?template=bug_report.md",
                     ),
                   ),
 

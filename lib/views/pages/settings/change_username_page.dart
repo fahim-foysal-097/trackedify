@@ -53,9 +53,29 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
     final newName = _usernameController.text.trim();
     if (newName.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Username cannot be empty')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: Theme.of(context).colorScheme.onError,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Username cannot be empty!',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onError,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
       return;
     }
     if (userId != null) {
@@ -71,9 +91,29 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
     if (!mounted) return;
     setState(() => currentUsername = newName);
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Username saved!')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Username saved!',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
     if (mounted) {
       Navigator.pop(context);
     }

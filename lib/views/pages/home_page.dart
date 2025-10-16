@@ -53,24 +53,40 @@ class HomePageState extends State<HomePage> {
     overviewKey.currentState?.refresh();
   }
 
-  // ! this shit is still slow
   @override
   void initState() {
     super.initState();
     loadCategories();
     loadExpenses();
-    _initSpeech();
     _loadVoicePref();
-
-    // Automatic update check after first frame (will run only once per app session)
+    _initSpeech(); // will check permission before initializing
     WidgetsBinding.instance.addPostFrameCallback((_) {
       UpdateService.checkForUpdate(context);
     });
   }
 
-  Future<void> _initSpeech() async {
-    _speech = stt.SpeechToText();
+  Future<void> _loadVoicePref() async {
     try {
+      final v = await DatabaseHelper().isVoiceEnabled();
+      if (!mounted) return;
+      setState(() => _voiceEnabled = v);
+    } catch (_) {}
+  }
+
+  /// Initialize speech-to-text only if mic permission is granted.
+  Future<void> _initSpeech() async {
+    try {
+      final micStatus = await Permission.microphone.status;
+      if (!micStatus.isGranted) {
+        // Don't initialize if the mic permission is not granted.
+        if (!mounted) return;
+        setState(() {
+          _voiceAvailable = false;
+        });
+        return;
+      }
+
+      _speech = stt.SpeechToText();
       final avail = await _speech!.initialize(
         onStatus: (status) {
           if (!mounted) return;
@@ -98,25 +114,6 @@ class HomePageState extends State<HomePage> {
       setState(() {
         _voiceAvailable = false;
       });
-    }
-  }
-
-  Future<void> _loadVoicePref() async {
-    try {
-      final v = await DatabaseHelper().isVoiceEnabled();
-      if (!mounted) return;
-      setState(() => _voiceEnabled = v);
-    } catch (_) {}
-  }
-
-  // Called via post-frame to refresh preference when returning to this page.
-  Future<void> _maybeRefreshVoicePref() async {
-    if (_prefLoadInProgress) return;
-    _prefLoadInProgress = true;
-    try {
-      await _loadVoicePref();
-    } finally {
-      _prefLoadInProgress = false;
     }
   }
 
@@ -328,7 +325,7 @@ class HomePageState extends State<HomePage> {
                           ),
                           label: const Text('Save to gallery'),
                           onPressed: () {
-                            Navigator.pop(context); // close viewer
+                            Navigator.pop(context);
                             _saveBytesToGallery(bytes);
                           },
                           style: OutlinedButton.styleFrom(
@@ -470,7 +467,6 @@ class HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // note content / placeholder
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -512,9 +508,7 @@ class HomePageState extends State<HomePage> {
                         );
                       }
                       final imgs = snap.data!;
-                      if (imgs.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
+                      if (imgs.isEmpty) return const SizedBox.shrink();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -635,10 +629,8 @@ class HomePageState extends State<HomePage> {
 
   Future<void> _onMicPressed() async {
     // ALWAYS re-check the DB preference right when user presses mic.
-    // This ensures toggling in Settings takes effect immediately.
     final enabled = await DatabaseHelper().isVoiceEnabled();
     if (!mounted) return;
-    // update local cache so UI reflects the latest value
     setState(() => _voiceEnabled = enabled);
 
     final theme = Theme.of(context);
@@ -663,7 +655,56 @@ class HomePageState extends State<HomePage> {
       return;
     }
 
+    // Check microphone permission before attempting to listen.
+    final micStatus = await Permission.microphone.status;
+    if (!micStatus.isGranted) {
+      // Try to request permission interactively.
+      final granted = await Permission.microphone.request();
+      if (!granted.isGranted) {
+        // Persist the user's denial to avoid repeated prompts across sessions.
+        await DatabaseHelper().setVoiceEnabled(false);
+        if (!mounted) return;
+        setState(() => _voiceEnabled = false);
+
+        final isPermanentlyDenied =
+            await Permission.microphone.isPermanentlyDenied;
+        if (isPermanentlyDenied) {
+          if (!mounted) return;
+          PanaraInfoDialog.show(
+            context,
+            title: 'Microphone blocked',
+            message:
+                'Microphone permission is blocked for this app. To use voice commands, open system settings and allow Microphone permission.',
+            buttonText: 'Open settings',
+            onTapDismiss: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
+            panaraDialogType: PanaraDialogType.warning,
+          );
+        } else {
+          if (!mounted) return;
+          PanaraInfoDialog.show(
+            context,
+            title: 'Permission denied',
+            message:
+                'Microphone permission denied. Voice commands have been disabled.',
+            buttonText: 'OK',
+            onTapDismiss: () => Navigator.pop(context),
+            textColor: Theme.of(context).textTheme.bodySmall?.color,
+            panaraDialogType: PanaraDialogType.normal,
+          );
+        }
+        return;
+      } else {
+        // Permission granted: try to initialize speech (if not already)
+        await _initSpeech();
+      }
+    }
+
     if (!_voiceAvailable || _speech == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -677,7 +718,7 @@ class HomePageState extends State<HomePage> {
           ),
         ),
       );
-      // try re-initializing in case permission was granted meanwhile
+      // attempt re-initialize if permission was granted
       await _initSpeech();
       return;
     }
@@ -706,8 +747,7 @@ class HomePageState extends State<HomePage> {
         onResult: (result) {
           _lastWords = result.recognizedWords;
           if (result.finalResult) {
-            // stop listening and perform action
-            _speech!.stop(); // No need for await here to avoid blocking
+            _speech!.stop();
             if (!mounted) return;
             setState(() => _isListening = false);
             _handleVoiceCommand(_lastWords);
@@ -741,13 +781,7 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  /// Try parse command; returns a parsed map or null
-  ///
-  /// How it works:
-  ///  - tokenize text
-  ///  - find the token which exactly matches a numeric pattern (e.g. "20" or "$20" or "20.5")
-  ///  - look for category token nearest to that numeric token (left then right), ignoring stopwords
-  ///  - also attempt to match any full category names present in the text
+  // ---------- parsing & handling voice commands ----------
   Map<String, dynamic>? _parseVoiceCommand(String text) {
     if (text.trim().isEmpty) return null;
     final lowered = text.toLowerCase();
@@ -847,23 +881,17 @@ class HomePageState extends State<HomePage> {
         final candClean = cand.replaceAll(RegExp(r'\$'), '').trim();
         if (candClean.isNotEmpty && !stopwords.contains(candClean)) {
           matchedCandidate = _normalizeCandidate(candClean);
-          if (matchedCandidate != null) {
-            found = true;
-          }
+          if (matchedCandidate != null) found = true;
         }
       }
-
       if (!found && rightIdx < tokens.length) {
         final cand = tokens[rightIdx].replaceAll(RegExp(r'[^\w]'), '');
         final candClean = cand.replaceAll(RegExp(r'\$'), '').trim();
         if (candClean.isNotEmpty && !stopwords.contains(candClean)) {
           matchedCandidate = _normalizeCandidate(candClean);
-          if (matchedCandidate != null) {
-            found = true;
-          }
+          if (matchedCandidate != null) found = true;
         }
       }
-
       if (found) break;
     }
 
@@ -921,7 +949,7 @@ class HomePageState extends State<HomePage> {
       return;
     }
 
-    // show confirmation dialog with only amount + category
+    // show confirmation dialog
     if (!mounted) return;
     final amountCtl = TextEditingController(text: parsed['amount'].toString());
     final categoryCtl = TextEditingController(text: parsed['category']);
@@ -971,7 +999,7 @@ class HomePageState extends State<HomePage> {
     if (!mounted) return;
     if (confirmed != true) return;
 
-    // validate & insert (no note)
+    // validate & insert
     final amountVal = double.tryParse(amountCtl.text.replaceAll(',', '.'));
     if (amountVal == null) {
       if (!mounted) return;
@@ -1042,7 +1070,6 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // updates immediately after returning from Settings.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeRefreshVoicePref();
     });
@@ -1252,5 +1279,15 @@ class HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  Future<void> _maybeRefreshVoicePref() async {
+    if (_prefLoadInProgress) return;
+    _prefLoadInProgress = true;
+    try {
+      await _loadVoicePref();
+    } finally {
+      _prefLoadInProgress = false;
+    }
   }
 }

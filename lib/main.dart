@@ -35,8 +35,16 @@ Future<void> main() async {
         await AwesomeNotifications().showAlarmPage();
       }
 
-      if (granted) {
-        // Get saved time (defaults to 20:00)
+      if (!granted) {
+        // Persist the user's implicit choice (deny) into DB to avoid repeated prompts.
+        await db.setNotificationEnabled(false);
+        if (kDebugMode) {
+          debugPrint(
+            'Notification permission denied -> saved preference to disabled.',
+          );
+        }
+      } else {
+        // Permission granted -> schedule the next one-shot reminder.
         final time = await db.getNotificationTime();
         final hour = time['hour'] ?? 20;
         final minute = time['minute'] ?? 0;
@@ -52,7 +60,7 @@ Future<void> main() async {
         );
       }
     } else {
-      // If disabled, cancel any scheduled reminder by ID
+      // If disabled in DB, ensure there are no reminders scheduled.
       await notifUtil.cancelById(AppConstants.dailyReminderId);
     }
   } catch (e) {
