@@ -18,13 +18,14 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 - App Locker
 - Voice Commands
 - Daily Reminder
-- Auto Updater
+- Auto Updater & Beutiful themes
 - Beautiful Insight Cards
 
 ## Screenshots
 
 <p float="center">
     <img src="readme_assets/ss_home.jpg" alt="App Screenshot" width="200"/>
+    <img src="readme_assets/ss_home_dark.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_add.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_insights.jpg" alt="App Screenshot" width="200"/>
     <img src="readme_assets/ss_pie.jpg" alt="App Screenshot" width="200"/>
@@ -83,37 +84,3 @@ If you don't want to sign the app, then remove `signingConfigs{}` block and `sig
 
 If you want to sign the app follow the flutter build tutorial -
 [Learn More ](https://docs.flutter.dev/deployment/android)
-
-#### Structure
-
-```
-Project Root
-├── analysis_options.yaml
-├── android
-├── assets
-│   ├── icons
-│   ├── img
-│   └── lotties
-├── flutter_launcher_icons.yaml
-├── ios
-├── lib
-│   ├── data
-│   │   └── notifiers.dart
-│   ├── database
-│   │   ├── database_helper.dart
-│   │   ├── Logic
-│   │   └── models
-│   ├── main.dart
-│   ├── shared
-│   │   ├── constants
-│   │   └── widgets
-│   └── views
-│       ├── pages
-│       ├── stats
-│       └── widget_tree.dart
-├── LICENSE
-├── pubspec.lock
-├── pubspec.yaml
-├── readme_assets
-├── README.md
-```

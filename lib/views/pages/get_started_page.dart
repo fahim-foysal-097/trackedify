@@ -155,10 +155,22 @@ class _GetStartedPageState extends State<GetStartedPage> {
           spinnerShown = false;
         }
         if (!mounted) return;
+        final cs = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: cs.error,
+            content: Row(
+              children: [
+                Icon(Icons.delete, color: cs.onError),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
+                    style: TextStyle(color: cs.onError),
+                  ),
+                ),
+              ],
             ),
           ),
         );
