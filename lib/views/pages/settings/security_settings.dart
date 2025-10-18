@@ -446,7 +446,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                             trailing: const Icon(Icons.chevron_right),
                             onTap: _changePin,
                           ),
-                          const Divider(height: 1),
+                          // const Divider(height: 1),
                           ListTile(
                             title: const Text('Change recovery password'),
                             subtitle: const Text(
@@ -454,7 +454,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
                             ),
                             onTap: _setRecoveryPassword,
                           ),
-                          const Divider(height: 1),
+                          // const Divider(height: 1),
                           ListTile(
                             title: const Text(
                               'Reset PIN (use recovery password)',

@@ -208,15 +208,23 @@ class _GetStartedPageState extends State<GetStartedPage> {
       }
 
       if (!mounted) return;
+
+      final cs = Theme.of(context).colorScheme;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Database imported successfully')),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Database imported successfully',
+                  style: TextStyle(color: cs.onPrimary),
+                ),
+              ),
             ],
           ),
         ),

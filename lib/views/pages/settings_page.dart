@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/edit_categories_page.dart';
@@ -15,8 +16,6 @@ import 'package:trackedify/views/pages/settings/voice_commands_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// TODO : remove 'Clear Downloaded Updates' and add some other settings
-
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -24,7 +23,8 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final iconColor = cs.primary;
+    final ctrl = ThemeController.instance;
+    final iconColor = ctrl.effectiveColorForRole(context, 'primary');
 
     void showTipsDialog() {
       const tips =
@@ -139,7 +139,7 @@ class SettingsPage extends StatelessWidget {
                   },
                 ),
                 SettingsButton(
-                  icon: Icons.label_outline_rounded,
+                  icon: Icons.tag,
                   title: 'Edit Categories',
                   iconColor: iconColor,
                   onTap: () {
@@ -310,51 +310,6 @@ class SettingsPage extends StatelessWidget {
                     await UpdateService.checkForUpdate(
                       context,
                       manualCheck: true,
-                    );
-                  },
-                ),
-                SettingsButton(
-                  icon: Icons.delete_outline,
-                  title: 'Clear Downloaded Updates',
-                  iconColor: iconColor,
-                  onTap: () async {
-                    if (!context.mounted) return;
-                    final confirmed = await PanaraConfirmDialog.show<bool>(
-                      context,
-                      title: "Clear downloads?",
-                      message:
-                          "This will delete all temporary downloaded updates (safe). Continue?",
-                      textColor: theme.textTheme.bodySmall?.color,
-                      confirmButtonText: "Clear",
-                      cancelButtonText: "Cancel",
-                      onTapCancel: () => Navigator.pop(context, false),
-                      onTapConfirm: () => Navigator.pop(context, true),
-                      panaraDialogType: PanaraDialogType.warning,
-                    );
-                    if (!context.mounted) return;
-                    if (confirmed != true) return;
-
-                    final deleted = await UpdateService.clearDownloadFolder();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: cs.primary,
-                        content: Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle_outline,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                "Cleared $deleted file(s) from app download folder.",
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     );
                   },
                 ),
