@@ -158,6 +158,10 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Travel & Transport', 5),
     Colors.deepOrange,
   ),
+  'petrol': CategoryData(
+    _iconFromCategory('Travel & Transport', 5),
+    Colors.deepOrange,
+  ),
 
   // ---------------- Home / Bills / Utilities ----------------
   'rent': CategoryData(
@@ -297,6 +301,7 @@ final Map<String, CategoryData> categoryDataset = {
     Colors.purpleAccent,
   ),
   'delivery': CategoryData(_iconFromCategory('Shopping', 16), Colors.green),
+  'amazon': CategoryData(_iconFromCategory('Shopping', 16), Colors.green),
   'grocery delivery': CategoryData(
     _iconFromCategory('Shopping', 16),
     Colors.green,
@@ -325,12 +330,12 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Entertainment', 20),
     Colors.indigo,
   ),
-  // 'hobby': CategoryData(_iconFromCategory('Hobbies & Crafts', 0), Colors.teal),
   'theatre': CategoryData(
     _iconFromCategory('Entertainment', 3),
     Colors.deepPurple,
   ), // ---------------- Education & Work ----------------
   'education': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
+  'study': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
   'books': CategoryData(_iconFromCategory('Education', 1), Colors.indigo),
   'courses': CategoryData(_iconFromCategory('Education', 3), Colors.indigo),
   'school fees': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
@@ -488,7 +493,6 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Hobbies & Crafts', 0),
     Colors.deepOrange,
   ), // ---------------- Other / Misc ----------------
-  'other': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
   'misc': CategoryData(_iconFromCategory('Other', 1), Colors.grey),
   'fee': CategoryData(_iconFromCategory('Other', 24), Colors.brown),
   'charge': CategoryData(_iconFromCategory('Other', 19), Colors.redAccent),
@@ -498,7 +502,7 @@ final Map<String, CategoryData> categoryDataset = {
   'miscellaneous': CategoryData(
     _iconFromCategory('Other', 1),
     Colors.grey,
-  ), // ---------------- Extended / many synonyms (A LOT LOT) ----------------
+  ), // ---------------- Extended / many synonyms ----------------
   // Food synonyms
   'deli': CategoryData(
     _iconFromCategory('Food & Drink', 0),
@@ -889,7 +893,6 @@ final Map<String, CategoryData> categoryDataset = {
     _iconFromCategory('Health & Fitness', 21),
     Colors.brown,
   ), // Education additions (covering all)
-  // 'school': CategoryData(_iconFromCategory('Education', 0), Colors.indigo),
   'reading': CategoryData(_iconFromCategory('Education', 1), Colors.indigo),
   'lab': CategoryData(_iconFromCategory('Education', 2), Colors.blue),
   'textbook': CategoryData(_iconFromCategory('Education', 3), Colors.indigo),
