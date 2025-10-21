@@ -195,7 +195,7 @@ class _ExpensesHeatmapCalendarState extends State<ExpensesHeatmapCalendar> {
               colorMode: ColorMode.opacity,
               showText: false,
               scrollable: true,
-              colorsets: const {100: Colors.red},
+              colorsets: {100: cs.primary},
               defaultColor: Theme.of(
                 context,
               ).colorScheme.surfaceContainerHighest,
