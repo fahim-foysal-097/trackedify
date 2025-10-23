@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 .directory
+.icon.ico
 
 # IntelliJ related
 *.iml
