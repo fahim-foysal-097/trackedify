@@ -51,7 +51,7 @@ dependencies:
   file_picker: ^10.3.3
   flutter_file_dialog: ^3.0.2
   crypto: ^3.0.6
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   speech_to_text: ^7.3.0
   panara_dialogs: ^0.1.5
   awesome_notifications: ^0.10.1
