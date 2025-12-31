@@ -200,7 +200,10 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
         body: ValueListenableBuilder<int>(
           valueListenable: selectedPageNotifier,
           builder: (context, selectedPage, child) {
-            return pages.elementAt(selectedPage);
+            return IndexedStack(
+              index: selectedPage,
+              children: pages,
+            );
           },
         ),
         bottomNavigationBar: const NavBarWidget(),
