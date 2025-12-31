@@ -967,6 +967,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   ),
                 )
               : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
                   itemCount: filteredExpenses.length + (showTip ? 1 : 0),
                   itemBuilder: (context, index) {

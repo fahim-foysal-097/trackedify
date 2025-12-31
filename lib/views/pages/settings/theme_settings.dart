@@ -61,6 +61,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
           animation: ctrl,
           builder: (context, _) {
             return ListView(
+              physics: const BouncingScrollPhysics(),
               children: [
                 Text(
                   'Mode',

@@ -209,6 +209,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
           ),
         ),
         content: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: ColorPicker(
             pickerColor: selectedColor,
             onColorChanged: (color) => picked = color,
@@ -640,8 +641,8 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18.0),
           child: ListView(
-            controller: _scrollController,
             physics: const BouncingScrollPhysics(),
+            controller: _scrollController,
             children: [
               const SizedBox(height: 8),
               _buildPreviewCard(),

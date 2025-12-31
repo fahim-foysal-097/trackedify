@@ -264,6 +264,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
