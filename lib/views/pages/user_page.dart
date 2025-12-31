@@ -1,23 +1,24 @@
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
 import 'package:trackedify/views/pages/settings/notification_settings.dart';
 import 'package:trackedify/views/pages/settings_page.dart';
-import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key = const PageStorageKey("UserPage")});

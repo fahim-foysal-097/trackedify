@@ -1,15 +1,15 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/auth_gate.dart';
 import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
+import 'package:trackedify/views/pages/set_pin_page.dart';
 import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
-import 'package:trackedify/views/pages/set_pin_page.dart';
-import 'package:trackedify/services/auth_gate.dart';
-import 'package:trackedify/database/database_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

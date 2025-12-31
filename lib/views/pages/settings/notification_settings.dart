@@ -2,10 +2,10 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/shared/constants/constants.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});

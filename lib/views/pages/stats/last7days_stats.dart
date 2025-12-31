@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:trackedify/database/database_helper.dart';
 import 'package:intl/intl.dart';
+import 'package:trackedify/database/database_helper.dart';
 
 class Last7daysStats extends StatefulWidget {
   const Last7daysStats({super.key});

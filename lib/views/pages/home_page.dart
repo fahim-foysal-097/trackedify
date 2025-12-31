@@ -1,11 +1,14 @@
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
@@ -14,9 +17,8 @@ import 'package:trackedify/shared/widgets/overview_widget.dart';
 import 'package:trackedify/shared/widgets/welcome_widget.dart';
 import 'package:trackedify/views/pages/expense_history_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
+
 import 'edit_expense_page.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
