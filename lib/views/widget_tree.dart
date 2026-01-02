@@ -166,9 +166,29 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
           height: FabConfig.fabDiameter,
           child: FloatingActionButton(
             onPressed: () {
+              HapticFeedback.mediumImpact();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddPage()),
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const AddPage(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(0.0, 1.0);
+                        const end = Offset.zero;
+                        const curve = Curves.ease;
+
+                        var tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(CurveTween(curve: curve));
+
+                        return SlideTransition(
+                          position: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                ),
               ).then((_) {
                 // After coming back, refresh the current page
                 final idx = selectedPageNotifier.value;
@@ -200,10 +220,7 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
         body: ValueListenableBuilder<int>(
           valueListenable: selectedPageNotifier,
           builder: (context, selectedPage, child) {
-            return IndexedStack(
-              index: selectedPage,
-              children: pages,
-            );
+            return IndexedStack(index: selectedPage, children: pages);
           },
         ),
         bottomNavigationBar: const NavBarWidget(),

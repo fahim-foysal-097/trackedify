@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -15,6 +17,7 @@ import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/shared/widgets/curvedbox_widget.dart';
 import 'package:trackedify/shared/widgets/overview_widget.dart';
 import 'package:trackedify/shared/widgets/welcome_widget.dart';
+import 'package:trackedify/views/pages/add_expense_page.dart';
 import 'package:trackedify/views/pages/expense_history_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
@@ -49,9 +52,14 @@ class HomePageState extends State<HomePage> {
 
   final overviewKey = GlobalKey<OverviewWidgetState>();
 
-  void refresh() {
-    loadCategories();
-    loadExpenses();
+  // Undo functionality
+  Map<String, dynamic>? _lastDeletedExpense;
+  Timer? _undoTimer;
+
+  Future<void> refresh() async {
+    HapticFeedback.lightImpact();
+    await loadCategories();
+    await loadExpenses();
     overviewKey.currentState?.refresh();
   }
 
@@ -378,7 +386,119 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _deleteExpenseWithUndo(Map<String, dynamic> expense) async {
+    HapticFeedback.mediumImpact();
+
+    final db = await DatabaseHelper().database;
+    final expenseId = expense['id'] as int;
+
+    // Store expense data for undo
+    _lastDeletedExpense = Map<String, dynamic>.from(expense);
+
+    // Delete from database
+    await db.delete('expenses', where: 'id = ?', whereArgs: [expenseId]);
+    try {
+      await db.delete(
+        'img_notes',
+        where: 'expense_id = ?',
+        whereArgs: [expenseId],
+      );
+    } catch (_) {}
+
+    // Reload expenses
+    await loadExpenses();
+    overviewKey.currentState?.refresh();
+
+    // Cancel previous undo timer if exists
+    _undoTimer?.cancel();
+
+    // Show undo snackbar
+    if (!mounted) return;
+    final cs = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: cs.error,
+        content: Row(
+          children: [
+            Icon(Icons.delete, color: cs.onError),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Expense deleted',
+                style: TextStyle(color: cs.onError),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _undoDelete(),
+              child: Text(
+                'UNDO',
+                style: TextStyle(
+                  color: cs.onError,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+
+    // Auto-dismiss undo after 5 seconds
+    _undoTimer = Timer(const Duration(seconds: 5), () {
+      _lastDeletedExpense = null;
+    });
+  }
+
+  Future<void> _undoDelete() async {
+    if (_lastDeletedExpense == null) return;
+
+    HapticFeedback.lightImpact();
+    _undoTimer?.cancel();
+
+    try {
+      final db = await DatabaseHelper().database;
+      await db.insert('expenses', {
+        'category': _lastDeletedExpense!['category'],
+        'amount': _lastDeletedExpense!['amount'],
+        'date': _lastDeletedExpense!['date'],
+        'note': _lastDeletedExpense!['note'],
+      });
+
+      await loadExpenses();
+      overviewKey.currentState?.refresh();
+
+      if (!mounted) return;
+      final cs = Theme.of(context).colorScheme;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: cs.primary,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Expense restored',
+                  style: TextStyle(color: cs.onPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('Undo failed: $e');
+    }
+
+    _lastDeletedExpense = null;
+  }
+
   Future<void> _showNoteSheet(Map<String, dynamic> expense) async {
+    HapticFeedback.selectionClick();
     final note = (expense['note'] ?? '').toString();
     final hasNote = note.trim().isNotEmpty;
     final theme = Theme.of(context);
@@ -569,20 +689,29 @@ class HomePageState extends State<HomePage> {
                             ),
                           ),
                           onPressed: () {
+                            HapticFeedback.lightImpact();
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    EditExpensePage(expense: expense),
-                              ),
-                            ).then((_) {
-                              // refresh after coming back from edit
-                              loadCategories();
-                              loadExpenses();
-                              overviewKey.currentState?.refresh();
-                              NavBarController.apply();
-                            });
+                            // Use a small delay to ensure bottom sheet closes before navigation
+                            Future.delayed(
+                              const Duration(milliseconds: 150),
+                              () {
+                                if (!context.mounted) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditExpensePage(expense: expense),
+                                  ),
+                                ).then((_) {
+                                  if (mounted) {
+                                    loadCategories();
+                                    loadExpenses();
+                                    overviewKey.currentState?.refresh();
+                                    NavBarController.apply();
+                                  }
+                                });
+                              },
+                            );
                           },
                           child: Text(
                             'Edit',
@@ -1067,6 +1196,7 @@ class HomePageState extends State<HomePage> {
     try {
       _speech?.stop();
     } catch (_) {}
+    _undoTimer?.cancel();
     super.dispose();
   }
 
@@ -1084,201 +1214,391 @@ class HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          Stack(
-            children: [
-              const CurvedboxWidget(),
-              OverviewWidget(key: overviewKey),
-              const WelcomeWidget(),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+      body: RefreshIndicator(
+        onRefresh: refresh,
+        color: cs.primary,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Stack(
               children: [
-                const Text(
-                  'Recent Expenses',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ExpenseHistoryPage(),
-                          ),
-                        ).then((_) {
-                          loadCategories();
-                          loadExpenses();
-                          overviewKey.currentState?.refresh();
-                          NavBarController.apply();
-                        });
-                      },
-                      child: Text(
-                        'Show all',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textColorMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: _voiceEnabled
-                          ? 'Add by voice'
-                          : 'Voice commands disabled',
-                      icon: Icon(
-                        _voiceEnabled
-                            ? FontAwesomeIcons.microphone
-                            : FontAwesomeIcons.microphoneSlash,
-                        color: !_voiceEnabled
-                            ? theme.disabledColor
-                            : (_isListening ? cs.error : textColorMuted),
-                      ),
-                      onPressed: _onMicPressed,
-                    ),
-                  ],
-                ),
+                const CurvedboxWidget(),
+                OverviewWidget(key: overviewKey),
+                const WelcomeWidget(),
               ],
             ),
-          ),
-          expenses.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Recent Expenses',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
                     children: [
-                      const SizedBox(height: 70),
-                      Icon(
-                        Icons.receipt_long,
-                        size: 64,
-                        color: cs.onSurface.withValues(alpha: 0.12),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No expenses to show',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: textColorMuted,
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      const ExpenseHistoryPage(),
+                              transitionsBuilder:
+                                  (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    const begin = Offset(1.0, 0.0);
+                                    const end = Offset.zero;
+                                    const curve = Curves.easeInOut;
+
+                                    var tween = Tween(
+                                      begin: begin,
+                                      end: end,
+                                    ).chain(CurveTween(curve: curve));
+
+                                    return SlideTransition(
+                                      position: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                            ),
+                          ).then((_) {
+                            loadCategories();
+                            loadExpenses();
+                            overviewKey.currentState?.refresh();
+                            NavBarController.apply();
+                          });
+                        },
+                        child: Text(
+                          'Show all',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: textColorMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: _voiceEnabled
+                            ? 'Add by voice'
+                            : 'Voice commands disabled',
+                        icon: Icon(
+                          _voiceEnabled
+                              ? FontAwesomeIcons.microphone
+                              : FontAwesomeIcons.microphoneSlash,
+                          color: !_voiceEnabled
+                              ? theme.disabledColor
+                              : (_isListening ? cs.error : textColorMuted),
+                        ),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          _onMicPressed();
+                        },
+                      ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 18),
-                  shrinkWrap: true,
-                  physics: const ClampingScrollPhysics(),
-                  itemCount: expenses.length,
-                  itemBuilder: (context, index) {
-                    final expense = expenses[index];
-                    final cat = getCategory(expense['category']);
-                    final hasNote = (expense['note'] ?? '')
-                        .toString()
-                        .trim()
-                        .isNotEmpty;
-                    final imageCount = _imageCountMap[expense['id']] ?? 0;
-
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => _showNoteSheet(expense),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: cs.surface,
-                            borderRadius: BorderRadius.circular(12),
+                ],
+              ),
+            ),
+            expenses.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 70),
+                        Icon(
+                          Icons.receipt_long,
+                          size: 64,
+                          color: cs.onSurface.withValues(alpha: 0.12),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No expenses to show',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: textColorMuted,
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: cat['color'],
-                                      child: Icon(
-                                        cat['icon'],
-                                        color: cs.onPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      expense['category'],
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Pull down to refresh or tap + to add',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: textColorMuted.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const AddPage(),
+                                transitionsBuilder:
+                                    (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      const begin = Offset(0.0, 1.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.ease;
 
-                                    if (hasNote) ...[
-                                      const SizedBox(width: 5),
-                                      Icon(
-                                        FontAwesomeIcons.solidNoteSticky,
-                                        size: 16,
-                                        color: textColorMuted,
-                                      ),
-                                    ],
-                                    if (imageCount > 0) ...[
-                                      const SizedBox(width: 8),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            FontAwesomeIcons.solidImage,
-                                            size: 16,
-                                            color: textColorMuted,
-                                          ),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            '$imageCount',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  color: textColorMuted,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      "-\$${_formatAmount(expense['amount'])}",
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
-                                    Text(
-                                      expense['date'],
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: textColorMuted,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
+                                      var tween = Tween(
+                                        begin: begin,
+                                        end: end,
+                                      ).chain(CurveTween(curve: curve));
+
+                                      return SlideTransition(
+                                        position: animation.drive(tween),
+                                        child: child,
+                                      );
+                                    },
+                              ),
+                            ).then((_) {
+                              refresh();
+                              NavBarController.apply();
+                            });
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Expense'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cs.primary,
+                            foregroundColor: cs.onPrimary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 18),
+                    shrinkWrap: true,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: expenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = expenses[index];
+                      final cat = getCategory(expense['category']);
+                      final hasNote = (expense['note'] ?? '')
+                          .toString()
+                          .trim()
+                          .isNotEmpty;
+                      final imageCount = _imageCountMap[expense['id']] ?? 0;
+
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Dismissible(
+                          key: Key('expense_${expense['id']}'),
+                          direction: DismissDirection.horizontal,
+                          background: Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            decoration: BoxDecoration(
+                              color: ctrl.effectiveColorForRole(
+                                context,
+                                'primary',
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Icon(Icons.edit, color: cs.onPrimary, size: 28),
+                                const SizedBox(width: 10),
+                                Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    color: cs.onPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+                          secondaryBackground: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.error,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "Delete",
+                                  style: TextStyle(
+                                    color: cs.onPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(
+                                  Icons.delete,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ],
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            HapticFeedback.mediumImpact();
+                            if (direction == DismissDirection.startToEnd) {
+                              // Navigate to edit page - return false to prevent dismiss
+                              if (!mounted) return false;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      EditExpensePage(expense: expense),
+                                ),
+                              ).then((_) {
+                                if (mounted) {
+                                  loadCategories();
+                                  loadExpenses();
+                                  overviewKey.currentState?.refresh();
+                                  NavBarController.apply();
+                                }
+                              });
+                              return false;
+                            } else if (direction ==
+                                DismissDirection.endToStart) {
+                              final confirm = await PanaraConfirmDialog.show<bool>(
+                                context,
+                                title: 'Delete Expense?',
+                                message:
+                                    'Are you sure you want to delete this expense?',
+                                confirmButtonText: "Delete",
+                                cancelButtonText: "Cancel",
+                                onTapCancel: () =>
+                                    Navigator.pop(context, false),
+                                onTapConfirm: () =>
+                                    Navigator.pop(context, true),
+                                textColor: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.color,
+                                panaraDialogType: PanaraDialogType.error,
+                              );
+                              return confirm == true;
+                            }
+                            return false;
+                          },
+                          onDismissed: (direction) {
+                            if (direction == DismissDirection.endToStart) {
+                              _deleteExpenseWithUndo(expense);
+                            }
+                          },
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _showNoteSheet(expense),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: cs.surface,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: cat['color'],
+                                          child: Icon(
+                                            cat['icon'],
+                                            color: cs.onPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          expense['category'],
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
+
+                                        if (hasNote) ...[
+                                          const SizedBox(width: 5),
+                                          Icon(
+                                            FontAwesomeIcons.solidNoteSticky,
+                                            size: 16,
+                                            color: textColorMuted,
+                                          ),
+                                        ],
+                                        if (imageCount > 0) ...[
+                                          const SizedBox(width: 8),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                FontAwesomeIcons.solidImage,
+                                                size: 16,
+                                                color: textColorMuted,
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                '$imageCount',
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: textColorMuted,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          "-\$${_formatAmount(expense['amount'])}",
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
+                                        Text(
+                                          expense['date'],
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: textColorMuted,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-        ],
+                      );
+                    },
+                  ),
+          ],
+        ),
       ),
     );
   }
