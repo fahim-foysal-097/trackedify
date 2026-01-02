@@ -161,58 +161,74 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
       },
       child: Scaffold(
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: SizedBox(
-          width: FabConfig.fabDiameter,
-          height: FabConfig.fabDiameter,
-          child: FloatingActionButton(
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      const AddPage(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                        const begin = Offset(0.0, 1.0);
-                        const end = Offset.zero;
-                        const curve = Curves.ease;
+        floatingActionButton: TweenAnimationBuilder<double>(
+          key: const ValueKey('fab_animation'),
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 50 * (1 - value)),
+              child: child,
+            );
+          },
+          child: SizedBox(
+            width: FabConfig.fabDiameter,
+            height: FabConfig.fabDiameter,
+            child: FloatingActionButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AddPage(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.easeOutCubic;
 
-                        var tween = Tween(
-                          begin: begin,
-                          end: end,
-                        ).chain(CurveTween(curve: curve));
+                          var tween = Tween(
+                            begin: begin,
+                            end: end,
+                          ).chain(CurveTween(curve: curve));
 
-                        return SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        );
-                      },
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: animation.drive(tween),
+                              child: child,
+                            ),
+                          );
+                        },
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
+                ).then((_) {
+                  // After coming back, refresh the current page
+                  final idx = selectedPageNotifier.value;
+                  if (idx == 0) homeKey.currentState?.refresh();
+                  if (idx == 1) statsKey.currentState?.refreshAll();
+                  if (idx == 2) insightKey.currentState?.refresh();
+                  if (idx == 3) userKey.currentState?.refresh();
+
+                  // reapply navrules after coming back
+                  NavBarController.apply();
+                });
+              },
+              elevation: 7,
+              backgroundColor: ctrl.effectiveColorForRole(context, 'fab-bg'),
+              shape: CircleBorder(
+                side: BorderSide(
+                  width: 3,
+                  color: ctrl.effectiveColorForRole(context, 'nav'),
                 ),
-              ).then((_) {
-                // After coming back, refresh the current page
-                final idx = selectedPageNotifier.value;
-                if (idx == 0) homeKey.currentState?.refresh();
-                if (idx == 1) statsKey.currentState?.refreshAll();
-                if (idx == 2) insightKey.currentState?.refresh();
-                if (idx == 3) userKey.currentState?.refresh();
-
-                // reapply navrules after coming back
-                NavBarController.apply();
-              });
-            },
-            elevation: 7,
-            backgroundColor: ctrl.effectiveColorForRole(context, 'fab-bg'),
-            shape: CircleBorder(
-              side: BorderSide(
-                width: 3,
+              ),
+              child: Icon(
+                Icons.add,
+                size: 28,
                 color: ctrl.effectiveColorForRole(context, 'nav'),
               ),
-            ),
-            child: Icon(
-              Icons.add,
-              size: 28,
-              color: ctrl.effectiveColorForRole(context, 'nav'),
             ),
           ),
         ),
@@ -220,7 +236,34 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
         body: ValueListenableBuilder<int>(
           valueListenable: selectedPageNotifier,
           builder: (context, selectedPage, child) {
-            return IndexedStack(index: selectedPage, children: pages);
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0.15, 0.0),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: child,
+                  ),
+                );
+              },
+              child: IndexedStack(
+                key: ValueKey<int>(selectedPage),
+                index: selectedPage,
+                children: pages,
+              ),
+            );
           },
         ),
         bottomNavigationBar: const NavBarWidget(),

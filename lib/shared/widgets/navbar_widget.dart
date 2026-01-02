@@ -111,26 +111,38 @@ class NavBarWidget extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            onTap();
+          },
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           hoverColor: Colors.transparent,
-          child: SizedBox(
-            height: double.infinity,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: color),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: color,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: SizedBox(
+              height: double.infinity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedScale(
+                    scale: selected ? 1.15 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    child: Icon(icon, size: 20, color: color),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: color,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                    child: Text(label),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

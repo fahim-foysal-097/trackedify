@@ -5,22 +5,26 @@ class KTextstyle {
     fontSize: 20,
     fontWeight: FontWeight.bold,
     color: Color.fromARGB(255, 255, 255, 255),
+    fontFamily: 'Inter',
   );
 
   static const TextStyle smallHeaderText = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: Color.fromARGB(255, 255, 255, 255),
+    fontFamily: 'Inter',
   );
 
   static const TextStyle headerText = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: Color.fromARGB(255, 255, 255, 255),
+    fontFamily: 'Inter',
   );
   static const TextStyle headerBlackText = TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     color: Color.fromARGB(255, 0, 0, 0),
+    fontFamily: 'Inter',
   );
 }

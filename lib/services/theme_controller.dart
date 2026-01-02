@@ -139,47 +139,31 @@ class ThemeController extends ChangeNotifier {
   /// Create ThemeData for light based on current selection.
   ThemeData getLightThemeData() {
     final opt = selectedLightOption;
-    if (opt.isFlex) {
-      // use FlexThemeData for built-in FlexScheme
-      return FlexThemeData.light(
-        scheme: opt.flexScheme!,
-        useMaterial3: true,
-      ).copyWith(
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-      );
-    } else {
-      // custom ColorScheme -> build ThemeData from it
-      return ThemeData.from(
-        colorScheme: opt.colorScheme!,
-        useMaterial3: true,
-      ).copyWith(
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-      );
-    }
+    final baseTheme = opt.isFlex
+        ? FlexThemeData.light(scheme: opt.flexScheme!, useMaterial3: true)
+        : ThemeData.from(colorScheme: opt.colorScheme!, useMaterial3: true);
+
+    return baseTheme.copyWith(
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
+      textTheme: baseTheme.textTheme.apply(fontFamily: 'Inter'),
+      primaryTextTheme: baseTheme.primaryTextTheme.apply(fontFamily: 'Inter'),
+    );
   }
 
   /// Create ThemeData for dark based on current selection.
   ThemeData getDarkThemeData() {
     final opt = selectedDarkOption;
-    if (opt.isFlex) {
-      return FlexThemeData.dark(
-        scheme: opt.flexScheme!,
-        useMaterial3: true,
-      ).copyWith(
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-      );
-    } else {
-      return ThemeData.from(
-        colorScheme: opt.colorScheme!,
-        useMaterial3: true,
-      ).copyWith(
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-      );
-    }
+    final baseTheme = opt.isFlex
+        ? FlexThemeData.dark(scheme: opt.flexScheme!, useMaterial3: true)
+        : ThemeData.from(colorScheme: opt.colorScheme!, useMaterial3: true);
+
+    return baseTheme.copyWith(
+      visualDensity: FlexColorScheme.comfortablePlatformDensity,
+      cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
+      textTheme: baseTheme.textTheme.apply(fontFamily: 'Inter'),
+      primaryTextTheme: baseTheme.primaryTextTheme.apply(fontFamily: 'Inter'),
+    );
   }
 
   // -------------------------

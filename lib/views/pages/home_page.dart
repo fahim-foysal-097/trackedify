@@ -1233,9 +1233,26 @@ class HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Recent Expenses',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 10 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Recent Expenses',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   Row(
                     children: [
@@ -1310,80 +1327,97 @@ class HomePageState extends State<HomePage> {
               ),
             ),
             expenses.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 70),
-                        Icon(
-                          Icons.receipt_long,
-                          size: 64,
-                          color: cs.onSurface.withValues(alpha: 0.12),
+                ? TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.scale(
+                          scale: 0.8 + (0.2 * value),
+                          child: child,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No expenses to show',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: textColorMuted,
+                      );
+                    },
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 70),
+                          Icon(
+                            Icons.receipt_long,
+                            size: 64,
+                            color: cs.onSurface.withValues(alpha: 0.12),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Pull down to refresh or tap + to add',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: textColorMuted.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const AddPage(),
-                                transitionsBuilder:
-                                    (
-                                      context,
-                                      animation,
-                                      secondaryAnimation,
-                                      child,
-                                    ) {
-                                      const begin = Offset(0.0, 1.0);
-                                      const end = Offset.zero;
-                                      const curve = Curves.ease;
-
-                                      var tween = Tween(
-                                        begin: begin,
-                                        end: end,
-                                      ).chain(CurveTween(curve: curve));
-
-                                      return SlideTransition(
-                                        position: animation.drive(tween),
-                                        child: child,
-                                      );
-                                    },
-                              ),
-                            ).then((_) {
-                              refresh();
-                              NavBarController.apply();
-                            });
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Expense'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: cs.primary,
-                            foregroundColor: cs.onPrimary,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
+                          const SizedBox(height: 12),
+                          Text(
+                            'No expenses to show',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: textColorMuted,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pull down to refresh or tap + to add',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: textColorMuted.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => const AddPage(),
+                                  transitionsBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                        child,
+                                      ) {
+                                        const begin = Offset(0.0, 1.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.ease;
+
+                                        var tween = Tween(
+                                          begin: begin,
+                                          end: end,
+                                        ).chain(CurveTween(curve: curve));
+
+                                        return SlideTransition(
+                                          position: animation.drive(tween),
+                                          child: child,
+                                        );
+                                      },
+                                ),
+                              ).then((_) {
+                                refresh();
+                                NavBarController.apply();
+                              });
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Expense'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: cs.primary,
+                              foregroundColor: cs.onPrimary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -1400,195 +1434,224 @@ class HomePageState extends State<HomePage> {
                           .isNotEmpty;
                       final imageCount = _imageCountMap[expense['id']] ?? 0;
 
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: Dismissible(
-                          key: Key('expense_${expense['id']}'),
-                          direction: DismissDirection.horizontal,
-                          background: Container(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.only(left: 20),
-                            decoration: BoxDecoration(
-                              color: ctrl.effectiveColorForRole(
-                                context,
-                                'primary',
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: Duration(milliseconds: 300 + (index * 50)),
+                        curve: Curves.easeOut,
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, 20 * (1 - value)),
+                              child: child,
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(Icons.edit, color: cs.onPrimary, size: 28),
-                                const SizedBox(width: 10),
-                                Text(
-                                  "Edit",
-                                  style: TextStyle(
-                                    color: cs.onPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          secondaryBackground: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.error,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "Delete",
-                                  style: TextStyle(
-                                    color: cs.onPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                  size: 28,
-                                ),
-                              ],
-                            ),
-                          ),
-                          confirmDismiss: (direction) async {
-                            HapticFeedback.mediumImpact();
-                            if (direction == DismissDirection.startToEnd) {
-                              // Navigate to edit page - return false to prevent dismiss
-                              if (!mounted) return false;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      EditExpensePage(expense: expense),
-                                ),
-                              ).then((_) {
-                                if (mounted) {
-                                  loadCategories();
-                                  loadExpenses();
-                                  overviewKey.currentState?.refresh();
-                                  NavBarController.apply();
-                                }
-                              });
-                              return false;
-                            } else if (direction ==
-                                DismissDirection.endToStart) {
-                              final confirm = await PanaraConfirmDialog.show<bool>(
-                                context,
-                                title: 'Delete Expense?',
-                                message:
-                                    'Are you sure you want to delete this expense?',
-                                confirmButtonText: "Delete",
-                                cancelButtonText: "Cancel",
-                                onTapCancel: () =>
-                                    Navigator.pop(context, false),
-                                onTapConfirm: () =>
-                                    Navigator.pop(context, true),
-                                textColor: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.color,
-                                panaraDialogType: PanaraDialogType.error,
-                              );
-                              return confirm == true;
-                            }
-                            return false;
-                          },
-                          onDismissed: (direction) {
-                            if (direction == DismissDirection.endToStart) {
-                              _deleteExpenseWithUndo(expense);
-                            }
-                          },
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _showNoteSheet(expense),
-                            child: Container(
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: Dismissible(
+                            key: Key('expense_${expense['id']}'),
+                            direction: DismissDirection.horizontal,
+                            background: Container(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.only(left: 20),
                               decoration: BoxDecoration(
-                                color: cs.surface,
+                                color: ctrl.effectiveColorForRole(
+                                  context,
+                                  'primary',
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Row(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    color: cs.onPrimary,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    "Edit",
+                                    style: TextStyle(
+                                      color: cs.onPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            secondaryBackground: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.error,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "Delete",
+                                    style: TextStyle(
+                                      color: cs.onPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            confirmDismiss: (direction) async {
+                              HapticFeedback.mediumImpact();
+                              if (direction == DismissDirection.startToEnd) {
+                                // Navigate to edit page - return false to prevent dismiss
+                                if (!mounted) return false;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditExpensePage(expense: expense),
+                                  ),
+                                ).then((_) {
+                                  if (mounted) {
+                                    loadCategories();
+                                    loadExpenses();
+                                    overviewKey.currentState?.refresh();
+                                    NavBarController.apply();
+                                  }
+                                });
+                                return false;
+                              } else if (direction ==
+                                  DismissDirection.endToStart) {
+                                final confirm =
+                                    await PanaraConfirmDialog.show<bool>(
+                                      context,
+                                      title: 'Delete Expense?',
+                                      message:
+                                          'Are you sure you want to delete this expense?',
+                                      confirmButtonText: "Delete",
+                                      cancelButtonText: "Cancel",
+                                      onTapCancel: () =>
+                                          Navigator.pop(context, false),
+                                      onTapConfirm: () =>
+                                          Navigator.pop(context, true),
+                                      textColor: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.color,
+                                      panaraDialogType: PanaraDialogType.error,
+                                    );
+                                return confirm == true;
+                              }
+                              return false;
+                            },
+                            onDismissed: (direction) {
+                              if (direction == DismissDirection.endToStart) {
+                                _deleteExpenseWithUndo(expense);
+                              }
+                            },
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  _showNoteSheet(expense);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: cs.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        CircleAvatar(
-                                          backgroundColor: cat['color'],
-                                          child: Icon(
-                                            cat['icon'],
-                                            color: cs.onPrimary,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          expense['category'],
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w500,
+                                        Row(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundColor: cat['color'],
+                                              child: Icon(
+                                                cat['icon'],
+                                                color: cs.onPrimary,
                                               ),
-                                        ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              expense['category'],
+                                              style: theme.textTheme.bodyLarge
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
 
-                                        if (hasNote) ...[
-                                          const SizedBox(width: 5),
-                                          Icon(
-                                            FontAwesomeIcons.solidNoteSticky,
-                                            size: 16,
-                                            color: textColorMuted,
-                                          ),
-                                        ],
-                                        if (imageCount > 0) ...[
-                                          const SizedBox(width: 8),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
+                                            if (hasNote) ...[
+                                              const SizedBox(width: 5),
                                               Icon(
-                                                FontAwesomeIcons.solidImage,
+                                                FontAwesomeIcons
+                                                    .solidNoteSticky,
                                                 size: 16,
                                                 color: textColorMuted,
                                               ),
-                                              const SizedBox(width: 3),
-                                              Text(
-                                                '$imageCount',
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      color: textColorMuted,
-                                                    ),
+                                            ],
+                                            if (imageCount > 0) ...[
+                                              const SizedBox(width: 8),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    FontAwesomeIcons.solidImage,
+                                                    size: 16,
+                                                    color: textColorMuted,
+                                                  ),
+                                                  const SizedBox(width: 3),
+                                                  Text(
+                                                    '$imageCount',
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: textColorMuted,
+                                                        ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
-                                          ),
-                                        ],
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              "-\$${_formatAmount(expense['amount'])}",
+                                              style: theme.textTheme.bodyLarge
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                            Text(
+                                              expense['date'],
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: textColorMuted,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          "-\$${_formatAmount(expense['amount'])}",
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                        ),
-                                        Text(
-                                          expense['date'],
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                color: textColorMuted,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
