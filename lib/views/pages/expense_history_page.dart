@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,11 +38,22 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   // Map expenseId -> image count
   Map<int, int> _imageCountMap = {};
 
+  // Undo functionality
+  Map<String, dynamic>? _lastDeletedExpense;
+  Timer? _undoTimer;
+
   @override
   void initState() {
     super.initState();
     loadCategories();
     loadExpenses();
+  }
+
+  @override
+  void dispose() {
+    _undoTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> loadCategories() async {
@@ -150,32 +163,118 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     return categoryMap[name] ?? {'color': Colors.grey, 'icon': Icons.category};
   }
 
-  Future<void> deleteExpense(int id) async {
+  Future<void> deleteExpenseWithUndo(Map<String, dynamic> expense) async {
+    HapticFeedback.mediumImpact();
+
     final db = await DatabaseHelper().database;
-    await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
-    // also delete associated img_notes
+    final expenseId = expense['id'] as int;
+
+    // Store expense data for undo
+    _lastDeletedExpense = Map<String, dynamic>.from(expense);
+
+    // Delete from database
+    await db.delete('expenses', where: 'id = ?', whereArgs: [expenseId]);
     try {
-      await db.delete('img_notes', where: 'expense_id = ?', whereArgs: [id]);
+      await db.delete(
+        'img_notes',
+        where: 'expense_id = ?',
+        whereArgs: [expenseId],
+      );
     } catch (_) {}
+
+    // Reload expenses
     await loadExpenses();
 
-    if (mounted) {
+    // Cancel previous undo timer if exists
+    _undoTimer?.cancel();
+
+    // Show undo snackbar
+    if (!mounted) return;
+    final cs = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: cs.error,
+        content: Row(
+          children: [
+            Icon(Icons.delete, color: cs.onError),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Expense deleted',
+                style: TextStyle(color: cs.onError),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _undoDelete(),
+              child: Text(
+                'UNDO',
+                style: TextStyle(
+                  color: cs.onError,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+
+    // Auto-dismiss undo after 5 seconds
+    _undoTimer = Timer(const Duration(seconds: 5), () {
+      _lastDeletedExpense = null;
+    });
+  }
+
+  Future<void> _undoDelete() async {
+    if (_lastDeletedExpense == null) return;
+
+    HapticFeedback.lightImpact();
+    _undoTimer?.cancel();
+
+    try {
+      final db = await DatabaseHelper().database;
+      await db.insert('expenses', {
+        'category': _lastDeletedExpense!['category'],
+        'amount': _lastDeletedExpense!['amount'],
+        'date': _lastDeletedExpense!['date'],
+        'note': _lastDeletedExpense!['note'],
+      });
+
+      await loadExpenses();
+
+      if (!mounted) return;
       final cs = Theme.of(context).colorScheme;
-      final onError = cs.onError;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
+          backgroundColor: cs.primary,
           content: Row(
             children: [
-              Icon(Icons.delete, color: onError),
+              Icon(Icons.check_circle_outline, color: cs.onPrimary),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Expense deleted')),
+              Expanded(
+                child: Text(
+                  'Expense restored',
+                  style: TextStyle(color: cs.onPrimary),
+                ),
+              ),
             ],
           ),
         ),
       );
+    } catch (e) {
+      if (kDebugMode) debugPrint('Undo failed: $e');
     }
+
+    _lastDeletedExpense = null;
+  }
+
+  Future<void> deleteExpense(int id) async {
+    final expense = expenses.firstWhere((e) => e['id'] == id);
+    await deleteExpenseWithUndo(expense);
   }
 
   Future<void> deleteMultipleExpenses(Set<int> ids) async {
@@ -256,11 +355,30 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   }
 
   void openEdit(Map<String, dynamic> expense) {
+    HapticFeedback.lightImpact();
     if (showTip) setState(() => showTip = false);
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => EditExpensePage(expense: expense)),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            EditExpensePage(expense: expense),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOut;
+
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
     ).then((_) {
       loadCategories();
       loadExpenses();
@@ -1204,11 +1322,28 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           ),
                         ),
                         confirmDismiss: (direction) async {
+                          HapticFeedback.mediumImpact();
                           if (direction == DismissDirection.startToEnd) {
                             openEdit(expense);
                             return false;
                           } else if (direction == DismissDirection.endToStart) {
-                            confirmDelete(expense);
+                            final confirm = await PanaraConfirmDialog.show<bool>(
+                              context,
+                              title: 'Delete Expense?',
+                              message:
+                                  'Are you sure you want to delete this expense?',
+                              confirmButtonText: "Delete",
+                              cancelButtonText: "Cancel",
+                              onTapCancel: () => Navigator.pop(context, false),
+                              onTapConfirm: () => Navigator.pop(context, true),
+                              textColor: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.color,
+                              panaraDialogType: PanaraDialogType.error,
+                            );
+                            if (confirm == true) {
+                              deleteExpenseWithUndo(expense);
+                            }
                             return false;
                           }
                           return false;

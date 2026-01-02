@@ -89,9 +89,28 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> addCustomCategory() async {
+    HapticFeedback.lightImpact();
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CreateCategoryPage()),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const CreateCategoryPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOut;
+
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
     );
 
     if (result == true) {
@@ -154,6 +173,7 @@ class _AddPageState extends State<AddPage> {
   }
 
   void _showCalculator() {
+    HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -172,6 +192,7 @@ class _AddPageState extends State<AddPage> {
   }
 
   void _showCategorySelector() {
+    HapticFeedback.lightImpact();
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -336,6 +357,7 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> _selectDate() async {
+    HapticFeedback.lightImpact();
     final DateTime? setDate = await showDatePicker(
       context: context,
       initialDate: selectedDate,
@@ -570,6 +592,7 @@ class _AddPageState extends State<AddPage> {
 
   /// Pick multiple images (image_picker) and store bytes in _pickedImages
   Future<void> _pickImages() async {
+    HapticFeedback.lightImpact();
     try {
       final List<XFile> files = await _picker.pickMultiImage(
         imageQuality: _selectedImageQuality,
@@ -647,6 +670,7 @@ class _AddPageState extends State<AddPage> {
 
   Future<void> _onSavePressed() async {
     FocusScope.of(context).unfocus();
+    HapticFeedback.mediumImpact();
 
     final cs = Theme.of(context).colorScheme;
 
@@ -733,6 +757,7 @@ class _AddPageState extends State<AddPage> {
 
       if (!mounted) return;
 
+      HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -827,7 +852,10 @@ class _AddPageState extends State<AddPage> {
                               Icons.arrow_back_ios_new_rounded,
                               color: cs.onSurface,
                             ),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.pop(context);
+                            },
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -915,6 +943,13 @@ class _AddPageState extends State<AddPage> {
                                 ),
                               ],
                               onChanged: (_) => setState(() {}),
+                              onSubmitted: (_) {
+                                if (!_saving &&
+                                    selectedCategoryName != null &&
+                                    expenseController.text.isNotEmpty) {
+                                  _onSavePressed();
+                                }
+                              },
                               decoration: InputDecoration(
                                 hintText: "Amount",
                                 filled: true,
@@ -993,6 +1028,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                             ),
                             onPressed: () {
+                              HapticFeedback.lightImpact();
                               setState(() {
                                 selectedDate = DateTime.now();
                                 dateController.text = DateFormat(
@@ -1026,6 +1062,14 @@ class _AddPageState extends State<AddPage> {
                         minLines: 1,
                         maxLines: 5,
                         onChanged: (_) => setState(() {}),
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) {
+                          if (!_saving &&
+                              selectedCategoryName != null &&
+                              expenseController.text.isNotEmpty) {
+                            _onSavePressed();
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: "Add a note (optional)",
                           filled: true,

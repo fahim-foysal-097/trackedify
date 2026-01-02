@@ -112,7 +112,42 @@ class _MyAppState extends State<MyApp> {
         '/set-pin': (ctx) => const SetPinPage(),
         '/theme-settings': (ctx) => const ThemeSettingsPage(),
       },
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/set-pin':
+            return _buildPageRoute(const SetPinPage(), settings);
+          case '/theme-settings':
+            return _buildPageRoute(const ThemeSettingsPage(), settings);
+          default:
+            return null;
+        }
+      },
       home: const AuthGate(child: WidgetTree()),
+    );
+  }
+
+  PageRouteBuilder _buildPageRoute(Widget page, RouteSettings settings) {
+    return PageRouteBuilder(
+      settings: settings,
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 0.1);
+        const end = Offset.zero;
+        const curve = Curves.easeOutCubic;
+
+        var tween = Tween(begin: begin, end: end).chain(
+          CurveTween(curve: curve),
+        );
+
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
     );
   }
 }
