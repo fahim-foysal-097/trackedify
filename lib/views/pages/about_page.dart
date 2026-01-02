@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,7 +17,8 @@ class AboutPage extends StatefulWidget {
   State<AboutPage> createState() => _AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
+class _AboutPageState extends State<AboutPage>
+    with SingleTickerProviderStateMixin {
   String _appName = 'Trackedify';
   String _version = '';
   String _buildNumber = '';
@@ -31,11 +33,69 @@ class _AboutPageState extends State<AboutPage> {
   List<_ReleaseTag> _latestTags = [];
   String? _releaseFetchError;
 
+  late AnimationController _blobController;
+  late List<Animation<double>> _blobAnimations;
+
   @override
   void initState() {
     super.initState();
     _initBasicInfo();
     _fetchLatestRelease();
+
+    _blobController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    _blobAnimations = List.generate(
+      6,
+      (index) => Tween<double>(begin: 0, end: 2 * math.pi).animate(
+        CurvedAnimation(
+          parent: _blobController,
+          curve: Interval(index * 0.15, 1.0, curve: Curves.easeInOut),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _blobController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedBlob({
+    required Color color,
+    required double size,
+    required Offset position,
+    required Animation<double> animation,
+  }) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final offsetX = math.sin(animation.value) * 30;
+        final offsetY = math.cos(animation.value) * 30;
+        return Positioned(
+          left: position.dx + offsetX,
+          top: position.dy + offsetY,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  color.withValues(alpha: 0.6),
+                  color.withValues(alpha: 0.2),
+                  color.withValues(alpha: 0.0),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _initBasicInfo() async {
@@ -77,7 +137,6 @@ class _AboutPageState extends State<AboutPage> {
     }
   }
 
-  /// Launch external URL
   Future<void> _launchURL(String url) async {
     final uri = Uri.parse(url);
     try {
@@ -89,8 +148,6 @@ class _AboutPageState extends State<AboutPage> {
     }
   }
 
-  /// Fetch the releases page HTML and extract the first "release card".
-  /// The parser is defensive: if structure changes it will store a user friendly error.
   Future<void> _fetchLatestRelease() async {
     setState(() {
       _loadingRelease = true;
@@ -108,19 +165,16 @@ class _AboutPageState extends State<AboutPage> {
       }
       final body = res.body;
 
-      // Find first card block by looking for the card start token.
       const token = '<div class="card mb-4 shadow release-card">';
       final start = body.indexOf(token);
       if (start == -1) {
         throw Exception('Unexpected page structure (no release cards found).');
       }
-      // find next card occurrence to slice a single card; if none, use rest of body
       final nextStart = body.indexOf(token, start + token.length);
       final firstCardHtml = (nextStart == -1)
           ? body.substring(start)
           : body.substring(start, nextStart);
 
-      // Extract the <h3> ... </h3> block (title + date)
       final h3Match = RegExp(
         r'<h3[^>]*>([\s\S]*?)</h3>',
         caseSensitive: false,
@@ -128,12 +182,10 @@ class _AboutPageState extends State<AboutPage> {
       if (h3Match != null) {
         final h3Html = h3Match.group(1) ?? '';
         final h3Text = _stripHtml(h3Html).trim();
-        // Try to extract date token like "Sep 28, 2025"
         final dateMatch = RegExp(
           r'-\s*([A-Za-z]{3,}\s+\d{1,2},\s*\d{4})',
         ).firstMatch(h3Text);
         String date = dateMatch?.group(1)?.trim() ?? '';
-        // Extract first token that looks like vX.Y.Z
         final verMatch = RegExp(r'v?(\d+\.\d+(?:\.\d+)?)').firstMatch(h3Text);
         String ver = verMatch != null
             ? 'v${verMatch.group(1)}'
@@ -143,7 +195,6 @@ class _AboutPageState extends State<AboutPage> {
         _latestDate = date.isNotEmpty ? date : null;
       }
 
-      // Parse release-tags block (preserve badges)
       final tagsMatch = RegExp(
         r'<span[^>]*class="[^"]*release-tags[^"]*"[^>]*>([\s\S]*?)</span>',
         caseSensitive: false,
@@ -152,7 +203,6 @@ class _AboutPageState extends State<AboutPage> {
       final List<_ReleaseTag> parsedTags = [];
       if (tagsMatch != null) {
         final tagsInner = tagsMatch.group(1) ?? '';
-        // find inner spans (tag-badge)
         final spanReg = RegExp(
           r'<span[^>]*class="([^"]*)"[^>]*>([\s\S]*?)</span>',
           caseSensitive: false,
@@ -164,7 +214,7 @@ class _AboutPageState extends State<AboutPage> {
           if (label.isEmpty) continue;
 
           final lc = classAttr.toLowerCase();
-          Color bg = const Color(0xFF4F46E5);
+          Color bg = const Color(0xFF6366F1);
           Color text = Colors.white;
 
           if (lc.contains('bg-primary')) {
@@ -188,7 +238,6 @@ class _AboutPageState extends State<AboutPage> {
           } else if (lc.contains('text-white')) {
             text = Colors.white;
           } else {
-            // decide contrast automatically for light backgrounds
             final brightness = ThemeData.estimateBrightnessForColor(bg);
             text = brightness == Brightness.dark
                 ? Colors.white
@@ -200,7 +249,6 @@ class _AboutPageState extends State<AboutPage> {
           );
         }
       }
-      // fallback: sometimes release-tags exist outside h3 - try to find any tag-badge spans in card
       if (parsedTags.isEmpty) {
         final badgeReg = RegExp(
           r'<span[^>]*class="[^"]*tag-badge[^"]*"[^>]*>([\s\S]*?)</span>',
@@ -212,14 +260,13 @@ class _AboutPageState extends State<AboutPage> {
           parsedTags.add(
             _ReleaseTag(
               label: label,
-              background: const Color(0xFF4F46E5),
+              background: const Color(0xFF6366F1),
               foreground: Colors.white,
             ),
           );
         }
       }
 
-      // Find all sections: <h5>Heading</h5> followed by <ul>...</ul>
       final sectionReg = RegExp(
         r'<h5[^>]*>([\s\S]*?)</h5>\s*<ul[^>]*>([\s\S]*?)</ul>',
         caseSensitive: false,
@@ -230,7 +277,6 @@ class _AboutPageState extends State<AboutPage> {
         final ulHtml = m.group(2) ?? '';
         final heading = _stripHtml(headingHtml).trim();
 
-        // extract li items
         final items = <String>[];
         final liReg = RegExp(r'<li[^>]*>([\s\S]*?)</li>', caseSensitive: false);
         for (final li in liReg.allMatches(ulHtml)) {
@@ -243,7 +289,6 @@ class _AboutPageState extends State<AboutPage> {
         }
       }
 
-      // Fallback: if no sections parsed, try to extract plain text for the card
       if (sections.isEmpty) {
         final plain = _stripHtml(firstCardHtml).trim();
         if (plain.isNotEmpty) {
@@ -268,7 +313,6 @@ class _AboutPageState extends State<AboutPage> {
     }
   }
 
-  /// Remove HTML tags and collapse whitespace
   String _stripHtml(String html) {
     var s = html.replaceAll(RegExp(r'<script[^>]*>[\s\S]*?</script>'), ' ');
     s = s.replaceAll(RegExp(r'<style[^>]*>[\s\S]*?</style>'), ' ');
@@ -279,433 +323,587 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark
+          ? const Color(0xFF0A0A0F)
+          : const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text('About'),
         elevation: 0,
-        centerTitle: false,
+        backgroundColor: Colors.transparent,
         leading: IconButton(
-          tooltip: "Back",
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 25),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          'About',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      body: RefreshIndicator(
-        color: Colors.blueAccent,
-        onRefresh: _fetchLatestRelease,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _appName,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white70),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () {},
-                          icon: const FaIcon(
-                            FontAwesomeIcons.codeBranch,
-                            size: 14,
-                          ),
-                          label: Text(
-                            _version.isNotEmpty ? _version : "?",
-                            style: const TextStyle(color: Colors.white),
-                          ),
+      body: Stack(
+        children: [
+          // Animated blobs background
+          ...List.generate(6, (index) {
+            final colors = [
+              const Color(0xFF6366F1),
+              const Color(0xFF8B5CF6),
+              const Color(0xFFEC4899),
+              const Color(0xFFF59E0B),
+              const Color(0xFF10B981),
+              const Color(0xFF3B82F6),
+            ];
+            final sizes = [120.0, 150.0, 100.0, 180.0, 130.0, 160.0];
+            final positions = [
+              const Offset(50, 100),
+              const Offset(250, 200),
+              const Offset(100, 400),
+              const Offset(300, 500),
+              const Offset(50, 600),
+              const Offset(280, 300),
+            ];
+            return _buildAnimatedBlob(
+              color: colors[index % colors.length],
+              size: sizes[index % sizes.length],
+              position: positions[index % positions.length],
+              animation: _blobAnimations[index],
+            );
+          }),
+          RefreshIndicator(
+            onRefresh: _fetchLatestRelease,
+            color: const Color(0xFF6366F1),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Hero card with app info
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF8B5CF6),
+                          Color(0xFFEC4899),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
                         ),
-                        const SizedBox(width: 8),
-                        if (_buildNumber.isNotEmpty)
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.white70),
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () {},
-                            icon: const FaIcon(
-                              FontAwesomeIcons.hashtag,
-                              size: 14,
-                            ),
-                            label: Text(
-                              'build $_buildNumber',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Row(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.devices_outlined,
-                          size: 18,
-                          color: Colors.white70,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.account_balance_wallet,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _appName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Expense Tracker',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _platformInfo.isNotEmpty
-                                ? _platformInfo
-                                : 'Platform info unavailable',
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildInfoChip(
+                              icon: FontAwesomeIcons.codeBranch,
+                              label: _version.isNotEmpty ? _version : "?",
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
+                            if (_buildNumber.isNotEmpty)
+                              _buildInfoChip(
+                                icon: FontAwesomeIcons.hashtag,
+                                label: 'Build $_buildNumber',
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.devices,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _platformInfo.isNotEmpty
+                                      ? _platformInfo
+                                      : 'Platform info unavailable',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildActionButton(
+                              icon: FontAwesomeIcons.squareGithub,
+                              label: 'GitHub',
+                              onPressed: () => _launchURL(
+                                'https://github.com/fahim-foysal-097/trackedify',
+                              ),
+                            ),
+                            _buildActionButton(
+                              icon: Icons.description_outlined,
+                              label: 'Releases',
+                              onPressed: () => _launchURL(_releasePageUrl),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Latest release card
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFF4F46E5,
+                          ).withValues(alpha: 0.25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.new_releases,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Latest Release',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (_loadingRelease)
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CupertinoActivityIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (_releaseFetchError != null) ...[
+                          Text(
+                            _releaseFetchError!,
                             style: const TextStyle(color: Colors.white70),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white54),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () => _launchURL(
-                            'https://github.com/fahim-foysal-097/trackedify',
-                          ),
-                          icon: const Icon(Icons.code),
-                          label: const Text('Source (GitHub)'),
-                        ),
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            side: const BorderSide(color: Colors.white54),
-                          ),
-                          onPressed: () => _launchURL(_releasePageUrl),
-                          icon: const Icon(Icons.description_outlined),
-                          label: const Text('Open Release Page'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Latest release card area with new gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.20),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // header row
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.new_releases_outlined,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Latest release',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
-                        const Spacer(),
-                        if (_loadingRelease)
-                          const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CupertinoActivityIndicator(
-                              color: Colors.white,
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: _fetchLatestRelease,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF4F46E5),
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (_releaseFetchError != null) ...[
-                      Text(
-                        _releaseFetchError!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: _fetchLatestRelease,
-                        icon: const Icon(Icons.refresh, color: Colors.white),
-                        label: const Text(
-                          'Retry',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ] else if (_latestTitle == null && !_loadingRelease) ...[
-                      const Text(
-                        'No release information available.',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ] else ...[
-                      if (_latestTitle != null)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+                        ] else if (_latestTitle == null &&
+                            !_loadingRelease) ...[
+                          const Text(
+                            'No release information available.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ] else ...[
+                          if (_latestTitle != null)
                             Row(
                               children: [
                                 Text(
                                   _latestTitle!,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                if (_latestDate != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8),
-                                    child: Text(
-                                      _latestDate!,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 13,
-                                      ),
+                                if (_latestDate != null) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _latestDate!,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
                                     ),
                                   ),
+                                ],
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () => _launchURL(_releasePageUrl),
+                                  icon: const Icon(
+                                    Icons.open_in_new,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ],
                             ),
-                            IconButton(
-                              onPressed: () => _launchURL(_releasePageUrl),
-                              icon: const Icon(
-                                Icons.open_in_new_rounded,
+                          const SizedBox(height: 12),
+                          if (_latestTags.isNotEmpty)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _latestTags.map((t) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: t.background,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    t.label,
+                                    style: TextStyle(
+                                      color: t.foreground,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          if (_latestTags.isNotEmpty)
+                            const SizedBox(height: 12),
+                          ..._latestSections.take(2).map((sec) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    sec.title.isNotEmpty
+                                        ? sec.title
+                                        : 'Details',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...sec.bullets.take(3).map((b) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 8,
+                                        bottom: 4,
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(
+                                            Icons.circle,
+                                            size: 6,
+                                            color: Colors.white70,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              b,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () => _launchURL(_releasePageUrl),
+                            child: const Text(
+                              'View full release notes →',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Credits card
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFF7C3AED,
+                          ).withValues(alpha: 0.25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.favorite,
                                 color: Colors.white,
                                 size: 20,
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Credits',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
-                      const SizedBox(height: 12),
-
-                      // release-tags badges
-                      if (_latestTags.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            children: _latestTags.map((t) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blueAccent,
-                                  borderRadius: BorderRadius.circular(18),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  t.label,
-                                  style: TextStyle(
-                                    color: t.foreground,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                        const SizedBox(height: 16),
+                        _buildCreditItem(
+                          icon: Icons.person,
+                          title: 'Creator',
+                          subtitle: 'Fahim Foysal',
                         ),
-
-                      // Sections as ExpansionTiles styled for dark gradient
-                      ..._latestSections.map((sec) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            dividerColor: Colors.white24,
-                            unselectedWidgetColor: Colors.white70,
-                            splashColor: Colors.white12,
-                            highlightColor: Colors.white12,
-                          ),
-                          child: ExpansionTile(
-                            tilePadding: EdgeInsets.zero,
-                            collapsedIconColor: Colors.white70,
-                            iconColor: Colors.white,
-                            title: Text(
-                              sec.title.isNotEmpty ? sec.title : 'Details',
-                              style: const TextStyle(color: Colors.white),
+                        const SizedBox(height: 12),
+                        InkWell(
+                          onTap: () =>
+                              _launchURL('https://github.com/fahim-foysal-097'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: _buildCreditItem(
+                            icon: FontAwesomeIcons.squareGithub,
+                            title: 'GitHub Profile',
+                            subtitle: '@fahim-foysal-097',
+                            trailing: const Icon(
+                              Icons.open_in_new,
+                              color: Colors.white70,
+                              size: 18,
                             ),
-                            children: sec.bullets.isNotEmpty
-                                ? sec.bullets.map((b) {
-                                    return ListTile(
-                                      dense: true,
-                                      contentPadding: const EdgeInsets.only(
-                                        left: 12,
-                                        right: 12,
-                                      ),
-                                      leading: const Icon(
-                                        Icons.circle,
-                                        size: 8,
-                                        color: Colors.white70,
-                                      ),
-                                      title: Text(
-                                        b,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList()
-                                : [
-                                    const ListTile(
-                                      dense: true,
-                                      title: Text('No details available.'),
-                                    ),
-                                  ],
                           ),
-                        );
-                      }),
-
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () => _launchURL(_releasePageUrl),
-                          child: const Text(
-                            'View full release notes',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Credits section with new gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7C3AED).withValues(alpha: 0.20),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.info_outline, color: Colors.white),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Credits',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: Colors.white),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    const ListTile(
-                      leading: Icon(Icons.person, color: Colors.white70),
-                      title: Text(
-                        'Creator: Fahim Foysal',
-                        style: TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Text(
+                      'Built with ❤️ using Flutter',
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : Colors.black54,
+                        fontSize: 13,
                       ),
                     ),
-                    ListTile(
-                      leading: const Icon(
-                        FontAwesomeIcons.squareGithub,
-                        color: Colors.white70,
-                      ),
-                      title: const Text(
-                        'GitHub',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      trailing: const Icon(
-                        Icons.open_in_new,
-                        color: Colors.white70,
-                      ),
-                      onTap: () =>
-                          _launchURL('https://github.com/fahim-foysal-097'),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-
-              const SizedBox(height: 18),
-
-              // Small footer
-              Center(
-                child: Text(
-                  'Trackedify - Built with care',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FaIcon(icon, color: Colors.white, size: 14),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Colors.white70),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildCreditItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white70, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing,
+        ],
       ),
     );
   }
