@@ -902,7 +902,7 @@ class _AboutPageState extends State<AboutPage>
               ],
             ),
           ),
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );

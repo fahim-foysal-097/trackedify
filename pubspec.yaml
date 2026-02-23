@@ -54,7 +54,7 @@ dependencies:
     flutter_secure_storage: ^10.0.0
     speech_to_text: ^7.3.0
     panara_dialogs: ^0.1.5
-    awesome_notifications: ^0.10.1
+    awesome_notifications: ^0.11.0
     android_notification_icons: ^0.0.1
     package_info_plus: ^9.0.0
     http: ^1.5.0
