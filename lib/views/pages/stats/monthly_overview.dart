@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 // TODO : improve cards style
 
@@ -333,7 +334,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                         reservedSize: 48,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            '\$${value.toInt()}',
+                            '${CurrencyController.instance.symbol}${value.toInt()}',
                             style: TextStyle(fontSize: 10, color: cs.onSurface),
                           );
                         },
@@ -382,7 +383,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           final day = t.x.toInt();
                           final value = t.y;
                           return LineTooltipItem(
-                            'Day $day\n\$${value.toStringAsFixed(2)}',
+                            'Day $day\n${CurrencyController.instance.formatAmount(value)}',
                             TextStyle(color: cs.onPrimary, fontSize: 12),
                           );
                         }).toList();
@@ -456,7 +457,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  "Total: \$${total.toStringAsFixed(2)}",
+                  "Total: ${CurrencyController.instance.formatAmount(total)}",
                   style: TextStyle(
                     fontSize: 18,
                     color: cs.onPrimary,
@@ -522,7 +523,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                             ),
                           ),
                           Text(
-                            "\$${value.toStringAsFixed(2)}",
+                            CurrencyController.instance.formatAmount(value),
                             style: TextStyle(
                               color: cs.onPrimary,
                               fontWeight: FontWeight.w600,

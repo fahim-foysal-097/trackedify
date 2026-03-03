@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
@@ -120,19 +121,10 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     await db.delete('categories', where: 'id = ?', whereArgs: [id]);
 
     if (!mounted) return;
-    final cs = theme.colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.error,
-        content: Row(
-          children: [
-            Icon(FontAwesomeIcons.trash, color: cs.onError),
-            const SizedBox(width: 12),
-            const Expanded(child: Text('Category deleted')),
-          ],
-        ),
-      ),
+    AppSnackBar.showError(
+      context,
+      'Category deleted',
+      icon: FontAwesomeIcons.trash,
     );
     await _reload();
   }
@@ -167,19 +159,10 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     );
 
     if (!mounted) return;
-    final cs = theme.colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.error,
-        content: Row(
-          children: [
-            Icon(FontAwesomeIcons.trash, color: cs.onError),
-            const SizedBox(width: 12),
-            Expanded(child: Text('Deleted ${ids.length} categories')),
-          ],
-        ),
-      ),
+    AppSnackBar.showError(
+      context,
+      'Deleted ${ids.length} categories',
+      icon: FontAwesomeIcons.trash,
     );
 
     setState(() {
@@ -218,19 +201,10 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     if (result == true) {
       await _reload();
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Category saved')),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'Category saved',
+        icon: Icons.check_circle_outline,
       );
     }
     try {

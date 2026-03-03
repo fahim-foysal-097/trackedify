@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/auth_gate.dart';
+import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
@@ -70,6 +71,9 @@ Future<void> main() async {
   // Load theme controller & options
   await ThemeController.instance.load();
 
+  // Load currency controller
+  await CurrencyController.instance.load();
+
   runApp(const MyApp());
 }
 
@@ -135,9 +139,10 @@ class _MyAppState extends State<MyApp> {
         const end = Offset.zero;
         const curve = Curves.easeOutCubic;
 
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
 
         return FadeTransition(
           opacity: animation,

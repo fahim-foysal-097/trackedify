@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 // -------------------- LAST 30 DAYS CHART --------------------
 
@@ -120,7 +121,7 @@ class Last30DaysChart extends StatelessWidget {
                       reservedSize: 40,
                       interval: intervalY,
                       getTitlesWidget: (value, meta) => Text(
-                        '\$${value.toInt()}',
+                        '${CurrencyController.instance.symbol}${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -172,7 +173,7 @@ class Last30DaysChart extends StatelessWidget {
                         final dateStr = DateFormat('MMM d, yyyy').format(date);
                         final y = lineBarSpot.y;
                         return LineTooltipItem(
-                          '$dateStr\n\$${y.toStringAsFixed(2)}',
+                          '$dateStr\n${CurrencyController.instance.formatAmount(y)}',
                           const TextStyle(color: Colors.white, fontSize: 12),
                         );
                       }).toList();
@@ -260,7 +261,7 @@ class TopCategoryChart extends StatelessWidget {
                           ? topCategories[idx].key
                           : '';
                       return BarTooltipItem(
-                        '$catName\n\$${rod.toY.toStringAsFixed(2)}',
+                        '$catName\n${CurrencyController.instance.formatAmount(rod.toY)}',
                         const TextStyle(color: Colors.white, fontSize: 12),
                       );
                     },
@@ -719,7 +720,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                     reservedSize: 40,
                     interval: intervalY,
                     getTitlesWidget: (value, meta) => Text(
-                      '\$${value.toInt()}',
+                      '${CurrencyController.instance.symbol}${value.toInt()}',
                       style: const TextStyle(fontSize: 10),
                     ),
                   ),
@@ -787,7 +788,7 @@ class _MonthCompareChartState extends State<MonthCompareChart> {
                       final y = lineBarSpot.y;
                       final color = lineBarSpot.bar.color;
                       return LineTooltipItem(
-                        '$dateStr\n\$${y.toStringAsFixed(2)}',
+                        '$dateStr\n${CurrencyController.instance.formatAmount(y)}',
                         TextStyle(color: color, fontSize: 12),
                       );
                     }).toList();
@@ -944,7 +945,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
       (i) => DateFormat('MMM').format(DateTime(0, i + 1)),
     );
 
-    final formatter = NumberFormat.currency(symbol: "\$");
+    final formatFn = CurrencyController.instance.formatAmount;
 
     if (!hasYearData) {
       return Container(
@@ -1138,7 +1139,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                       reservedSize: 46,
                       interval: intervalY,
                       getTitlesWidget: (value, meta) => Text(
-                        '\$${value.toInt()}',
+                        '${CurrencyController.instance.symbol}${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -1162,7 +1163,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                       final month = monthLabels[monthIdx];
                       final value = rod.toY;
                       return BarTooltipItem(
-                        '$month\n${formatter.format(value)}',
+                        '$month\n${formatFn(value)}',
                         const TextStyle(color: Colors.white, fontSize: 12),
                       );
                     },
@@ -1180,9 +1181,7 @@ class _YearlyTrendChartState extends State<YearlyTrendChart> {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
-                formatter.format(
-                  monthlyTotals.values.fold(0.0, (p, e) => p + e),
-                ),
+                formatFn(monthlyTotals.values.fold(0.0, (p, e) => p + e)),
                 style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
@@ -1268,7 +1267,7 @@ class CategoryPieChart extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                '$name • \$${amount.toStringAsFixed(0)}',
+                '$name • ${CurrencyController.instance.symbol}${amount.toStringAsFixed(0)}',
                 style: tt.bodySmall,
               ),
             ],
@@ -1320,7 +1319,7 @@ class CategoryPieChart extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Total: \$${total.toStringAsFixed(2)}',
+            'Total: ${CurrencyController.instance.formatAmount(total)}',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -1468,7 +1467,7 @@ class WeekdayBarChart extends StatelessWidget {
                       reservedSize: 48,
                       interval: intervalY,
                       getTitlesWidget: (double value, TitleMeta meta) => Text(
-                        '\$${value.toInt()}',
+                        '${CurrencyController.instance.symbol}${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -1495,7 +1494,7 @@ class WeekdayBarChart extends StatelessWidget {
                         ) {
                           final label = labels[group.x.toInt()];
                           return BarTooltipItem(
-                            '$label\n\$${rod.toY.toStringAsFixed(2)}',
+                            '$label\n${CurrencyController.instance.formatAmount(rod.toY)}',
                             const TextStyle(color: Colors.white),
                           );
                         },
@@ -1643,7 +1642,7 @@ class CumulativeAreaChart extends StatelessWidget {
                       reservedSize: 42,
                       interval: intervalY,
                       getTitlesWidget: (v, meta) => Text(
-                        '\$${v.toInt()}',
+                        '${CurrencyController.instance.symbol}${v.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -1689,7 +1688,7 @@ class CumulativeAreaChart extends StatelessWidget {
                         );
                         final dateStr = DateFormat('MMM d').format(date);
                         return LineTooltipItem(
-                          '$dateStr\n\$${t.y.toStringAsFixed(2)}',
+                          '$dateStr\n${CurrencyController.instance.formatAmount(t.y)}',
                           const TextStyle(color: Colors.white),
                         );
                       }).toList();
@@ -1701,7 +1700,7 @@ class CumulativeAreaChart extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Current cumulative (30D): \$${spots.last.y.toStringAsFixed(2)}',
+            'Current cumulative (30D): ${CurrencyController.instance.formatAmount(spots.last.y)}',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -1854,7 +1853,7 @@ class TopExpensesList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '\$${amount.toStringAsFixed(2)}',
+                          CurrencyController.instance.formatAmount(amount),
                           style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),

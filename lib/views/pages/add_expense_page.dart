@@ -8,7 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/add_expense.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
@@ -141,24 +143,10 @@ class _AddPageState extends State<AddPage> {
       await db.delete("categories", where: "id = ?", whereArgs: [id]);
       await loadCategories();
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.delete, color: cs.onError),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "Category '$name' deleted!",
-                  style: TextStyle(color: cs.onError),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        "Category '$name' deleted!",
+        icon: Icons.delete,
       );
     }
   }
@@ -395,10 +383,9 @@ class _AddPageState extends State<AddPage> {
     final cs = theme.colorScheme;
     final selectedCat = getSelectedCategory();
     final amountText = expenseController.text.isNotEmpty
-        ? NumberFormat.currency(
-            symbol: '\$',
-            decimalDigits: 2,
-          ).format(double.tryParse(expenseController.text) ?? 0.0)
+        ? CurrencyController.instance.formatAmount(
+            double.tryParse(expenseController.text) ?? 0.0,
+          )
         : '--';
 
     final noteText = noteController.text.trim().isEmpty
@@ -624,9 +611,7 @@ class _AddPageState extends State<AddPage> {
     } on PlatformException catch (e) {
       if (kDebugMode) debugPrint('Image pick failed: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to pick images')));
+      AppSnackBar.showError(context, 'Failed to pick images');
     }
   }
 
@@ -672,65 +657,25 @@ class _AddPageState extends State<AddPage> {
     FocusScope.of(context).unfocus();
     HapticFeedback.mediumImpact();
 
-    final cs = Theme.of(context).colorScheme;
-
     if (selectedCategoryName == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.secondary,
-          content: Row(
-            children: [
-              Icon(Icons.info_outline, color: cs.onSecondary),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Please select a category')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showInfo(context, 'Please select a category');
       return;
     }
 
     final category = getSelectedCategory();
     if (category == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid category')));
+      AppSnackBar.showError(context, 'Invalid category');
       return;
     }
 
     final amount = double.tryParse(expenseController.text);
     if (amount == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.secondary,
-          content: Row(
-            children: [
-              Icon(Icons.info, color: cs.onSecondary),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Please enter an amount')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showInfo(context, 'Please enter an amount');
       return;
     }
 
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.secondary,
-          content: Row(
-            children: [
-              Icon(Icons.info, color: cs.onSecondary),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Please enter a valid amount')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showInfo(context, 'Please enter a valid amount');
       return;
     }
 
@@ -759,24 +704,7 @@ class _AddPageState extends State<AddPage> {
 
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Expense saved',
-                  style: TextStyle(color: cs.onPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Expense saved');
 
       if (addAnotherAfterSave) {
         _clearFields(keepCategory: true);
@@ -788,9 +716,7 @@ class _AddPageState extends State<AddPage> {
     } catch (e, st) {
       if (kDebugMode) debugPrint('Save error: $e\n$st');
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save expense: $e')));
+      AppSnackBar.showError(context, 'Failed to save expense: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -951,7 +877,8 @@ class _AddPageState extends State<AddPage> {
                                 }
                               },
                               decoration: InputDecoration(
-                                hintText: "Amount",
+                                hintText:
+                                    "Amount (${CurrencyController.instance.symbol})",
                                 filled: true,
                                 fillColor: cs.surface,
                                 prefixIcon: Padding(

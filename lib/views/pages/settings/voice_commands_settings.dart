@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class VoiceCommandsSettings extends StatefulWidget {
   const VoiceCommandsSettings({super.key});
@@ -108,24 +109,10 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
         _saving = false;
       });
 
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Voice commands enabled',
-                  style: TextStyle(color: cs.onPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'Voice commands enabled',
+        icon: Icons.check_circle_outline,
       );
     } else {
       // Disabling voice (user toggled off)
@@ -136,24 +123,10 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
         _saving = false;
       });
 
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onError),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Voice commands disabled',
-                  style: TextStyle(color: cs.onError),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        'Voice commands disabled',
+        icon: Icons.check_circle_outline,
       );
     }
   }

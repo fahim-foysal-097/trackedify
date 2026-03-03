@@ -12,8 +12,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/shared/widgets/curvedbox_widget.dart';
 import 'package:trackedify/shared/widgets/overview_widget.dart';
 import 'package:trackedify/shared/widgets/welcome_widget.dart';
@@ -248,13 +250,7 @@ class HomePageState extends State<HomePage> {
     final ok = await _ensureSavePermission();
     if (!ok) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Permission denied. Cannot save image.'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      AppSnackBar.showError(context, 'Permission denied. Cannot save image.');
       return;
     }
 
@@ -268,27 +264,14 @@ class HomePageState extends State<HomePage> {
         skipIfExists: false,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          content: Row(
-            children: [
-              Icon(
-                Icons.check_circle_outline,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Saved to gallery')),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'Saved to gallery',
+        icon: Icons.check_circle_outline,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
+      AppSnackBar.showError(context, 'Failed to save image: $e');
     }
   }
 
@@ -414,35 +397,12 @@ class HomePageState extends State<HomePage> {
 
     // Show undo snackbar
     if (!mounted) return;
-    final cs = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.error,
-        content: Row(
-          children: [
-            Icon(Icons.delete, color: cs.onError),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Expense deleted',
-                style: TextStyle(color: cs.onError),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _undoDelete(),
-              child: Text(
-                'UNDO',
-                style: TextStyle(
-                  color: cs.onError,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 5),
-      ),
+    AppSnackBar.showWithUndo(
+      context,
+      'Expense deleted',
+      () => _undoDelete(),
+      icon: Icons.delete,
+      duration: const Duration(seconds: 5),
     );
 
     // Auto-dismiss undo after 5 seconds
@@ -470,25 +430,10 @@ class HomePageState extends State<HomePage> {
       overviewKey.currentState?.refresh();
 
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Expense restored',
-                  style: TextStyle(color: cs.onPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'Expense restored',
+        icon: Icons.check_circle_outline,
       );
     } catch (e) {
       if (kDebugMode) debugPrint('Undo failed: $e');
@@ -764,24 +709,11 @@ class HomePageState extends State<HomePage> {
     if (!mounted) return;
     setState(() => _voiceEnabled = enabled);
 
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
     if (!_voiceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.mic_off, color: cs.onError),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('Voice commands are disabled in Settings'),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        'Voice commands are disabled in Settings',
+        icon: Icons.mic_off,
       );
       return;
     }
@@ -836,18 +768,10 @@ class HomePageState extends State<HomePage> {
 
     if (!_voiceAvailable || _speech == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.mic_off, color: cs.onError),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Voice recognition not available')),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        'Voice recognition not available',
+        icon: Icons.mic_off,
       );
       // attempt re-initialize if permission was granted
       await _initSpeech();
@@ -895,20 +819,7 @@ class HomePageState extends State<HomePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isListening = false);
-      final cs2 = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs2.error,
-          content: Row(
-            children: [
-              Icon(Icons.error_outline_rounded, color: cs2.onError),
-              const SizedBox(width: 12),
-              Expanded(child: Text('Voice error: $e')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showError(context, 'Voice error: $e');
     }
   }
 
@@ -1134,22 +1045,7 @@ class HomePageState extends State<HomePage> {
     final amountVal = double.tryParse(amountCtl.text.replaceAll(',', '.'));
     if (amountVal == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.error,
-          content: Row(
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                color: Theme.of(context).colorScheme.onError,
-              ),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Invalid amount')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showError(context, 'Invalid amount');
       return;
     }
     final categoryVal = categoryCtl.text.trim().isEmpty
@@ -1165,25 +1061,10 @@ class HomePageState extends State<HomePage> {
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        content: Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Added: \$${amountVal.toStringAsFixed(2)} - $categoryVal',
-              ),
-            ),
-          ],
-        ),
-      ),
+    AppSnackBar.showSuccess(
+      context,
+      'Added: ${CurrencyController.instance.formatAmount(amountVal)} - $categoryVal',
+      icon: Icons.check_circle_outline,
     );
 
     // reload

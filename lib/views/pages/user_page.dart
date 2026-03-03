@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
@@ -153,21 +154,7 @@ class UserPageState extends State<UserPage> {
         if (!mounted) return;
         setState(() {});
       } catch (e) {
-        if (!mounted) return;
-        final cs = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.error,
-            content: Row(
-              children: [
-                Icon(Icons.warning_rounded, color: cs.onError),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Failed to save profile picture: $e')),
-              ],
-            ),
-          ),
-        );
+        AppSnackBar.showError(context, 'Failed to save profile picture: $e');
       }
     }
   }
@@ -217,21 +204,7 @@ class UserPageState extends State<UserPage> {
         if (!mounted) return;
         setState(() {});
       } catch (e) {
-        if (!mounted) return;
-        final cs = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.error,
-            content: Row(
-              children: [
-                Icon(Icons.warning_rounded, color: cs.onError),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Failed to delete profile picture: $e')),
-              ],
-            ),
-          ),
-        );
+        AppSnackBar.showError(context, 'Failed to delete profile picture: $e');
       }
     }
   }
@@ -521,24 +494,10 @@ class UserPageState extends State<UserPage> {
                               username = "User";
                               showTip = true;
                             });
-                            final cs2 = Theme.of(context).colorScheme;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: cs2.error,
-                                content: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.warning_rounded,
-                                      color: cs2.onError,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Expanded(
-                                      child: Text('All data deleted'),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            AppSnackBar.showError(
+                              context,
+                              'All data deleted',
+                              icon: Icons.warning_rounded,
                             );
                           }
                         },

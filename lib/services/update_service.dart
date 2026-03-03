@@ -9,6 +9,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
@@ -402,9 +403,7 @@ class UpdateService {
       if (context.mounted) {
         // ensure any sheet is closed
         if (Navigator.canPop(context)) Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Update failed: $e")));
+        AppSnackBar.showError(context, "Update failed: $e");
       }
     }
   }

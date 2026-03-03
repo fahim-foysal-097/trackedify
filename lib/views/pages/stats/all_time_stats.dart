@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 class AllTimeStats extends StatefulWidget {
   const AllTimeStats({super.key});
@@ -270,7 +271,9 @@ class AllTimeStatsState extends State<AllTimeStats> {
         color: cat['color'] as Color,
         value: data.value,
         radius: isTouched ? touchedRadius : baseRadius,
-        title: isTouched ? '\$${data.value.toStringAsFixed(2)}' : '',
+        title: isTouched
+            ? CurrencyController.instance.formatAmount(data.value)
+            : '',
         titleStyle: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
@@ -287,7 +290,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
       _buildStatCard(
         icon: Icons.numbers,
         title: 'Total Spent',
-        value: '\$${totalExpense.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(totalExpense),
         color: cs.primary,
       ),
       _buildStatCard(
@@ -299,33 +302,35 @@ class AllTimeStatsState extends State<AllTimeStats> {
       _buildStatCard(
         icon: Icons.trending_up,
         title: 'Avg per Tx',
-        value: '\$${averageExpense.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(averageExpense),
         color: cs.tertiary,
       ),
       _buildStatCard(
         icon: Icons.calendar_today,
         title: 'This Month',
-        value: '\$${totalThisMonth.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(totalThisMonth),
         color: cs.primaryContainer,
       ),
       _buildStatCard(
         icon: Icons.date_range,
         title: 'Avg Daily',
-        value: '\$${avgDailySpend.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(avgDailySpend),
         color: cs.secondaryContainer,
       ),
       _buildStatCard(
         icon: Icons.warning_rounded,
         title: 'Largest',
         value: largestExpenseCategory ?? 'None',
-        subValue: '\$${largestSingleExpense.toStringAsFixed(2)}',
+        subValue: CurrencyController.instance.formatAmount(
+          largestSingleExpense,
+        ),
         color: Colors.redAccent,
       ),
       _buildStatCard(
         icon: Icons.savings,
         title: 'Smallest',
         value: smallestExpenseCategory ?? 'None',
-        subValue: '\$${smallestExpense.toStringAsFixed(2)}',
+        subValue: CurrencyController.instance.formatAmount(smallestExpense),
         color: Colors.green,
       ),
       _buildStatCard(
@@ -346,7 +351,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
         title: 'Top Category',
         value: topCategory ?? 'None',
         subValue:
-            '\$${topAmount.toStringAsFixed(2)} (${topPercentage.toStringAsFixed(0)}%)',
+            '${CurrencyController.instance.formatAmount(topAmount)} (${topPercentage.toStringAsFixed(0)}%)',
         color: cs.secondary,
       ),
       _buildStatCard(
@@ -422,7 +427,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '\$${totalExpense.toStringAsFixed(2)}',
+                      CurrencyController.instance.formatAmount(totalExpense),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -490,7 +495,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${data.key} (\$${data.value.toStringAsFixed(2)})',
+                          '${data.key} (${CurrencyController.instance.formatAmount(data.value)})',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: isSelected

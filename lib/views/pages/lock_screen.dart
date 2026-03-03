@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trackedify/services/auth_service.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
 
 class LockScreen extends StatefulWidget {
@@ -94,9 +95,7 @@ class _LockScreenState extends State<LockScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recovery password incorrect')),
-      );
+      AppSnackBar.showError(context, 'Recovery password incorrect');
       return;
     }
 
@@ -108,9 +107,7 @@ class _LockScreenState extends State<LockScreen> {
     if (!mounted) return;
 
     if (changed == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PIN changed - please unlock again')),
-      );
+      AppSnackBar.showSuccess(context, 'PIN changed - please unlock again');
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class ChangeUsernamePage extends StatefulWidget {
   const ChangeUsernamePage({super.key});
@@ -53,29 +54,7 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
     final newName = _usernameController.text.trim();
     if (newName.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.error,
-          content: Row(
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                color: Theme.of(context).colorScheme.onError,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Username cannot be empty!',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onError,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showError(context, 'Username cannot be empty!');
       return;
     }
     if (userId != null) {
@@ -91,28 +70,10 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
     if (!mounted) return;
     setState(() => currentUsername = newName);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        content: Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Username saved!',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    AppSnackBar.showSuccess(
+      context,
+      'Username saved!',
+      icon: Icons.check_circle_outline,
     );
     if (mounted) {
       Navigator.pop(context);

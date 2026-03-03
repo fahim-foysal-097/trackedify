@@ -4,8 +4,10 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/change_username_page.dart';
+import 'package:trackedify/views/pages/settings/currency_settings.dart';
 import 'package:trackedify/views/pages/settings/edit_categories_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
@@ -132,6 +134,21 @@ class SettingsPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const ThemeSettingsPage(),
+                      ),
+                    ).then((_) {
+                      NavBarController.apply();
+                    });
+                  },
+                ),
+                SettingsButton(
+                  icon: Icons.currency_exchange,
+                  title: 'Currency',
+                  iconColor: iconColor,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CurrencySettingsPage(),
                       ),
                     ).then((_) {
                       NavBarController.apply();
@@ -271,24 +288,7 @@ class SettingsPage extends StatelessWidget {
                         await DatabaseHelper().wipeAllData();
                         if (context.mounted) {
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: cs.error,
-                              content: Row(
-                                children: [
-                                  Icon(
-                                    Icons.warning_rounded,
-                                    color: cs.onError,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Text('All data deleted'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
+                          AppSnackBar.showError(context, 'All data deleted');
                         }
                       },
                       textColor: theme.textTheme.bodySmall?.color,

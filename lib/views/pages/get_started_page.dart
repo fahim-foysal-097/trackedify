@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
@@ -34,9 +36,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
   Future<void> saveUsername() async {
     final enteredName = nameController.text.trim();
     if (enteredName.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter your name')));
+      AppSnackBar.showInfo(context, 'Please enter your name');
       return;
     }
 
@@ -122,9 +122,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
 
       if (result == null || result.files.single.path == null) {
         // user cancelled
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Import cancelled.")));
+        AppSnackBar.showInfo(context, 'Import cancelled.');
         return;
       }
 
@@ -132,9 +130,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
       final importFile = File(importPath);
       if (!await importFile.exists()) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected file does not exist.')),
-        );
+        AppSnackBar.showError(context, 'Selected file does not exist.');
         return;
       }
 
@@ -155,24 +151,10 @@ class _GetStartedPageState extends State<GetStartedPage> {
           spinnerShown = false;
         }
         if (!mounted) return;
-        final cs = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.error,
-            content: Row(
-              children: [
-                Icon(Icons.delete, color: cs.onError),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
-                    style: TextStyle(color: cs.onError),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showError(
+          context,
+          'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
+          icon: Icons.delete,
         );
         return;
       }
@@ -188,9 +170,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
         }
         if (!mounted) return;
         if (kDebugMode) debugPrint('Helper importDatabase threw: $e');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
+        AppSnackBar.showError(context, 'DB import failed: $e');
         return;
       }
 
@@ -209,26 +189,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
 
       if (!mounted) return;
 
-      final cs = Theme.of(context).colorScheme;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Database imported successfully',
-                  style: TextStyle(color: cs.onPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Database imported successfully');
 
       // Navigate to main app **after successful import**
       if (!mounted) return;
@@ -242,9 +203,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Import failed: $e")));
+        AppSnackBar.showError(context, 'Import failed: $e');
       }
       if (kDebugMode) debugPrint('Import failed: $e');
     } finally {

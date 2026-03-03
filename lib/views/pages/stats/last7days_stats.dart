@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 class Last7daysStats extends StatefulWidget {
   const Last7daysStats({super.key});
@@ -136,7 +137,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                   'No data for the chart',
                   style: TextStyle(
                     fontSize: 16,
-                    color: cs.onSurface.withValues(alpha:0.75),
+                    color: cs.onSurface.withValues(alpha: 0.75),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -145,7 +146,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                   'Please add some expenses to view the chart.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: cs.onSurface.withValues(alpha:0.7),
+                    color: cs.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -160,7 +161,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
     final computedMaxY = (maxDaily * 1.2).clamp(1.0, double.infinity);
 
     // Compute insights for last 7 days
-    final NumberFormat currency = NumberFormat.simpleCurrency(name: 'USD');
+    // Use CurrencyController instead of NumberFormat
     final double total7 = dailyTotals.fold(0.0, (a, b) => a + b);
     final double avg7 = total7 / 7.0;
     final int maxIndex = dailyTotals.indexWhere((v) => v == maxDaily);
@@ -186,7 +187,9 @@ class Last7daysStatsState extends State<Last7daysStats> {
         icon: Icons.warning_rounded,
         title: 'Largest Single',
         value: largestSingleCategory7 ?? 'None',
-        subValue: '\$${largestSingleExpense7.toStringAsFixed(2)}',
+        subValue: CurrencyController.instance.formatAmount(
+          largestSingleExpense7,
+        ),
         color: Colors.redAccent,
       ),
       _buildStatCard(
@@ -199,13 +202,13 @@ class Last7daysStatsState extends State<Last7daysStats> {
       _buildStatCard(
         icon: Icons.trending_up,
         title: 'Avg per Tx',
-        value: '\$${avgPerTransaction7.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(avgPerTransaction7),
         color: Colors.orange,
       ),
       _buildStatCard(
         icon: Icons.analytics,
         title: 'Avg per Day',
-        value: '\$${avg7.toStringAsFixed(2)}',
+        value: CurrencyController.instance.formatAmount(avg7),
         color: Colors.cyan,
       ),
     ];
@@ -223,9 +226,9 @@ class Last7daysStatsState extends State<Last7daysStats> {
                 Expanded(
                   child: _InsightCard(
                     title: 'Total',
-                    value: currency.format(total7),
+                    value: CurrencyController.instance.formatAmount(total7),
                     subtitle: '7d',
-                    backgroundColor: cs.primary.withValues(alpha:0.08),
+                    backgroundColor: cs.primary.withValues(alpha: 0.08),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -233,9 +236,9 @@ class Last7daysStatsState extends State<Last7daysStats> {
                 Expanded(
                   child: _InsightCard(
                     title: 'Avg / day',
-                    value: currency.format(avg7),
+                    value: CurrencyController.instance.formatAmount(avg7),
                     subtitle: '7d',
-                    backgroundColor: cs.secondary.withValues(alpha:0.08),
+                    backgroundColor: cs.secondary.withValues(alpha: 0.08),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -247,7 +250,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                         ? DateFormat('MM/dd').format(maxDay)
                         : '-',
                     subtitle: "7d",
-                    backgroundColor: Colors.orange.withValues(alpha:0.08),
+                    backgroundColor: Colors.orange.withValues(alpha: 0.08),
                   ),
                 ),
               ],
@@ -271,11 +274,11 @@ class Last7daysStatsState extends State<Last7daysStats> {
                     horizontalInterval: (computedMaxY / 5).ceilToDouble(),
                     verticalInterval: 1,
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: cs.onSurface.withValues(alpha:0.08),
+                      color: cs.onSurface.withValues(alpha: 0.08),
                       strokeWidth: 1,
                     ),
                     getDrawingVerticalLine: (value) => FlLine(
-                      color: cs.onSurface.withValues(alpha:0.06),
+                      color: cs.onSurface.withValues(alpha: 0.06),
                       strokeWidth: 1,
                     ),
                   ),
@@ -297,7 +300,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                         getTitlesWidget: (value, meta) => Padding(
                           padding: const EdgeInsets.only(right: 6.0),
                           child: Text(
-                            '\$${value.toInt()}',
+                            '${CurrencyController.instance.symbol}${value.toInt()}',
                             style: TextStyle(fontSize: 10, color: cs.onSurface),
                           ),
                         ),
@@ -336,8 +339,8 @@ class Last7daysStatsState extends State<Last7daysStats> {
                         show: true,
                         gradient: LinearGradient(
                           colors: [
-                            cs.primary.withValues(alpha:0.45),
-                            cs.primary.withValues(alpha:0.12),
+                            cs.primary.withValues(alpha: 0.45),
+                            cs.primary.withValues(alpha: 0.12),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -349,7 +352,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                     enabled: true,
                     touchTooltipData: LineTouchTooltipData(
                       getTooltipColor: (touchedSpot) =>
-                          cs.onSurface.withValues(alpha:0.9),
+                          cs.onSurface.withValues(alpha: 0.9),
                       tooltipPadding: const EdgeInsets.all(8),
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((lineBarSpot) {
@@ -366,7 +369,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
                           ).format(date);
                           final y = lineBarSpot.y;
                           return LineTooltipItem(
-                            '$dateStr\n\$${y.toStringAsFixed(2)}',
+                            '$dateStr\n${CurrencyController.instance.formatAmount(y)}',
                             TextStyle(color: cs.onPrimary, fontSize: 12),
                           );
                         }).toList();
@@ -451,14 +454,14 @@ class Last7daysStatsState extends State<Last7daysStats> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha:0.4), color.withValues(alpha:0.8)],
+          colors: [color.withValues(alpha: 0.4), color.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha:0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -529,7 +532,7 @@ class _InsightCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: cs.onSurface.withValues(alpha:0.04),
+            color: cs.onSurface.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -562,7 +565,7 @@ class _InsightCard extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: cs.onSurface.withValues(alpha:0.7),
+                  color: cs.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],

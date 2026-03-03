@@ -6,6 +6,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/shared/constants/constants.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
@@ -52,10 +53,8 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     if (!mounted) return;
     setState(() => _notificationsEnabled = newValue);
 
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
     if (newValue) {
+      final theme = Theme.of(context);
       final granted = await _notificationUtil.requestPermission();
       if (!granted) {
         await DatabaseHelper().setNotificationEnabled(false);
@@ -92,64 +91,30 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         );
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.primary,
-            content: Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: cs.onPrimary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Daily reminder enabled',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          'Daily reminder enabled',
+          icon: Icons.check_circle_outline,
         );
       } catch (e) {
         if (kDebugMode) debugPrint('Schedule failed: $e');
         await DatabaseHelper().setNotificationEnabled(false);
         if (!mounted) return;
         setState(() => _notificationsEnabled = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to schedule reminder: $e')),
-        );
+        AppSnackBar.showError(context, 'Failed to schedule reminder: $e');
       }
     } else {
       try {
         await _notificationUtil.cancelById(AppConstants.dailyReminderId);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.error,
-            content: Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: cs.onError),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Daily reminder disabled',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onError,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showError(
+          context,
+          'Daily reminder disabled',
+          icon: Icons.check_circle_outline,
         );
       } catch (e) {
         if (kDebugMode) debugPrint('Cancel failed: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to cancel reminder: $e ')),
-        );
+        AppSnackBar.showError(context, 'Failed to cancel reminder: $e');
       }
     }
 
@@ -176,7 +141,6 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     setState(() => _saving = true);
     if (!mounted) return;
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
 
     try {
       await DatabaseHelper().setNotificationTime(picked.hour, picked.minute);
@@ -200,25 +164,10 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             minute: _minute,
           );
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: cs.primary,
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle_outline, color: cs.onPrimary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Reminder set for ${_formatTime(_hour, _minute)}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          AppSnackBar.showSuccess(
+            context,
+            'Reminder set for ${_formatTime(_hour, _minute)}',
+            icon: Icons.check_circle_outline,
           );
         } else {
           await DatabaseHelper().setNotificationEnabled(false);
@@ -240,49 +189,19 @@ class _NotificationSettingsState extends State<NotificationSettings> {
         }
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.primary,
-            content: Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: cs.onPrimary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Reminder time saved: ${_formatTime(_hour, _minute)}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          'Reminder time saved: ${_formatTime(_hour, _minute)}',
+          icon: Icons.check_circle_outline,
         );
       }
     } catch (e) {
       if (kDebugMode) debugPrint('Failed to save/pick time: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.cancel_outlined, color: cs.onError),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Failed to save reminder time: $e',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onError,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        'Failed to save reminder time: $e',
+        icon: Icons.cancel_outlined,
       );
     } finally {
       setState(() => _saving = false);

@@ -5,6 +5,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/data/category_suggestion_data.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 /// Local suggestion helper (simple on-device "AI" (not really, just rules) using Levenshtein).
 
@@ -261,25 +262,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     );
 
     if (!mounted) return;
-    final cs = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.primary,
-        content: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: cs.onPrimary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Category "$name" added!',
-                style: TextStyle(color: cs.onPrimary),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    AppSnackBar.showSuccess(context, 'Category "$name" added!');
     Navigator.pop(context, true);
   }
 

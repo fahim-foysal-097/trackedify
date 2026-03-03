@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 // -------------------- 20 DAYS WITH 10 DAYS PREDICTION --------------------
 
@@ -322,7 +323,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                         reservedSize: 40,
                         interval: intervalY,
                         getTitlesWidget: (value, meta) => Text(
-                          '\$${value.toInt()}',
+                          '${CurrencyController.instance.symbol}${value.toInt()}',
                           style: const TextStyle(fontSize: 10),
                         ),
                       ),
@@ -418,7 +419,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                           final y = spot.y;
                           final prefix = isPredict ? 'Predicted\n' : '';
                           return LineTooltipItem(
-                            '$prefix$dateStr\n\$${y.toStringAsFixed(2)}',
+                            '$prefix$dateStr\n${CurrencyController.instance.formatAmount(y)}',
                             const TextStyle(color: Colors.white, fontSize: 12),
                           );
                         }).toList();
@@ -441,7 +442,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Next day (${DateFormat('MMM d').format(dayNow.add(const Duration(days: 1)))}) predicted expense: \$0.00',
+                      'Next day (${DateFormat('MMM d').format(dayNow.add(const Duration(days: 1)))}) predicted expense: ${CurrencyController.instance.formatAmount(0.0)}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -645,7 +646,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                       reservedSize: 40,
                       interval: intervalY,
                       getTitlesWidget: (value, meta) => Text(
-                        '\$${value.toInt()}',
+                        '${CurrencyController.instance.symbol}${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -739,7 +740,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                         final y = spot.y;
                         final prefix = isPredict ? 'Predicted\n' : '';
                         return LineTooltipItem(
-                          '$prefix$dateStr\n\$${y.toStringAsFixed(2)}',
+                          '$prefix$dateStr\n${CurrencyController.instance.formatAmount(y)}',
                           const TextStyle(color: Colors.white, fontSize: 12),
                         );
                       }).toList();
@@ -762,7 +763,7 @@ class TwentyDaysWithPredictionChart extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Next day (${DateFormat('MMM d').format(dayNow.add(const Duration(days: 1)))}) predicted expense: \$${forecasts[0].toStringAsFixed(2)}',
+                    'Next day (${DateFormat('MMM d').format(dayNow.add(const Duration(days: 1)))}) predicted expense: ${CurrencyController.instance.formatAmount(forecasts[0])}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

@@ -8,6 +8,7 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class ExportPage extends StatefulWidget {
   const ExportPage({super.key});
@@ -163,9 +164,7 @@ class _ExportPageState extends State<ExportPage> {
           dialogShown = false;
         }
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Database file not found.")),
-        );
+        AppSnackBar.showError(context, 'Database file not found.');
         return;
       }
 
@@ -188,25 +187,13 @@ class _ExportPageState extends State<ExportPage> {
         if (kDebugMode) debugPrint('Export cancelled.');
       } else {
         final bool isContentUri = savedPath.startsWith('content://');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isContentUri
-                        ? 'Database exported successfully (SAF URI).'
-                        : 'Database exported to: $savedPath',
-                  ),
-                ),
-              ],
-            ),
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          isContentUri
+              ? 'Database exported successfully (SAF URI).'
+              : 'Database exported to: $savedPath',
+          icon: Icons.check_circle_outline,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -216,9 +203,7 @@ class _ExportPageState extends State<ExportPage> {
         dialogShown = false;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Export failed: $e")));
+      AppSnackBar.showError(context, 'Export failed: $e');
     } finally {
       if (mounted) setState(() => _isProcessingDb = false);
     }
@@ -236,9 +221,7 @@ class _ExportPageState extends State<ExportPage> {
     try {
       // Prevent exporting if there are no expenses
       if (_expenseCount == 0) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+        AppSnackBar.showInfo(context, 'No expenses to export.');
         return;
       }
 
@@ -301,25 +284,13 @@ class _ExportPageState extends State<ExportPage> {
         if (kDebugMode) debugPrint('CSV export cancelled');
       } else {
         final bool isContentUri = savedPath.startsWith('content://');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isContentUri
-                        ? 'CSV exported successfully (SAF URI).'
-                        : 'CSV exported to: ${p.basename(savedPath)}',
-                  ),
-                ),
-              ],
-            ),
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          isContentUri
+              ? 'CSV exported successfully (SAF URI).'
+              : 'CSV exported to: ${p.basename(savedPath)}',
+          icon: Icons.check_circle_outline,
+          duration: const Duration(seconds: 4),
         );
         if (kDebugMode) {
           debugPrint("CSV export saved: $savedPath");
@@ -331,9 +302,7 @@ class _ExportPageState extends State<ExportPage> {
         dialogShown = false;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('CSV export failed: $e')));
+      AppSnackBar.showError(context, 'CSV export failed: $e');
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -350,9 +319,7 @@ class _ExportPageState extends State<ExportPage> {
     try {
       // Prevent exporting if there are no expenses
       if (_expenseCount == 0) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+        AppSnackBar.showInfo(context, 'No expenses to export.');
         return;
       }
 
@@ -396,20 +363,10 @@ class _ExportPageState extends State<ExportPage> {
       if (saved == null) {
         if (kDebugMode) debugPrint('JSON export cancelled');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.deepPurple,
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text('JSON export saved: ${p.basename(saved)}'),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          'JSON export saved: ${p.basename(saved)}',
+          icon: Icons.check_circle_outline,
         );
         if (kDebugMode) {
           debugPrint("JSON export saved: ${p.basename(saved)}");
@@ -421,9 +378,7 @@ class _ExportPageState extends State<ExportPage> {
         dialogShown = false;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('JSON export failed: $e')));
+      AppSnackBar.showError(context, 'JSON export failed: $e');
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -431,9 +386,7 @@ class _ExportPageState extends State<ExportPage> {
 
   Future<void> _exportBothToSaveDialog() async {
     if (_expenseCount == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No expenses to export.')));
+      AppSnackBar.showInfo(context, 'No expenses to export.');
       return;
     }
     await _exportCsvToSaveDialog();

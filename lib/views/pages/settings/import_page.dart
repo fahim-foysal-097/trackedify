@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class ImportPage extends StatefulWidget {
   const ImportPage({super.key});
@@ -127,9 +128,7 @@ class _ImportPageState extends State<ImportPage> {
       final importFile = File(importPath);
       if (!await importFile.exists()) {
         if (!mounted) return false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected file does not exist.')),
-        );
+        AppSnackBar.showError(context, 'Selected file does not exist.');
         return false;
       }
 
@@ -152,12 +151,9 @@ class _ImportPageState extends State<ImportPage> {
           spinnerShown = false;
         }
         if (!mounted) return false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
-            ),
-          ),
+        AppSnackBar.showError(
+          context,
+          'Selected file is not a valid Trackedify database or is corrupted. Import cancelled.',
         );
         return false;
       }
@@ -173,9 +169,7 @@ class _ImportPageState extends State<ImportPage> {
         }
         if (!mounted) return false;
         if (kDebugMode) debugPrint('Helper importDatabase threw: $e');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
+        AppSnackBar.showError(context, 'DB import failed: $e');
         return false;
       }
 
@@ -196,18 +190,10 @@ class _ImportPageState extends State<ImportPage> {
         spinnerShown = false;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 12),
-              Expanded(child: Text('Database imported successfully')),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'Database imported successfully',
+        icon: Icons.check_circle_outline,
       );
       return true;
     } catch (e) {
@@ -217,9 +203,7 @@ class _ImportPageState extends State<ImportPage> {
       }
 
       if (!mounted) return false;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('DB import failed: $e')));
+      AppSnackBar.showError(context, 'DB import failed: $e');
       return false;
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -287,9 +271,7 @@ class _ImportPageState extends State<ImportPage> {
       final importFile = File(importPath);
       if (!await importFile.exists()) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected file does not exist.')),
-        );
+        AppSnackBar.showError(context, 'Selected file does not exist.');
         return;
       }
 
@@ -445,24 +427,12 @@ class _ImportPageState extends State<ImportPage> {
         spinnerShown = false;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.deepPurple,
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'JSON import done — expenses: +$insertedExpenses (skipped $skippedExpenses), '
-                  'categories: +$insertedCategories (skipped $skippedCategories), user_info: $insertedUsers',
-                ),
-              ),
-            ],
-          ),
-          duration: const Duration(seconds: 5),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'JSON import done — expenses: +$insertedExpenses (skipped $skippedExpenses), '
+        'categories: +$insertedCategories (skipped $skippedCategories), user_info: $insertedUsers',
+        icon: Icons.check_circle_outline,
+        duration: const Duration(seconds: 5),
       );
     } catch (e) {
       if (spinnerShown && mounted && Navigator.canPop(context)) {
@@ -470,9 +440,7 @@ class _ImportPageState extends State<ImportPage> {
         spinnerShown = false;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('JSON import failed: $e')));
+      AppSnackBar.showError(context, 'JSON import failed: $e');
       if (kDebugMode) debugPrint('JSON import failed: $e');
     } finally {
       if (mounted) setState(() => _isProcessing = false);

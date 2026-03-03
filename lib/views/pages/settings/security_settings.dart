@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/services/auth_service.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
 
 class SecuritySettings extends StatefulWidget {
@@ -89,26 +90,10 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       if (result == true) {
         await _loadAuthState();
         if (!mounted) return;
-        final cs = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: cs.primary,
-            content: Row(
-              children: [
-                Icon(Icons.check_circle_outline, color: cs.onPrimary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'App lock enabled',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppSnackBar.showSuccess(
+          context,
+          'App lock enabled',
+          icon: Icons.check_circle_outline,
         );
       }
       return;
@@ -125,32 +110,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     final ok = await _auth.verifyPin(pin);
     if (!mounted) return;
     if (!ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Wrong PIN')));
+      AppSnackBar.showError(context, 'Wrong PIN');
       return;
     }
     await _auth.disablePin();
     await _loadAuthState();
     if (!mounted) return;
-    final cs = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.error,
-        content: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: cs.onError),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'App lock disabled',
-                style: TextStyle(color: Theme.of(context).colorScheme.onError),
-              ),
-            ),
-          ],
-        ),
-      ),
+    AppSnackBar.showError(
+      context,
+      'App lock disabled',
+      icon: Icons.check_circle_outline,
     );
   }
 
@@ -163,9 +132,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     final ok = await _auth.verifyPin(current);
     if (!mounted) return;
     if (!ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Wrong PIN')));
+      AppSnackBar.showError(context, 'Wrong PIN');
       return;
     }
 
@@ -176,9 +143,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     if (changed == true) {
       await _loadAuthState();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('PIN changed')));
+      AppSnackBar.showInfo(context, 'PIN changed');
     }
   }
 
@@ -214,9 +179,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     final isValid = await _auth.verifyPin(currentPin);
     if (!mounted) return;
     if (!isValid) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Incorrect PIN')));
+      AppSnackBar.showError(context, 'Incorrect PIN');
       return;
     }
 
@@ -249,9 +212,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     if (!mounted || newRecovery == null || newRecovery.isEmpty) return;
     await _auth.setRecoveryPassword(newRecovery);
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Recovery password saved')));
+    AppSnackBar.showSuccess(context, 'Recovery password saved');
   }
 
   Future<void> _resetPinWithRecovery() async {
@@ -266,9 +227,7 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     if (!mounted) return;
 
     if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Incorrect recovery password')),
-      );
+      AppSnackBar.showError(context, 'Incorrect recovery password');
       return;
     }
 
@@ -280,26 +239,10 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     if (created == true) {
       await _loadAuthState();
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'PIN has been reset',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      AppSnackBar.showSuccess(
+        context,
+        'PIN has been reset',
+        icon: Icons.check_circle_outline,
       );
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,11 @@ import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/widget_tree.dart';
+
 import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {
@@ -190,36 +194,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     // Show undo snackbar
     if (!mounted) return;
-    final cs = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: cs.error,
-        content: Row(
-          children: [
-            Icon(Icons.delete, color: cs.onError),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Expense deleted',
-                style: TextStyle(color: cs.onError),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _undoDelete(),
-              child: Text(
-                'UNDO',
-                style: TextStyle(
-                  color: cs.onError,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 5),
-      ),
-    );
+    if (!mounted) return;
+    AppSnackBar.showWithUndo(context, 'Expense deleted', _undoDelete);
 
     // Auto-dismiss undo after 5 seconds
     _undoTimer = Timer(const Duration(seconds: 5), () {
@@ -245,26 +221,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       await loadExpenses();
 
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Expense restored',
-                  style: TextStyle(color: cs.onPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Expense restored');
     } catch (e) {
       if (kDebugMode) debugPrint('Undo failed: $e');
     }
@@ -295,20 +252,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     await loadExpenses();
 
     if (mounted) {
-      final cs = Theme.of(context).colorScheme;
-      final onError = cs.onError;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.error,
-          content: Row(
-            children: [
-              Icon(Icons.delete, color: onError),
-              const SizedBox(width: 12),
-              Expanded(child: Text('$deletedCount expense(s) deleted')),
-            ],
-          ),
-        ),
+      AppSnackBar.showError(
+        context,
+        '$deletedCount expense(s) deleted',
+        icon: Icons.delete,
       );
     }
   }
@@ -407,15 +354,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     });
   }
 
-  String _formatAmount(dynamic amount) {
-    if (amount is num) {
-      return amount.toDouble().toStringAsFixed(2);
-    }
-    final parsed = double.tryParse(amount?.toString() ?? '');
-    if (parsed != null) return parsed.toStringAsFixed(2);
-    return amount?.toString() ?? '0.00';
-  }
-
   /// Fetch image blobs for an expense id from img_notes.
   Future<List<Uint8List>> _fetchImagesForExpense(int expenseId) async {
     final db = await DatabaseHelper().database;
@@ -461,13 +399,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     final ok = await _ensureSavePermission();
     if (!ok) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Permission denied. Cannot save image.'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      AppSnackBar.showError(context, 'Permission denied. Cannot save image.');
       return;
     }
 
@@ -481,25 +413,10 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         skipIfExists: false,
       );
       if (!mounted) return;
-      final cs = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.primary,
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline, color: cs.onPrimary),
-              const SizedBox(width: 12),
-              const Expanded(child: Text('Saved to gallery')),
-            ],
-          ),
-        ),
-      );
+      AppSnackBar.showSuccess(context, 'Saved to gallery');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
+      AppSnackBar.showError(context, 'Failed to save image: $e');
     }
   }
 
@@ -675,7 +592,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "-\$${_formatAmount(expense['amount'])}",
+                                "-${CurrencyController.instance.formatAmount(expense['amount'])}",
                                 style: theme.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1260,7 +1177,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                           ),
                           subtitle: subtitle,
                           trailing: Text(
-                            "-\$${_formatAmount(expense['amount'])}",
+                            "-${CurrencyController.instance.formatAmount(expense['amount'])}",
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
