@@ -364,13 +364,13 @@ class DatabaseHelper {
   }
 
   Future<void> wipeAllData() async {
-    final db = await database;
-    await db.delete('img_notes');
-    await db.delete('expenses');
-    await db.delete('user_info');
-    await db.delete('categories');
-    await db.execute('VACUUM'); // resets IDs
-    await _insertDefaultCategories(db); // repopulate category
+    String path = await _dbPath();
+    if (_db != null) {
+      await _db!.close();
+      _db = null;
+    }
+    await deleteDatabase(path);
+    await database; // Re-initialize with default categories etc.
   }
 
   Future<List<Map<String, dynamic>>> getCategories() async {

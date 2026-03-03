@@ -8,7 +8,6 @@ import 'package:lottie/lottie.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
-import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
 class GetStartedPage extends StatefulWidget {
@@ -253,36 +252,6 @@ class _GetStartedPageState extends State<GetStartedPage> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      height: kToolbarHeight,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ThemeSettingsPage(),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          "Select Theme",
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
                     SizedBox(
                       width: double.infinity,
                       height: kToolbarHeight,

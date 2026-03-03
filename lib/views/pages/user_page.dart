@@ -488,12 +488,14 @@ class UserPageState extends State<UserPage> {
                         onTapConfirm: () async {
                           await DatabaseHelper().wipeAllData();
                           if (context.mounted) {
-                            Navigator.pop(context);
-                            setState(() {
-                              profilePicPath = null;
-                              username = "User";
-                              showTip = true;
-                            });
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    const WidgetTree(),
+                              ),
+                              (route) => false,
+                            );
                             AppSnackBar.showError(
                               context,
                               'All data deleted',

@@ -287,7 +287,14 @@ class SettingsPage extends StatelessWidget {
                       onTapConfirm: () async {
                         await DatabaseHelper().wipeAllData();
                         if (context.mounted) {
-                          Navigator.pop(context);
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  const WidgetTree(),
+                            ),
+                            (route) => false,
+                          );
                           AppSnackBar.showError(context, 'All data deleted');
                         }
                       },
