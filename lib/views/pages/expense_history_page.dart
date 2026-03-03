@@ -46,15 +46,33 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
   Map<String, dynamic>? _lastDeletedExpense;
   Timer? _undoTimer;
 
+  // Filter and Sort state
+  int? _selectedMonth;
+  int? _selectedYear;
+  String? _selectedCategory;
+  String _sortOption = 'date_desc';
+
+  // Scroll Controller
+  final ScrollController _scrollController = ScrollController();
+  bool _showGoToTop = false;
+
   @override
   void initState() {
     super.initState();
     loadCategories();
     loadExpenses();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 300 && !_showGoToTop) {
+        setState(() => _showGoToTop = true);
+      } else if (_scrollController.offset <= 300 && _showGoToTop) {
+        setState(() => _showGoToTop = false);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _undoTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -338,25 +356,75 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     });
   }
 
-  void filterExpenses(String query) {
-    if (query.isEmpty) {
-      setState(() => filteredExpenses = expenses);
-      return;
-    }
+  void applyFiltersAndSort([String? query]) {
+    final currentQuery = (query ?? _searchController.text).toLowerCase();
 
-    query = query.toLowerCase();
     setState(() {
       filteredExpenses = expenses.where((expense) {
-        final category = (expense['category'] ?? '').toString().toLowerCase();
-        final amount = (expense['amount'] ?? '').toString().toLowerCase();
-        final date = (expense['date'] ?? '').toString().toLowerCase();
-        final note = (expense['note'] ?? '').toString().toLowerCase();
+        // String search
+        bool matchesQuery = true;
+        if (currentQuery.isNotEmpty) {
+          final category = (expense['category'] ?? '').toString().toLowerCase();
+          final amount = (expense['amount'] ?? '').toString().toLowerCase();
+          final date = (expense['date'] ?? '').toString().toLowerCase();
+          final note = (expense['note'] ?? '').toString().toLowerCase();
 
-        return category.contains(query) ||
-            amount.contains(query) ||
-            date.contains(query) ||
-            note.contains(query);
+          matchesQuery =
+              category.contains(currentQuery) ||
+              amount.contains(currentQuery) ||
+              date.contains(currentQuery) ||
+              note.contains(currentQuery);
+        }
+
+        if (!matchesQuery) return false;
+
+        // Month / Year filter
+        if (_selectedMonth != null || _selectedYear != null) {
+          final dateStr = (expense['date'] ?? '').toString();
+          if (dateStr.length >= 10) {
+            final parts = dateStr.split('-');
+            if (parts.length >= 3) {
+              final expYear = int.tryParse(parts[0]);
+              final expMonth = int.tryParse(parts[1]);
+
+              if (_selectedYear != null && expYear != _selectedYear) {
+                return false;
+              }
+              if (_selectedMonth != null && expMonth != _selectedMonth) {
+                return false;
+              }
+            }
+          }
+        }
+
+        // Category filter
+        if (_selectedCategory != null &&
+            _selectedCategory != 'All' &&
+            expense['category'] != _selectedCategory) {
+          return false;
+        }
+
+        return true;
       }).toList();
+
+      // Apply Sort
+      if (_sortOption == 'date_desc') {
+        filteredExpenses.sort(
+          (a, b) => b['date'].toString().compareTo(a['date'].toString()),
+        );
+      } else if (_sortOption == 'highest') {
+        filteredExpenses.sort((a, b) {
+          final aAmount = double.tryParse(a['amount'].toString()) ?? 0.0;
+          final bAmount = double.tryParse(b['amount'].toString()) ?? 0.0;
+          return bAmount.compareTo(aAmount);
+        });
+      } else if (_sortOption == 'lowest') {
+        filteredExpenses.sort((a, b) {
+          final aAmount = double.tryParse(a['amount'].toString()) ?? 0.0;
+          final bAmount = double.tryParse(b['amount'].toString()) ?? 0.0;
+          return aAmount.compareTo(bAmount);
+        });
+      }
     });
   }
 
@@ -839,6 +907,290 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     });
   }
 
+  void _showSortBottomSheet() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Sort Expenses',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // ignore: deprecated_member_use
+                RadioListTile<String>(
+                  title: const Text('Newest first (Default)'),
+                  value: 'date_desc',
+                  // ignore: deprecated_member_use
+                  groupValue: _sortOption,
+                  activeColor: ctrl.effectiveColorForRole(context, 'primary'),
+                  // ignore: deprecated_member_use
+                  onChanged: (val) {
+                    setState(() => _sortOption = val!);
+                    Navigator.pop(context);
+                    applyFiltersAndSort();
+                  },
+                ),
+                // ignore: deprecated_member_use
+                RadioListTile<String>(
+                  title: const Text('Highest amount'),
+                  value: 'highest',
+                  // ignore: deprecated_member_use
+                  groupValue: _sortOption,
+                  activeColor: ctrl.effectiveColorForRole(context, 'primary'),
+                  // ignore: deprecated_member_use
+                  onChanged: (val) {
+                    setState(() => _sortOption = val!);
+                    Navigator.pop(context);
+                    applyFiltersAndSort();
+                  },
+                ),
+                // ignore: deprecated_member_use
+                RadioListTile<String>(
+                  title: const Text('Lowest amount'),
+                  value: 'lowest',
+                  // ignore: deprecated_member_use
+                  groupValue: _sortOption,
+                  activeColor: ctrl.effectiveColorForRole(context, 'primary'),
+                  // ignore: deprecated_member_use
+                  onChanged: (val) {
+                    setState(() => _sortOption = val!);
+                    Navigator.pop(context);
+                    applyFiltersAndSort();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFilterBottomSheet() {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final years =
+                expenses
+                    .map((e) {
+                      final ds = (e['date'] ?? '').toString();
+                      if (ds.length >= 4) {
+                        return int.tryParse(ds.substring(0, 4));
+                      }
+                      return null;
+                    })
+                    .whereType<int>()
+                    .toSet()
+                    .toList()
+                  ..sort((a, b) => b.compareTo(a));
+
+            final categoryNames = ['All', ...categoryMap.keys];
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Filter Expenses',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setModalState(() {
+                                _selectedMonth = null;
+                                _selectedYear = null;
+                                _selectedCategory = null;
+                              });
+                              setState(() {
+                                _selectedMonth = null;
+                                _selectedYear = null;
+                                _selectedCategory = null;
+                              });
+                              applyFiltersAndSort();
+                            },
+                            child: Text(
+                              'Clear',
+                              style: TextStyle(
+                                color: ctrl.effectiveColorForRole(
+                                  context,
+                                  'primary',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Month', style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int?>(
+                        initialValue: _selectedMonth,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Months'),
+                          ),
+                          for (int i = 1; i <= 12; i++)
+                            DropdownMenuItem(
+                              value: i,
+                              child: Text(
+                                [
+                                  'January',
+                                  'February',
+                                  'March',
+                                  'April',
+                                  'May',
+                                  'June',
+                                  'July',
+                                  'August',
+                                  'September',
+                                  'October',
+                                  'November',
+                                  'December',
+                                ][i - 1],
+                              ),
+                            ),
+                        ],
+                        onChanged: (val) {
+                          setModalState(() => _selectedMonth = val);
+                          setState(() => _selectedMonth = val);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Year', style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int?>(
+                        initialValue: _selectedYear,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Years'),
+                          ),
+                          ...years.map(
+                            (y) => DropdownMenuItem(
+                              value: y,
+                              child: Text(y.toString()),
+                            ),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          setModalState(() => _selectedYear = val);
+                          setState(() => _selectedYear = val);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Category', style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String?>(
+                        initialValue: _selectedCategory ?? 'All',
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: categoryNames
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                        onChanged: (val) {
+                          setModalState(() => _selectedCategory = val);
+                          setState(() => _selectedCategory = val);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ctrl.effectiveColorForRole(
+                            context,
+                            'primary',
+                          ),
+                          foregroundColor: cs.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          applyFiltersAndSort();
+                        },
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void showTipsDialog() {
     const tips =
         '''Long-press an item to enter multi-select. Use the Select All (top-right) to select visible items. Swipe right to edit, swipe left to delete. Tap an item to view details and you can also save image notes.''';
@@ -924,31 +1276,31 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
               onPressed: () => Navigator.pop(context),
             ),
             actionsPadding: const EdgeInsets.only(right: 6),
-            actions: selectionMode
-                ? [
-                    IconButton(
-                      tooltip: 'Select all visible',
-                      icon: Icon(Icons.select_all, color: cs.onPrimary),
-                      onPressed: toggleSelectAll,
-                    ),
-                    IconButton(
-                      tooltip: 'Clear selection',
-                      icon: Icon(Icons.clear, color: cs.onPrimary),
-                      onPressed: () {
-                        setState(() {
-                          selectionMode = false;
-                          selectedExpenses.clear();
-                        });
-                      },
-                    ),
-                  ]
-                : [
-                    IconButton(
-                      tooltip: 'Tips',
-                      icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
-                      onPressed: showTipsDialog,
-                    ),
-                  ],
+            actions: [
+              if (selectionMode) ...[
+                IconButton(
+                  tooltip: 'Select all visible',
+                  icon: Icon(Icons.select_all, color: cs.onPrimary),
+                  onPressed: toggleSelectAll,
+                ),
+                IconButton(
+                  tooltip: 'Clear selection',
+                  icon: Icon(Icons.clear, color: cs.onPrimary),
+                  onPressed: () {
+                    setState(() {
+                      selectionMode = false;
+                      selectedExpenses.clear();
+                    });
+                  },
+                ),
+              ] else ...[
+                IconButton(
+                  tooltip: 'Tips',
+                  icon: Icon(Icons.lightbulb_outline, color: cs.onSurface),
+                  onPressed: showTipsDialog,
+                ),
+              ],
+            ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(72),
               child: Padding(
@@ -956,33 +1308,82 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   horizontal: 16,
                   vertical: 10,
                 ),
-                child: Container(
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shadowColor,
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: filterExpenses,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: "Search expenses",
-                      prefixIcon: Icon(Icons.search, color: textColorMuted),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 12,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: shadowColor,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) => applyFiltersAndSort(val),
+                          textInputAction: TextInputAction.search,
+                          decoration: InputDecoration(
+                            hintText: "Search expenses",
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: textColorMuted,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (!selectionMode) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: shadowColor,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Sort',
+                              icon: Icon(Icons.sort, color: cs.onSurface),
+                              onPressed: _showSortBottomSheet,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 24,
+                              color: cs.onSurface.withValues(alpha: 0.1),
+                            ),
+                            IconButton(
+                              tooltip: 'Filter',
+                              icon: Icon(
+                                Icons.filter_list,
+                                color: cs.onSurface,
+                              ),
+                              onPressed: _showFilterBottomSheet,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -1008,6 +1409,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                   ),
                 )
               : ListView.builder(
+                  controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
                   itemCount: filteredExpenses.length + (showTip ? 1 : 0),
@@ -1302,6 +1704,25 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                     backgroundColor: selectedExpenses.isEmpty
                         ? Theme.of(context).disabledColor
                         : Theme.of(context).colorScheme.error,
+                  )
+                : _showGoToTop && !selectionMode
+                ? FloatingActionButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    onPressed: () {
+                      _scrollController.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    },
+                    backgroundColor: ctrl.effectiveColorForRole(
+                      context,
+                      'primary',
+                    ),
+                    foregroundColor: cs.onPrimary,
+                    child: const Icon(Icons.arrow_upward),
                   )
                 : const SizedBox.shrink(),
           ),
