@@ -375,20 +375,25 @@ class _ImportPageState extends State<ImportPage> {
               }
 
               // --- Deduplication check ---
-              final existing = await db.query(
-                'expenses',
-                where:
-                    'category = ? AND amount = ? AND date = ? AND (note IS ? OR note = ?)',
-                whereArgs: [category, amount, date, null, note],
-                limit: 1,
+              // Use the view so the category column is available
+              final existing = await db.rawQuery(
+                'SELECT id FROM expenses_with_category '
+                'WHERE category = ? AND amount = ? AND date = ? '
+                'AND (note IS NULL AND ? IS NULL OR note = ?)',
+                [category, amount, date, note, note],
               );
               if (existing.isNotEmpty) {
                 skippedExpenses++;
                 continue;
               }
 
+              // Resolve category name → id
+              final categoryId = await _dbHelper.resolveOrCreateCategoryId(
+                category,
+              );
+
               await _dbHelper.insertExpense(
-                category: category,
+                categoryId: categoryId,
                 amount: amount,
                 date: date,
                 note: note,

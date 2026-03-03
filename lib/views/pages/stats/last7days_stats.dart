@@ -36,7 +36,10 @@ class Last7daysStatsState extends State<Last7daysStats> {
     setState(() => isLoading = true);
 
     final db = await DatabaseHelper().database;
-    final allData = await db.query('expenses', orderBy: 'date ASC');
+    final allData = await db.query(
+      'expenses_with_category',
+      orderBy: 'date ASC',
+    );
 
     final now = DateTime.now();
     last7Days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
@@ -64,7 +67,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
     String? maxCat7;
 
     for (var row in recentExpenses) {
-      final category = row['category'] as String;
+      final category = (row['category']?.toString()) ?? 'Uncategorized';
       final amount = (row['amount'] as num).toDouble();
 
       txCount7 += 1;

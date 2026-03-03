@@ -47,7 +47,7 @@ class InsightsPageState extends State<InsightsPage> {
     try {
       final db = await dbHelper.database;
       final List<Map<String, dynamic>> all = await db.query(
-        'expenses',
+        'expenses_with_category',
         orderBy: 'date ASC',
       );
 
@@ -76,7 +76,7 @@ class InsightsPageState extends State<InsightsPage> {
 
       for (var e in all) {
         final amt = (e['amount'] as num).toDouble();
-        final cat = e['category'] as String;
+        final cat = (e['category']?.toString()) ?? 'Uncategorized';
         final dt = DateTime.parse(e['date'] as String);
 
         total += amt;

@@ -102,14 +102,29 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
 
   Future<void> _confirmAndDeleteSingle(int id, String name) async {
     final theme = Theme.of(context);
+    final db = await dbHelper.database;
+
+    // Count how many expenses will be deleted
+    final countResult = await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM expenses WHERE category_id = ?',
+      [id],
+    );
+    final expenseCount = (countResult.first['cnt'] as int?) ?? 0;
+
+    final hasExpenses = expenseCount > 0;
+    final message = hasExpenses
+        ? 'Delete "$name"? '
+              'This will also permanently delete $expenseCount associated expense${expenseCount == 1 ? '' : 's'}. This cannot be undone.'
+        : 'Delete "$name"? This action cannot be undone.';
+
+    if (!mounted) return;
     final confirmed = await PanaraConfirmDialog.show<bool>(
       context,
-      title: "Delete category?",
-      message:
-          "Delete \"$name\"? Existing expenses that used this category will keep the text value.",
+      title: 'Delete category?',
+      message: message,
       textColor: theme.textTheme.bodySmall?.color,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: PanaraDialogType.error,
@@ -117,13 +132,18 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
 
     if (confirmed != true) return;
 
-    final db = await dbHelper.database;
-    await db.delete('categories', where: 'id = ?', whereArgs: [id]);
+    // Delete expenses first (satisfies FK RESTRICT), then the category
+    await db.transaction((txn) async {
+      await txn.delete('expenses', where: 'category_id = ?', whereArgs: [id]);
+      await txn.delete('categories', where: 'id = ?', whereArgs: [id]);
+    });
 
     if (!mounted) return;
     AppSnackBar.showError(
       context,
-      'Category deleted',
+      hasExpenses
+          ? 'Category and $expenseCount expense${expenseCount == 1 ? '' : 's'} deleted'
+          : 'Category deleted',
       icon: FontAwesomeIcons.trash,
     );
     await _reload();
@@ -134,14 +154,31 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
     if (_selectedIds.isEmpty) return;
 
     final theme = Theme.of(context);
+    final db = await dbHelper.database;
+    final ids = _selectedIds.toList();
+    final placeholders = List.filled(ids.length, '?').join(',');
+
+    // Count total expenses across all selected categories
+    final countResult = await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM expenses WHERE category_id IN ($placeholders)',
+      ids,
+    );
+    final expenseCount = (countResult.first['cnt'] as int?) ?? 0;
+    final hasExpenses = expenseCount > 0;
+
+    final message = hasExpenses
+        ? 'Delete ${ids.length} categories? '
+              'This will also permanently delete $expenseCount associated expense${expenseCount == 1 ? '' : 's'}. This cannot be undone.'
+        : 'Delete ${ids.length} selected categories? This action cannot be undone.';
+
+    if (!mounted) return;
     final confirmed = await PanaraConfirmDialog.show<bool>(
       context,
-      title: "Delete selected categories?",
-      message:
-          "Delete ${_selectedIds.length} selected categories? This action cannot be undone. Existing expenses that used these categories will keep their text value.",
+      title: 'Delete selected categories?',
+      message: message,
       textColor: theme.textTheme.bodySmall?.color,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
       onTapCancel: () => Navigator.pop(context, false),
       onTapConfirm: () => Navigator.pop(context, true),
       panaraDialogType: PanaraDialogType.error,
@@ -149,19 +186,26 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
 
     if (confirmed != true) return;
 
-    final ids = _selectedIds.toList();
-    final placeholders = List.filled(ids.length, '?').join(',');
-    final db = await dbHelper.database;
-    await db.delete(
-      'categories',
-      where: 'id IN ($placeholders)',
-      whereArgs: ids,
-    );
+    // Delete expenses first, then categories
+    await db.transaction((txn) async {
+      await txn.delete(
+        'expenses',
+        where: 'category_id IN ($placeholders)',
+        whereArgs: ids,
+      );
+      await txn.delete(
+        'categories',
+        where: 'id IN ($placeholders)',
+        whereArgs: ids,
+      );
+    });
 
     if (!mounted) return;
     AppSnackBar.showError(
       context,
-      'Deleted ${ids.length} categories',
+      hasExpenses
+          ? 'Deleted ${ids.length} categories and $expenseCount expense${expenseCount == 1 ? '' : 's'}'
+          : 'Deleted ${ids.length} categories',
       icon: FontAwesomeIcons.trash,
     );
 

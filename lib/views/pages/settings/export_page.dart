@@ -235,8 +235,11 @@ class _ExportPageState extends State<ExportPage> {
 
       final db = await _dbHelper.database;
 
-      // Query expenses ordered by date ascending (you can change ordering if needed)
-      final expenses = await db.query('expenses', orderBy: 'date ASC');
+      // Query expenses via view (provides human-readable category name)
+      final expenses = await db.query(
+        'expenses_with_category',
+        orderBy: 'date ASC',
+      );
 
       // Build CSV - NOTE: strict header + order requested by user
       final sb = StringBuffer();
@@ -331,7 +334,10 @@ class _ExportPageState extends State<ExportPage> {
       dialogShown = true;
 
       final db = await _dbHelper.database;
-      final expenses = await db.query('expenses', orderBy: 'date ASC');
+      final expenses = await db.query(
+        'expenses_with_category',
+        orderBy: 'date ASC',
+      );
       final categories = await db.query('categories', orderBy: 'id ASC');
       final users = await db.query('user_info');
 

@@ -113,8 +113,9 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       isLoading = true;
     });
 
-    final db = await DatabaseHelper().database;
-    final data = await db.query('expenses', orderBy: 'date DESC, id DESC');
+    final data = await DatabaseHelper().getExpenses(
+      orderBy: 'date DESC, id DESC',
+    );
 
     setState(() {
       expenses = data;
@@ -211,8 +212,13 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     try {
       final db = await DatabaseHelper().database;
+      final catId =
+          (_lastDeletedExpense!['category_id'] as int?) ??
+          await DatabaseHelper().resolveOrCreateCategoryId(
+            (_lastDeletedExpense!['category'] ?? 'Uncategorized').toString(),
+          );
       await db.insert('expenses', {
-        'category': _lastDeletedExpense!['category'],
+        'category_id': catId,
         'amount': _lastDeletedExpense!['amount'],
         'date': _lastDeletedExpense!['date'],
         'note': _lastDeletedExpense!['note'],

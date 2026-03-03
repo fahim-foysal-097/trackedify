@@ -63,8 +63,8 @@ class AllTimeStatsState extends State<AllTimeStats> {
         },
     };
 
-    // Load expenses
-    final data = await db.query('expenses');
+    // Load expenses (via view to get category name)
+    final data = await db.query('expenses_with_category');
 
     final Map<String, double> totals = {};
     final Map<String, int> counts = {};
@@ -88,7 +88,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
     String? minExpenseCat;
 
     for (var row in data) {
-      final categoryName = row['category'] as String;
+      final categoryName = (row['category']?.toString()) ?? 'Uncategorized';
       final amount = (row['amount'] as num).toDouble();
 
       totals[categoryName] = (totals[categoryName] ?? 0) + amount;

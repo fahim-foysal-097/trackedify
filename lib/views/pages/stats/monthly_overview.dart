@@ -29,7 +29,10 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
   Future<void> loadMonthlyData() async {
     setState(() => isLoading = true);
     final db = await DatabaseHelper().database;
-    final allExpenses = await db.query('expenses', orderBy: 'date DESC');
+    final allExpenses = await db.query(
+      'expenses_with_category',
+      orderBy: 'date DESC',
+    );
 
     // Group expenses by month-year
     groupedByMonth = {};
@@ -47,8 +50,9 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       for (var exp in expenses) {
         final amount = (exp['amount'] as num).toDouble();
         monthTotal += amount;
+        final catKey = (exp['category']?.toString()) ?? 'Uncategorized';
         categoryTotals.update(
-          exp['category'],
+          catKey,
           (value) => value + amount,
           ifAbsent: () => amount,
         );

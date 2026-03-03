@@ -143,9 +143,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> loadExpenses() async {
-    final db = await DatabaseHelper().database;
-    final data = await db.query(
-      'expenses',
+    final data = await DatabaseHelper().getExpenses(
       orderBy: 'date DESC, id DESC',
       limit: 6,
     );
@@ -410,8 +408,14 @@ class HomePageState extends State<HomePage> {
 
     try {
       final db = await DatabaseHelper().database;
+      // Resolve category name → id for the undo
+      final catId =
+          (_lastDeletedExpense!['category_id'] as int?) ??
+          await DatabaseHelper().resolveOrCreateCategoryId(
+            (_lastDeletedExpense!['category'] ?? 'Uncategorized').toString(),
+          );
       await db.insert('expenses', {
-        'category': _lastDeletedExpense!['category'],
+        'category_id': catId,
         'amount': _lastDeletedExpense!['amount'],
         'date': _lastDeletedExpense!['date'],
         'note': _lastDeletedExpense!['note'],
@@ -1042,10 +1046,15 @@ class HomePageState extends State<HomePage> {
     final categoryVal = categoryCtl.text.trim().isEmpty
         ? 'Other'
         : categoryCtl.text.trim();
-    final dateStr = DateFormat('dd/MM/yyyy').format(DateTime.now());
+    final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // Resolve category name → id (inserts placeholder if unknown)
+    final categoryId = await DatabaseHelper().resolveOrCreateCategoryId(
+      categoryVal,
+    );
 
     await DatabaseHelper().insertExpense(
-      category: categoryVal,
+      categoryId: categoryId,
       amount: amountVal,
       date: dateStr,
       note: null,

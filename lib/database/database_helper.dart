@@ -28,23 +28,12 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (db, version) async {
         await db.transaction((txn) async {
-          // --- Table: Expenses ---
-          await txn.execute('''
-            CREATE TABLE expenses (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              category TEXT NOT NULL,
-              amount REAL NOT NULL,
-              date TEXT NOT NULL,
-              note TEXT
-            )
-          ''');
-
           // --- Table: Categories ---
           await txn.execute('''
             CREATE TABLE categories (
@@ -53,6 +42,32 @@ class DatabaseHelper {
               color INTEGER NOT NULL,
               icon_code INTEGER NOT NULL
             )
+          ''');
+
+          // --- Table: Expenses (uses FK to categories) ---
+          await txn.execute('''
+            CREATE TABLE expenses (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              category_id INTEGER NOT NULL,
+              amount REAL NOT NULL,
+              date TEXT NOT NULL,
+              note TEXT,
+              FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE RESTRICT
+            )
+          ''');
+
+          // --- View: expenses_with_category ---
+          // LEFT JOIN + COALESCE so expenses are NEVER lost even if category_id is orphaned.
+          await txn.execute('''
+            CREATE VIEW expenses_with_category AS
+              SELECT e.id,
+                     e.category_id,
+                     COALESCE(c.name, 'Unknown') AS category,
+                     e.amount,
+                     e.date,
+                     e.note
+              FROM expenses e
+              LEFT JOIN categories c ON e.category_id = c.id
           ''');
 
           // --- Table: User Info ---
@@ -193,6 +208,129 @@ class DatabaseHelper {
             );
           } catch (_) {}
         }
+
+        // ─── Version 8: Migrate category TEXT → category_id FK ───────────────
+        if (oldVersion < 8) {
+          await db.transaction((txn) async {
+            // 1. Ensure categories table exists (it should from v2+, but be safe)
+            await txn.execute('''
+              CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                color INTEGER NOT NULL,
+                icon_code INTEGER NOT NULL
+              )
+            ''');
+            await _insertDefaultCategories(txn);
+
+            // 2. Ensure an "Uncategorized" fallback exists
+            await txn.insert('categories', {
+              'name': 'Uncategorized',
+              'color': 0xFF9E9E9E,
+              'icon_code': 0xe574,
+            }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+            // 3. Disable FK enforcement during structural migration
+            await txn.execute('PRAGMA foreign_keys = OFF');
+
+            // 4. Rename old expenses table
+            await txn.execute('ALTER TABLE expenses RENAME TO expenses_old');
+
+            // 5. Create new expenses table with category_id FK
+            await txn.execute('''
+              CREATE TABLE expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category_id INTEGER NOT NULL,
+                amount REAL NOT NULL,
+                date TEXT NOT NULL,
+                note TEXT,
+                FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE RESTRICT
+              )
+            ''');
+
+            // 6. Get the Uncategorized fallback ID
+            final fallbackRows = await txn.query(
+              'categories',
+              columns: ['id'],
+              where: 'name = ?',
+              whereArgs: ['Uncategorized'],
+              limit: 1,
+            );
+            final fallbackId = fallbackRows.first['id'] as int;
+
+            // 7. Migrate rows: match category name → category id
+            final oldExpenses = await txn.query('expenses_old');
+            for (final row in oldExpenses) {
+              final oldCategoryName = row['category']?.toString() ?? '';
+              int? categoryId;
+
+              if (oldCategoryName.isNotEmpty) {
+                final match = await txn.query(
+                  'categories',
+                  columns: ['id'],
+                  where: 'name = ?',
+                  whereArgs: [oldCategoryName],
+                  limit: 1,
+                );
+                if (match.isNotEmpty) {
+                  categoryId = match.first['id'] as int;
+                } else {
+                  // Insert the old category name as a new category (grey, question mark icon)
+                  final newId = await txn.insert('categories', {
+                    'name': oldCategoryName,
+                    'color': 0xFF9E9E9E,
+                    'icon_code': 0xe574,
+                  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+                  if (newId > 0) {
+                    categoryId = newId;
+                  } else {
+                    // Already inserted due to race — re-fetch
+                    final reMatch = await txn.query(
+                      'categories',
+                      columns: ['id'],
+                      where: 'name = ?',
+                      whereArgs: [oldCategoryName],
+                      limit: 1,
+                    );
+                    categoryId = reMatch.isNotEmpty
+                        ? reMatch.first['id'] as int
+                        : fallbackId;
+                  }
+                }
+              } else {
+                categoryId = fallbackId;
+              }
+
+              await txn.insert('expenses', {
+                'id': row['id'],
+                'category_id': categoryId,
+                'amount': row['amount'],
+                'date': row['date'],
+                'note': row['note'],
+              });
+            }
+
+            // 8. Drop old table
+            await txn.execute('DROP TABLE expenses_old');
+
+            // 9. Re-enable FK enforcement
+            await txn.execute('PRAGMA foreign_keys = ON');
+
+            // 10. Create the compatibility view (LEFT JOIN so no expense is invisible)
+            await txn.execute('DROP VIEW IF EXISTS expenses_with_category');
+            await txn.execute('''
+              CREATE VIEW expenses_with_category AS
+                SELECT e.id,
+                       e.category_id,
+                       COALESCE(c.name, 'Unknown') AS category,
+                       e.amount,
+                       e.date,
+                       e.note
+                FROM expenses e
+                LEFT JOIN categories c ON e.category_id = c.id
+            ''');
+          });
+        }
       },
     );
   }
@@ -247,6 +385,51 @@ class DatabaseHelper {
       'color': color,
       'icon_code': iconCode,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  /// Look up a category's ID by its name. Returns null if not found.
+  Future<int?> getCategoryIdByName(String name) async {
+    final db = await database;
+    final rows = await db.query(
+      'categories',
+      columns: ['id'],
+      where: 'name = ?',
+      whereArgs: [name],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int;
+  }
+
+  /// Resolve category name → id, inserting a grey placeholder if not found.
+  Future<int> resolveOrCreateCategoryId(String categoryName) async {
+    final db = await database;
+    final existing = await db.query(
+      'categories',
+      columns: ['id'],
+      where: 'name = ?',
+      whereArgs: [categoryName],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      return existing.first['id'] as int;
+    }
+    // Insert as grey placeholder
+    final newId = await db.insert('categories', {
+      'name': categoryName,
+      'color': 0xFF9E9E9E,
+      'icon_code': 0xe574,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    if (newId > 0) return newId;
+    // Race: re-fetch
+    final re = await db.query(
+      'categories',
+      columns: ['id'],
+      where: 'name = ?',
+      whereArgs: [categoryName],
+      limit: 1,
+    );
+    return re.first['id'] as int;
   }
 
   Future<void> closeDatabase() async {
@@ -353,20 +536,34 @@ class DatabaseHelper {
     );
   }
 
-  /// Insert an expense.
+  /// Insert an expense using the category's ID (FK).
   Future<int> insertExpense({
-    required String category,
+    required int categoryId,
     required double amount,
     required String date,
     String? note,
   }) async {
     final db = await database;
     return db.insert('expenses', {
-      'category': category,
+      'category_id': categoryId,
       'amount': amount,
       'date': date,
       'note': note,
     });
+  }
+
+  /// Query expenses returning rows with a 'category' name column.
+  /// Uses the expenses_with_category view.
+  Future<List<Map<String, dynamic>>> getExpenses({
+    String? orderBy,
+    int? limit,
+  }) async {
+    final db = await database;
+    return db.query(
+      'expenses_with_category',
+      orderBy: orderBy ?? 'date DESC, id DESC',
+      limit: limit,
+    );
   }
 
   // -------------------------

@@ -30,6 +30,7 @@ class _AddPageState extends State<AddPage> {
   DateTime selectedDate = DateTime.now();
 
   String? selectedCategoryName;
+  int? selectedCategoryId;
   List<Map<String, dynamic>> categories = [];
 
   // Toggle: add another after saving
@@ -85,6 +86,7 @@ class _AddPageState extends State<AddPage> {
       if (selectedCategoryName != null &&
           !categories.any((c) => c['name'] == selectedCategoryName)) {
         selectedCategoryName = null;
+        selectedCategoryId = null;
         categoryController.text = '';
       }
     });
@@ -121,34 +123,58 @@ class _AddPageState extends State<AddPage> {
   }
 
   Future<void> deleteCategory(int id, String name) async {
+    final db = await DatabaseHelper().database;
+
+    // Count linked expenses
+    final countResult = await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM expenses WHERE category_id = ?',
+      [id],
+    );
+    final expenseCount = (countResult.first['cnt'] as int?) ?? 0;
+    final hasExpenses = expenseCount > 0;
+    final message = hasExpenses
+        ? 'Are you sure you want to delete "$name"? '
+              'This will also permanently delete $expenseCount associated expense${expenseCount == 1 ? '' : 's'}.'
+        : 'Are you sure you want to delete "$name"?';
+
+    if (!mounted) return;
     final theme = Theme.of(context);
     final confirm = await PanaraConfirmDialog.show<bool>(
       context,
-      title: "Delete Category?",
-      message: 'Are you sure you want to delete "$name"?',
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      onTapCancel: () {
-        Navigator.pop(context, false);
-      },
-      onTapConfirm: () {
-        Navigator.pop(context, true);
-      },
+      title: 'Delete Category?',
+      message: message,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      onTapCancel: () => Navigator.pop(context, false),
+      onTapConfirm: () => Navigator.pop(context, true),
       textColor: theme.textTheme.bodySmall?.color,
       panaraDialogType: PanaraDialogType.error,
     );
 
-    if (confirm == true) {
-      final db = await DatabaseHelper().database;
-      await db.delete("categories", where: "id = ?", whereArgs: [id]);
-      await loadCategories();
-      if (!mounted) return;
-      AppSnackBar.showError(
-        context,
-        "Category '$name' deleted!",
-        icon: Icons.delete,
-      );
+    if (confirm != true) return;
+
+    await db.transaction((txn) async {
+      await txn.delete('expenses', where: 'category_id = ?', whereArgs: [id]);
+      await txn.delete('categories', where: 'id = ?', whereArgs: [id]);
+    });
+
+    // If this category was selected, clear selection
+    if (selectedCategoryName == name) {
+      setState(() {
+        selectedCategoryName = null;
+        selectedCategoryId = null;
+      });
     }
+
+    await loadCategories();
+    if (!mounted) return;
+    AppSnackBar.showError(
+      context,
+      hasExpenses
+          ? "Category '$name' and $expenseCount expense${expenseCount == 1 ? '' : 's'} deleted!"
+          : "Category '$name' deleted!",
+      icon: Icons.delete,
+    );
   }
 
   Map<String, dynamic>? getSelectedCategory() {
@@ -272,6 +298,7 @@ class _AddPageState extends State<AddPage> {
                       onTap: () {
                         setState(() {
                           selectedCategoryName = cat['name'];
+                          selectedCategoryId = cat['id'] as int?;
                           categoryController.text = cat['name'];
                         });
                         Navigator.pop(sheetContext);
@@ -373,6 +400,7 @@ class _AddPageState extends State<AddPage> {
       dateController.text = DateFormat('dd/MM/yyyy').format(selectedDate);
       if (!keepCategory) {
         selectedCategoryName = null;
+        selectedCategoryId = null;
         categoryController.clear();
       }
     });
@@ -657,13 +685,13 @@ class _AddPageState extends State<AddPage> {
     FocusScope.of(context).unfocus();
     HapticFeedback.mediumImpact();
 
-    if (selectedCategoryName == null) {
+    if (selectedCategoryName == null || selectedCategoryId == null) {
       AppSnackBar.showInfo(context, 'Please select a category');
       return;
     }
 
     final category = getSelectedCategory();
-    if (category == null) {
+    if (category == null || selectedCategoryId == null) {
       AppSnackBar.showError(context, 'Invalid category');
       return;
     }
@@ -686,7 +714,7 @@ class _AddPageState extends State<AddPage> {
     try {
       await Future.sync(
         () => addExpense(
-          category: category['name'],
+          categoryId: selectedCategoryId!,
           amount: amount,
           date: selectedDate,
           note: noteText,
