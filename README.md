@@ -42,7 +42,7 @@ Trackedify is a lightweight personal expense tracker designed to help you take c
 
 ## Download
 
-<a href="https://fahim-foysal-097.github.io/trackedify-website/"><img src="https://img.shields.io/badge/Go to Website-Download-blue?style=for-the-badge"></a>
+<a href="https://fahim-foysal-097.github.io/trackedify-web/"><img src="https://img.shields.io/badge/Go to Website-Download-blue?style=for-the-badge"></a>
 
 ## TODO
 

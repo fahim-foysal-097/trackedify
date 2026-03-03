@@ -24,7 +24,7 @@ class _AboutPageState extends State<AboutPage>
   String _buildNumber = '';
   String _platformInfo = '';
   final String _releasePageUrl =
-      'https://fahim-foysal-097.github.io/trackedify-website/releases.html';
+      'https://fahim-foysal-097.github.io/trackedify-web/releases.html';
 
   bool _loadingRelease = false;
   String? _latestTitle;

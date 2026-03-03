@@ -323,7 +323,7 @@ class SettingsPage extends StatelessWidget {
                   title: 'Visit Website',
                   iconColor: iconColor,
                   onTap: () => launchURL(
-                    "https://fahim-foysal-097.github.io/trackedify-website/",
+                    "https://fahim-foysal-097.github.io/trackedify-web/",
                   ),
                 ),
                 SettingsButton(

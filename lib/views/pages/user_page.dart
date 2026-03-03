@@ -590,7 +590,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Release Notes',
                     accent: Colors.green,
                     onTap: () => _launchURL(
-                      "https://fahim-foysal-097.github.io/trackedify-website/releases.html",
+                      "https://fahim-foysal-097.github.io/trackedify-web/releases.html",
                     ),
                   ),
 
@@ -599,7 +599,7 @@ class UserPageState extends State<UserPage> {
                     label: 'Website',
                     accent: Colors.deepPurple,
                     onTap: () => _launchURL(
-                      "https://fahim-foysal-097.github.io/trackedify-website/",
+                      "https://fahim-foysal-097.github.io/trackedify-web/",
                     ),
                   ),
 
