@@ -15,100 +15,100 @@ publish_to: "none"
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.8.0+12
+version: 1.9.0+13
 
 environment:
-    sdk: ^3.11.0
+  sdk: ^3.11.0
 
 dependencies:
-    flutter:
-        sdk: flutter
+  flutter:
+    sdk: flutter
 
-    # The following adds the Cupertino Icons font to your application.
-    # Use with the CupertinoIcons class for iOS style icons.
-    cupertino_icons: ^1.0.8
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
 
-    intl: ^0.20.2
-    font_awesome_flutter: ^10.10.0
-    path: ^1.9.1
-    path_provider: ^2.1.5
-    sqflite: ^2.4.2
-    fl_chart: ^1.1.1
-    lottie: ^3.3.2
-    flutter_launcher_icons: ^0.14.4
-    url_launcher: ^6.3.2
-    flutter_colorpicker: ^1.1.0
-    image_picker: ^1.2.0
-    flutter_native_splash: ^2.4.6
-    math_expressions: ^3.1.0
-    file_picker: ^10.3.3
-    flutter_file_dialog: ^3.0.2
-    crypto: ^3.0.6
-    flutter_secure_storage: ^10.0.0
-    speech_to_text: ^7.3.0
-    panara_dialogs: ^0.1.5
-    awesome_notifications: ^0.11.0
-    android_notification_icons: ^0.0.1
-    package_info_plus: ^9.0.0
-    http: ^1.5.0
-    permission_handler: ^12.0.1
-    open_filex: ^4.7.0
-    device_info_plus: ^12.1.0
-    saver_gallery: ^4.0.1
-    flutter_heatmap_calendar: ^1.0.5
-    flex_color_scheme: ^8.3.0
-    shared_preferences: ^2.5.3
+  intl: ^0.20.2
+  font_awesome_flutter: ^10.10.0
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  sqflite: ^2.4.2
+  fl_chart: ^1.1.1
+  lottie: ^3.3.2
+  flutter_launcher_icons: ^0.14.4
+  url_launcher: ^6.3.2
+  flutter_colorpicker: ^1.1.0
+  image_picker: ^1.2.0
+  flutter_native_splash: ^2.4.6
+  math_expressions: ^3.1.0
+  file_picker: ^10.3.3
+  flutter_file_dialog: ^3.0.2
+  crypto: ^3.0.6
+  flutter_secure_storage: ^10.0.0
+  speech_to_text: ^7.3.0
+  panara_dialogs: ^0.1.5
+  awesome_notifications: ^0.11.0
+  android_notification_icons: ^0.0.1
+  package_info_plus: ^9.0.0
+  http: ^1.5.0
+  permission_handler: ^12.0.1
+  open_filex: ^4.7.0
+  device_info_plus: ^12.1.0
+  saver_gallery: ^4.0.1
+  flutter_heatmap_calendar: ^1.0.5
+  flex_color_scheme: ^8.3.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
-    flutter_test:
-        sdk: flutter
+  flutter_test:
+    sdk: flutter
 
-    flutter_lints: ^6.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 android_notification_icons:
-    image_path: "assets/icon/notification.png"
-    icon_name: "ic_notification"
+  image_path: "assets/icon/notification.png"
+  icon_name: "ic_notification"
 
 # The following section is specific to Flutter packages.
 flutter:
-    # The following line ensures that the Material Icons font is
-    # included with your application, so that you can use the icons in
-    # the material Icons class.
-    uses-material-design: true
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
 
-    # To add assets to your application, add an assets section, like this:
-    assets:
-        - assets/img/pfp.jpg
-        - assets/lotties/
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/img/pfp.jpg
+    - assets/lotties/
 
-    # An image asset can refer to one or more resolution-specific "variants", see
-    # https://flutter.dev/to/resolution-aware-images
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
 
-    # For details regarding adding assets from package dependencies, see
-    # https://flutter.dev/to/asset-from-package
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
 
-    # To add custom fonts to your application, add a fonts section here,
-    # in this "flutter" section. Each entry in this list should have a
-    # "family" key with the font family name, and a "fonts" key with a
-    # list giving the asset and other descriptors for the font. For
-    # example:
-    fonts:
-        - family: Inter
-          fonts:
-              - asset: assets/fonts/Inter.ttf
-    #   - family: Schyler
-    #     fonts:
-    #       - asset: fonts/Schyler-Regular.ttf
-    #       - asset: fonts/Schyler-Italic.ttf
-    #         style: italic
-    #   - family: Trajan Pro
-    #     fonts:
-    #       - asset: fonts/TrajanPro.ttf
-    #       - asset: fonts/TrajanPro_Bold.ttf
-    #         weight: 700
-    #
-    # For details regarding fonts from package dependencies,
-    # see https://flutter.dev/to/font-from-package
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

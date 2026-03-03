@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trackedify/database/database_helper.dart';
+import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 
 class ImportPage extends StatefulWidget {
@@ -104,6 +105,20 @@ class _ImportPageState extends State<ImportPage> {
     }
   }
 
+  Future<void> _syncCurrencyFromDb() async {
+    try {
+      final cur = await DatabaseHelper().getCurrency();
+      if (cur != null && cur['code'] != null && cur['name'] != null) {
+        await CurrencyController.instance.setCurrency(
+          cur['code']!,
+          cur['name']!,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to sync currency from DB: \$e');
+    }
+  }
+
   // Import DB (.db)
   Future<bool> _importDb() async {
     if (_isProcessing || !mounted) return false;
@@ -181,6 +196,7 @@ class _ImportPageState extends State<ImportPage> {
       }
 
       // refresh counts
+      await _syncCurrencyFromDb();
       await _loadSummary();
 
       if (!mounted) return true;
@@ -408,6 +424,16 @@ class _ImportPageState extends State<ImportPage> {
                 : ((u['notification_enabled'] == true) ? 1 : 0);
           }
 
+          if (u.containsKey('currency_code')) {
+            row['currency_code'] = u['currency_code']?.toString();
+          }
+          if (u.containsKey('currency_name')) {
+            row['currency_name'] = u['currency_name']?.toString();
+          }
+          if (u.containsKey('currency_symbol')) {
+            row['currency_symbol'] = u['currency_symbol']?.toString();
+          }
+
           // insert
           try {
             final inserted = await db.insert('user_info', row);
@@ -417,6 +443,9 @@ class _ImportPageState extends State<ImportPage> {
           }
         }
       }
+
+      // sync currency
+      await _syncCurrencyFromDb();
 
       // done - refresh summary
       await _loadSummary();

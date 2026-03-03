@@ -46,3 +46,6 @@ app.*.map.json
 
 # Test related
 /test/data/
+
+# Others
+todo.txt

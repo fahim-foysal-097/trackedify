@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -67,7 +67,10 @@ class DatabaseHelper {
               voice_enabled INTEGER DEFAULT 1,
               notification_enabled INTEGER DEFAULT 1,
               notification_hour INTEGER DEFAULT 20,
-              notification_minute INTEGER DEFAULT 0
+              notification_minute INTEGER DEFAULT 0,
+              currency_code TEXT DEFAULT 'usd',
+              currency_name TEXT DEFAULT 'US Dollar',
+              currency_symbol TEXT DEFAULT '\$'
             )
           ''');
 
@@ -170,6 +173,24 @@ class DatabaseHelper {
                 FOREIGN KEY(expense_id) REFERENCES expenses(id) ON DELETE CASCADE
               )
             ''');
+          } catch (_) {}
+        }
+
+        if (oldVersion < 7) {
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN currency_code TEXT DEFAULT "usd"',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN currency_name TEXT DEFAULT "US Dollar"',
+            );
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE user_info ADD COLUMN currency_symbol TEXT DEFAULT "\$"',
+            );
           } catch (_) {}
         }
       },
@@ -413,6 +434,45 @@ class DatabaseHelper {
       'image': image,
       'caption': caption,
     });
+  }
+
+  // -------------------------
+  // Currency helpers
+  // -------------------------
+  Future<void> updateCurrency(String code, String name, String symbol) async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) {
+      await db.insert('user_info', {
+        'username': 'User',
+        'currency_code': code,
+        'currency_name': name,
+        'currency_symbol': symbol,
+      });
+      return;
+    }
+    final id = rows.first['id'] as int;
+    await db.update(
+      'user_info',
+      {'currency_code': code, 'currency_name': name, 'currency_symbol': symbol},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<Map<String, String>?> getCurrency() async {
+    final db = await database;
+    final rows = await db.query('user_info', limit: 1);
+    if (rows.isEmpty) return null;
+    final first = rows.first;
+    if (first['currency_code'] != null) {
+      return {
+        'code': first['currency_code'].toString(),
+        'name': first['currency_name'].toString(),
+        'symbol': first['currency_symbol'].toString(),
+      };
+    }
+    return null;
   }
 
   /// Get all image notes (optionally filter by expenseId)

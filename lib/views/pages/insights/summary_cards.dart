@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 // -------------------- EXPENSE SUMMARY & INSIGHTS --------------------
 
@@ -9,7 +9,6 @@ class ExpenseSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(symbol: "\$");
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -33,7 +32,7 @@ class ExpenseSummaryCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                formatter.format(totalExpense),
+                CurrencyController.instance.formatAmount(totalExpense),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -55,8 +54,6 @@ class InsightsCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(symbol: "\$");
-
     double safeDouble(Object? o) => (o as num?)?.toDouble() ?? 0.0;
 
     final percent = safeDouble(insights['percentChange']);
@@ -74,7 +71,6 @@ class InsightsCards extends StatelessWidget {
                 title: "Max Expense",
                 value: safeDouble(insights['maxExpense']),
                 color: Colors.red,
-                formatter: formatter,
               ),
             ),
             const SizedBox(width: 12),
@@ -83,7 +79,6 @@ class InsightsCards extends StatelessWidget {
                 title: "Min Expense",
                 value: safeDouble(insights['minExpense']),
                 color: Colors.green,
-                formatter: formatter,
               ),
             ),
             const SizedBox(width: 12),
@@ -105,7 +100,6 @@ class InsightsCards extends StatelessWidget {
                 title: "Weekly Avg",
                 value: safeDouble(insights['weeklyAvg']),
                 color: Colors.purple,
-                formatter: formatter,
               ),
             ),
             const SizedBox(width: 12),
@@ -114,7 +108,6 @@ class InsightsCards extends StatelessWidget {
                 title: "Current Month",
                 value: safeDouble(insights['currentMonth']),
                 color: Colors.blue,
-                formatter: formatter,
               ),
             ),
             const SizedBox(width: 12),
@@ -137,7 +130,6 @@ class InsightsCards extends StatelessWidget {
     double? value,
     String? valueText,
     required Color color,
-    NumberFormat? formatter,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -157,7 +149,9 @@ class InsightsCards extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            value != null ? formatter!.format(value) : valueText ?? "",
+            value != null
+                ? CurrencyController.instance.formatAmount(value)
+                : valueText ?? "",
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,

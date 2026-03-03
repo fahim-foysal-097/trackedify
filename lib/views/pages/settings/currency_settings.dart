@@ -28,8 +28,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
   late TabController _tabCtrl;
 
   // Converter test state
-  static const _testChain = ['usd', 'bdt', 'eur', 'jpy'];
-  static const _testAmount = 200.0;
+  final double _testAmount = 100.0;
   List<_ConversionStep> _conversionSteps = [];
   bool _loadingTest = false;
   String? _testError;
@@ -213,23 +212,22 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
 
     try {
       final steps = <_ConversionStep>[];
-      double current = _testAmount;
+      final targets = ['bdt', 'eur', 'jpy'];
 
-      for (int i = 0; i < _testChain.length - 1; i++) {
-        final from = _testChain[i];
-        final to = _testChain[i + 1];
+      for (int i = 0; i < targets.length; i++) {
+        const from = 'usd';
+        final to = targets[i];
         final rate = await _ctrl.fetchConversionRate(from, to);
-        final converted = current * rate;
+        final converted = _testAmount * rate;
         steps.add(
           _ConversionStep(
             fromCode: from,
             toCode: to,
-            fromAmount: current,
+            fromAmount: _testAmount,
             toAmount: converted,
             rate: rate,
           ),
         );
-        current = converted;
       }
 
       if (!mounted) return;
@@ -442,8 +440,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Converts \$200 USD → BDT → EUR → JPY '
-                    'using live exchange rates.',
+                    'Fetches live exchange rates for USD against BDT, EUR, and JPY. Verify before converting currency.',
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 16),
@@ -509,37 +506,6 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
               (e) => _buildStepCard(e.value, theme, cs, e.key),
             ),
             const SizedBox(height: 12),
-            // Final result summary
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: cs.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Final result',
-                    style: TextStyle(
-                      color: cs.onPrimary.withValues(alpha: 0.8),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '\$${_testAmount.toStringAsFixed(2)} USD'
-                    '  →  '
-                    '¥${_conversionSteps.last.toAmount.toStringAsFixed(2)} JPY',
-                    style: TextStyle(
-                      color: cs.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ],
       ),

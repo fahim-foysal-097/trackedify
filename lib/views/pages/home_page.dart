@@ -196,15 +196,6 @@ class HomePageState extends State<HomePage> {
     return categoryMap[name] ?? {'color': Colors.grey, 'icon': Icons.category};
   }
 
-  String _formatAmount(dynamic amount) {
-    if (amount is num) {
-      return amount.toDouble().toStringAsFixed(2);
-    }
-    final parsed = double.tryParse(amount?.toString() ?? '');
-    if (parsed != null) return parsed.toStringAsFixed(2);
-    return amount?.toString() ?? '0.00';
-  }
-
   /// Fetch image blobs for an expense id from img_notes.
   Future<List<Uint8List>> _fetchImagesForExpense(int expenseId) async {
     final db = await DatabaseHelper().database;
@@ -517,7 +508,7 @@ class HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            "-\$${_formatAmount(expense['amount'])}",
+                            "-${CurrencyController.instance.formatAmount(expense['amount'])}",
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -1514,7 +1505,7 @@ class HomePageState extends State<HomePage> {
                                               CrossAxisAlignment.end,
                                           children: [
                                             Text(
-                                              "-\$${_formatAmount(expense['amount'])}",
+                                              "-${CurrencyController.instance.formatAmount(expense['amount'])}",
                                               style: theme.textTheme.bodyLarge
                                                   ?.copyWith(
                                                     fontWeight: FontWeight.w500,

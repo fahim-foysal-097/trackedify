@@ -301,7 +301,7 @@ class TopCategoryChart extends StatelessWidget {
                       reservedSize: 40,
                       interval: intervalY,
                       getTitlesWidget: (value, meta) => Text(
-                        '\$${value.toInt()}',
+                        '${CurrencyController.instance.symbol}${value.toInt()}',
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),

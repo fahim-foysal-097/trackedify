@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../database/database_helper.dart';
+
 const Map<String, String> kCurrencySymbols = {
   'usd': '\$',
   'eur': '€',
@@ -65,6 +67,8 @@ class CurrencyController extends ChangeNotifier {
     await prefs.setString('currency_code', code);
     await prefs.setString('currency_name', name);
     await prefs.setString('currency_symbol', sym);
+
+    await DatabaseHelper().updateCurrency(code, name, sym);
 
     _selectedCurrencyCode = code;
     _selectedCurrencyName = name;
