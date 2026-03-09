@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
@@ -386,27 +387,9 @@ class _AboutPageState extends State<AboutPage>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Hero card with app info
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF6366F1),
-                          Color(0xFF8B5CF6),
-                          Color(0xFFEC4899),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
+                  _buildGlassCard(
                     padding: const EdgeInsets.all(24),
+                    borderRadius: 24,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -523,25 +506,9 @@ class _AboutPageState extends State<AboutPage>
                   ),
                   const SizedBox(height: 24),
                   // Latest release card
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF4F46E5,
-                          ).withValues(alpha: 0.25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
+                  _buildGlassCard(
                     padding: const EdgeInsets.all(20),
+                    borderRadius: 20,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -725,25 +692,9 @@ class _AboutPageState extends State<AboutPage>
                   ),
                   const SizedBox(height: 24),
                   // Credits card
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFF7C3AED,
-                          ).withValues(alpha: 0.25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
+                  _buildGlassCard(
                     padding: const EdgeInsets.all(20),
+                    borderRadius: 20,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -815,6 +766,31 @@ class _AboutPageState extends State<AboutPage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGlassCard({
+    required Widget child,
+    required EdgeInsets padding,
+    double borderRadius = 24,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          padding: padding,
+          child: child,
+        ),
       ),
     );
   }

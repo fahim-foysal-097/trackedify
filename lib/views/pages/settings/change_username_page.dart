@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import 'package:trackedify/shared/widgets/custom_button.dart';
 
 class ChangeUsernamePage extends StatefulWidget {
   const ChangeUsernamePage({super.key});
@@ -108,50 +109,97 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
       body: _loading
           ? const Center(child: CupertinoActivityIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: 'New Username',
-                      filled: true,
-                      fillColor: theme.colorScheme.surface,
-                      prefixIcon: Icon(
-                        FontAwesomeIcons.pen,
-                        color: theme.textTheme.bodySmall?.color,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF1C1C1E)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: Theme.of(context).brightness == Brightness.dark
+                                ? 0.3
+                                : 0.05,
+                          ),
+                          blurRadius: 32,
+                          offset: const Offset(0, 16),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.05),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: kToolbarHeight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cs.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            FontAwesomeIcons.userPen,
+                            size: 36,
+                            color: cs.primary,
+                          ),
                         ),
-                      ),
-                      onPressed: _saveUsername,
-                      child: Text(
-                        'Save Username',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: cs.onPrimary,
-                          fontSize: 18,
+                        const SizedBox(height: 24),
+                        Text(
+                          'Personalize',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Choose a name to customize your experience',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        TextField(
+                          controller: _usernameController,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Your unique name',
+                            filled: true,
+                            fillColor: theme.colorScheme.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            label: 'Save Changes',
+                            onPressed: _saveUsername,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
     );

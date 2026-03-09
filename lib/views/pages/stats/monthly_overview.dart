@@ -5,8 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/currency_controller.dart';
 
-// TODO : improve cards style
-
 class MonthlyOverviewTab extends StatefulWidget {
   const MonthlyOverviewTab({super.key});
 
@@ -156,12 +154,28 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
         ? nowKey
         : (availableMonths.isNotEmpty ? availableMonths.first : nowKey);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     // If month has no data -> show friendly empty card (keeps dropdown above)
     if (allZero) {
-      return Card(
-        color: cs.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 6,
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: isDark 
+                ? Colors.white.withValues(alpha: 0.05) 
+                : Colors.black.withValues(alpha: 0.05),
+          ),
+        ),
         child: Column(
           children: [
             Row(
@@ -241,9 +255,24 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     double intervalY = (computedTop / 4);
     if (intervalY <= 0) intervalY = 1.0;
 
-    return Card(
-      color: cs.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.05) 
+              : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -405,29 +434,43 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
 
   Widget _buildMonthCard(Map<String, dynamic> monthInfo) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final total = (monthInfo['total'] as num).toDouble();
     final month = monthInfo['month'] as String;
     final topCats = monthInfo['topCategories'] as List;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
-          colors: [
-            cs.primary.withValues(alpha: 0.95),
-            cs.primaryContainer.withValues(alpha: 0.9),
-          ],
+          colors: isDark 
+            ? [
+                cs.primaryContainer.withValues(alpha: 0.6),
+                cs.primaryContainer.withValues(alpha: 0.2),
+              ]
+            : [
+                cs.primary.withValues(alpha: 0.95),
+                cs.primary.withValues(alpha: 0.8),
+              ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: cs.primary.withValues(alpha: 0.22),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: isDark 
+                ? Colors.black.withValues(alpha: 0.3)
+                : cs.primary.withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
+        border: Border.all(
+          color: isDark 
+              ? cs.primary.withValues(alpha: 0.2) 
+              : Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -437,14 +480,14 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
             // Month header with icon
             Row(
               children: [
-                Icon(Icons.calendar_today, color: cs.onPrimary, size: 24),
+                const Icon(Icons.calendar_today, color: Colors.white, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   formatMonth(month),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: cs.onPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -456,15 +499,15 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               children: [
                 Icon(
                   Icons.attach_money,
-                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   size: 18,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   "Total: ${CurrencyController.instance.formatAmount(total)}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
-                    color: cs.onPrimary,
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -477,16 +520,16 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               children: [
                 Icon(
                   Icons.pie_chart,
-                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   size: 18,
                 ),
                 const SizedBox(width: 6),
-                Text(
+                const Text(
                   "Top 3 Categories",
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                    color: cs.onPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -499,16 +542,19 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
               final percent = total > 0 ? (value / total) : 0.0;
 
               final progressColor = percent * 100 <= 50
-                  ? cs.onPrimary
-                  : cs.onPrimary;
+                  ? Colors.white
+                  : Colors.white;
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: cs.onPrimary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,8 +565,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           Expanded(
                             child: Text(
                               category,
-                              style: TextStyle(
-                                color: cs.onPrimary,
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -528,8 +574,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           ),
                           Text(
                             CurrencyController.instance.formatAmount(value),
-                            style: TextStyle(
-                              color: cs.onPrimary,
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -545,8 +591,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                               child: LinearProgressIndicator(
                                 value: percent.clamp(0.0, 1.0),
                                 minHeight: 6,
-                                backgroundColor: cs.onPrimary.withValues(
-                                  alpha: 0.12,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.15,
                                 ),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   progressColor,
@@ -558,8 +604,9 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
                           Text(
                             "${(percent * 100).toStringAsFixed(1)}%",
                             style: TextStyle(
-                              color: cs.onPrimary.withValues(alpha: 0.8),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
