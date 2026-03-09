@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import '../../../shared/widgets/custom_dialog.dart';
 
 class CurrencySettingsPage extends StatefulWidget {
   const CurrencySettingsPage({super.key});
@@ -123,40 +124,18 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
     required String toName,
     required ColorScheme cs,
   }) {
-    return showDialog<bool>(
+    return ConfirmDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.currency_exchange, color: cs.primary),
-            const SizedBox(width: 10),
-            const Text('Convert Amounts?'),
-          ],
-        ),
-        content: Text(
-          'Do you want to convert your existing expense amounts from '
+      title: 'Convert Amounts?',
+      message: 'Do you want to convert your existing expense amounts from '
           '${fromName.isNotEmpty ? fromName : fromCode.toUpperCase()} '
           'to ${toName.isNotEmpty ? toName : toCode.toUpperCase()} '
           'using the current exchange rate?\n\n'
           'This will permanently update all amounts in the database. '
-          'Selecting "No" only changes the currency symbol.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: const Text('Cancel'),
-          ),
-          OutlinedButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No, just symbol'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Yes, Convert'),
-          ),
-        ],
-      ),
+          'Selecting "Cancel" or tapping outside retains the new symbol but skips conversion.',
+      confirmLabel: 'Convert',
+      cancelLabel: 'Skip',
+      icon: Icons.currency_exchange,
     );
   }
 

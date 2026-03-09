@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
@@ -15,6 +14,7 @@ import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
+import '../../shared/widgets/custom_dialog.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseHistoryPage extends StatefulWidget {
@@ -284,45 +284,40 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     }
   }
 
-  void confirmDelete(Map<String, dynamic> expense) {
+  void confirmDelete(Map<String, dynamic> expense) async {
     if (showTip) setState(() => showTip = false);
 
-    PanaraConfirmDialog.show(
-      context,
+    final result = await ConfirmDialog.show(
+      context: context,
       title: 'Delete Expense?',
       message: 'Are you sure you want to delete this expense?',
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      onTapCancel: () {
-        Navigator.pop(context);
-      },
-      onTapConfirm: () {
-        deleteExpense(expense['id']);
-        Navigator.pop(context);
-      },
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
+    
+    if (result == true) {
+      deleteExpense(expense['id']);
+    }
   }
 
-  void confirmDeleteMultiple(Set<int> ids) {
+  void confirmDeleteMultiple(Set<int> ids) async {
     final idsCopy = Set<int>.from(ids);
 
-    PanaraConfirmDialog.show(
-      context,
+    final result = await ConfirmDialog.show(
+      context: context,
       title: 'Delete Selected Expenses?',
       message:
           'Are you sure you want to delete ${idsCopy.length} selected expenses?',
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      onTapCancel: () => Navigator.pop(context),
-      onTapConfirm: () {
-        deleteMultipleExpenses(idsCopy);
-        Navigator.pop(context);
-      },
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
+    if (result == true) {
+      deleteMultipleExpenses(idsCopy);
+    }
   }
 
   void openEdit(Map<String, dynamic> expense) {
@@ -1195,14 +1190,12 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
     const tips =
         '''Long-press an item to enter multi-select. Use the Select All (top-right) to select visible items. Swipe right to edit, swipe left to delete. Tap an item to view details and you can also save image notes.''';
 
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 
@@ -1652,19 +1645,15 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                             openEdit(expense);
                             return false;
                           } else if (direction == DismissDirection.endToStart) {
-                            final confirm = await PanaraConfirmDialog.show<bool>(
-                              context,
+                            final confirm = await ConfirmDialog.show(
+                              context: context,
                               title: 'Delete Expense?',
                               message:
                                   'Are you sure you want to delete this expense?',
-                              confirmButtonText: "Delete",
-                              cancelButtonText: "Cancel",
-                              onTapCancel: () => Navigator.pop(context, false),
-                              onTapConfirm: () => Navigator.pop(context, true),
-                              textColor: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.color,
-                              panaraDialogType: PanaraDialogType.error,
+                              confirmLabel: "Delete",
+                              cancelLabel: "Cancel",
+                              isDestructive: true,
+                              icon: Icons.delete_outline,
                             );
                             if (confirm == true) {
                               deleteExpenseWithUndo(expense);

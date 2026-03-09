@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+
+import '../../../shared/widgets/custom_dialog.dart';
 
 class ExportPage extends StatefulWidget {
   const ExportPage({super.key});
@@ -35,14 +37,12 @@ class _ExportPageState extends State<ExportPage> {
     const tips =
         '''You can export / backup your data in CSV, JSON and SQLite database format. If you only want to keep backup of your data, export DB/JSON. You can only backup image notes by exporting DB.''';
 
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 

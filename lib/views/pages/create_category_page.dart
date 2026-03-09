@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/data/category_suggestion_data.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+
+import '../../shared/widgets/custom_dialog.dart';
 
 /// Local suggestion helper (simple on-device "AI" (not really, just rules) using Levenshtein).
 
@@ -184,67 +185,41 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
   void showTipsDialog() {
     const tips =
         'You can add custom categories from here. You can also edit categories from settings page. Also there is smart suggestions for icons and colors.';
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 
   Future<void> _openColorPicker() async {
-    final theme = Theme.of(context);
     Color picked = selectedColor;
-    await showDialog(
+    final result = await ConfirmDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Center(
-          child: Text(
-            'Select Custom Color',
-            style: theme.textTheme.titleMedium,
-          ),
+      title: 'Select Custom Color',
+      confirmLabel: 'Select',
+      content: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: ColorPicker(
+          pickerColor: selectedColor,
+          onColorChanged: (color) => picked = color,
+          enableAlpha: false,
+          displayThumbColor: true,
+          pickerAreaHeightPercent: 0.7,
+          pickerAreaBorderRadius: BorderRadius.circular(10),
         ),
-        content: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: ColorPicker(
-            pickerColor: selectedColor,
-            onColorChanged: (color) => picked = color,
-            enableAlpha: false,
-            displayThumbColor: true,
-            pickerAreaHeightPercent: 0.7,
-            pickerAreaBorderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: theme.colorScheme.onSurface),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                selectedColor = picked;
-                userPickedColor = true; // user explicitly picked a color
-                aiSuggestedColor = null; // clear AI suggestion once user picks
-              });
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Select',
-              style: TextStyle(color: theme.colorScheme.primary),
-            ),
-          ),
-        ],
       ),
     );
+
+    if (result == true) {
+      setState(() {
+        selectedColor = picked;
+        userPickedColor = true; // user explicitly picked a color
+        aiSuggestedColor = null; // clear AI suggestion once user picks
+      });
+    }
   }
 
   Future<void> _saveCategory() async {

@@ -2,12 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
+
+import '../../../shared/widgets/custom_dialog.dart';
 
 class EditCategoriesPage extends StatefulWidget {
   const EditCategoriesPage({super.key});
@@ -40,15 +41,12 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   void _showTips() {
-    final theme = Theme.of(context);
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: "Tips",
       message: "You can delete multiple categories at once by long-pressing.",
-      buttonText: "Got it",
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapDismiss: () => Navigator.pop(context),
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: "Got it",
+      icon: Icons.lightbulb_outline,
     );
   }
 
@@ -101,7 +99,6 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   }
 
   Future<void> _confirmAndDeleteSingle(int id, String name) async {
-    final theme = Theme.of(context);
     final db = await dbHelper.database;
 
     // Count how many expenses will be deleted
@@ -118,16 +115,14 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
         : 'Delete "$name"? This action cannot be undone.';
 
     if (!mounted) return;
-    final confirmed = await PanaraConfirmDialog.show<bool>(
-      context,
+    final confirmed = await ConfirmDialog.show(
+      context: context,
       title: 'Delete category?',
       message: message,
-      textColor: theme.textTheme.bodySmall?.color,
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
-      onTapCancel: () => Navigator.pop(context, false),
-      onTapConfirm: () => Navigator.pop(context, true),
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
 
     if (confirmed != true) return;
@@ -153,7 +148,6 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   Future<void> _confirmAndDeleteSelected() async {
     if (_selectedIds.isEmpty) return;
 
-    final theme = Theme.of(context);
     final db = await dbHelper.database;
     final ids = _selectedIds.toList();
     final placeholders = List.filled(ids.length, '?').join(',');
@@ -172,16 +166,14 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
         : 'Delete ${ids.length} selected categories? This action cannot be undone.';
 
     if (!mounted) return;
-    final confirmed = await PanaraConfirmDialog.show<bool>(
-      context,
+    final confirmed = await ConfirmDialog.show(
+      context: context,
       title: 'Delete selected categories?',
       message: message,
-      textColor: theme.textTheme.bodySmall?.color,
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
-      onTapCancel: () => Navigator.pop(context, false),
-      onTapConfirm: () => Navigator.pop(context, true),
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
 
     if (confirmed != true) return;
@@ -676,14 +668,13 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
     if (isDuplicate) {
       setState(() => _saving = false);
       if (!mounted) return;
-      PanaraInfoDialog.show(
-        context,
+      InfoDialog.show(
+        context: context,
         title: "Name already used",
         message: "A category with that name already exists. Pick another name.",
-        buttonText: "OK",
-        onTapDismiss: () => Navigator.pop(context),
-        textColor: Theme.of(context).textTheme.bodySmall?.color,
-        panaraDialogType: PanaraDialogType.normal,
+        buttonLabel: "OK",
+        icon: Icons.error_outline,
+        iconColor: Colors.red,
       );
       return;
     }
@@ -716,48 +707,29 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
 
   Future<void> _openColorPicker() async {
     Color picked = _selectedColor;
-    final theme = Theme.of(context);
-    await showDialog(
+    final result = await ConfirmDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Center(
-          child: Text('Select Custom Color', style: theme.textTheme.titleSmall),
+      title: 'Select Custom Color',
+      confirmLabel: 'Select',
+      cancelLabel: 'Cancel',
+      content: SingleChildScrollView(
+        child: ColorPicker(
+          pickerColor: _selectedColor,
+          onColorChanged: (color) => picked = color,
+          enableAlpha: false,
+          displayThumbColor: true,
+          pickerAreaHeightPercent: 0.7,
+          pickerAreaBorderRadius: BorderRadius.circular(10),
         ),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: _selectedColor,
-            onColorChanged: (color) => picked = color,
-            enableAlpha: false,
-            displayThumbColor: true,
-            pickerAreaHeightPercent: 0.7,
-            pickerAreaBorderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: theme.colorScheme.onSurface),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _selectedColor = picked;
-              });
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Select',
-              style: TextStyle(color: theme.colorScheme.primary),
-            ),
-          ),
-        ],
       ),
     );
+
+    if (result == true) {
+      if (!mounted) return;
+      setState(() {
+        _selectedColor = picked;
+      });
+    }
   }
 
   Widget _buildIconGrid() {

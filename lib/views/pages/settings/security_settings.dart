@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/services/auth_service.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
+
+import '../../../shared/widgets/custom_dialog.dart';
 
 class SecuritySettings extends StatefulWidget {
   const SecuritySettings({super.key});
@@ -35,16 +36,13 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   }
 
   void _showTipsDialog() {
-    final theme = Theme.of(context);
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Security tips',
       message:
           'Enable App Lock (PIN) to protect your data. You can change PIN, reset it with your recovery password, or set a recovery password below.',
-      buttonText: 'Got it',
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapDismiss: () => Navigator.pop(context),
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.security,
     );
   }
 
@@ -55,29 +53,19 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   }) async {
     if (!mounted) return null;
     final ctl = TextEditingController();
-    return showDialog<String?>(
+    final result = await ConfirmDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: TextField(
-          controller: ctl,
-          obscureText: obscure,
-          keyboardType: TextInputType.text,
-          decoration: InputDecoration(hintText: hint),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ctl.text.trim()),
-            child: const Text('Confirm', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      title: title,
+      confirmLabel: 'Confirm',
+      cancelLabel: 'Cancel',
+      content: TextField(
+        controller: ctl,
+        obscureText: obscure,
+        keyboardType: TextInputType.text,
+        decoration: InputDecoration(hintText: hint),
       ),
     );
+    return result == true ? ctl.text.trim() : null;
   }
 
   Future<void> _enableAppLock() async {
@@ -150,29 +138,19 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   Future<void> _setRecoveryPassword() async {
     final pinCtl = TextEditingController();
 
-    final currentPin = await showDialog<String?>(
+    final currentPinResult = await ConfirmDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Verify PIN'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: TextField(
-          controller: pinCtl,
-          obscureText: true,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: 'Enter current PIN'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, pinCtl.text.trim()),
-            child: const Text('Verify', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      title: 'Verify PIN',
+      confirmLabel: 'Verify',
+      cancelLabel: 'Cancel',
+      content: TextField(
+        controller: pinCtl,
+        obscureText: true,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(hintText: 'Enter current PIN'),
       ),
     );
+    final currentPin = currentPinResult == true ? pinCtl.text.trim() : null;
 
     if (!mounted || currentPin == null || currentPin.isEmpty) return;
 
@@ -184,30 +162,21 @@ class _SecuritySettingsState extends State<SecuritySettings> {
     }
 
     final recoveryCtl = TextEditingController();
-    final newRecovery = await showDialog<String?>(
+    final newRecoveryResult = await ConfirmDialog.show(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Set new recovery password'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: TextField(
-          controller: recoveryCtl,
-          obscureText: true,
-          decoration: const InputDecoration(
-            hintText: 'Enter new recovery password',
-          ),
+      title: 'Set new recovery password',
+      confirmLabel: 'Save',
+      cancelLabel: 'Cancel',
+      content: TextField(
+        controller: recoveryCtl,
+        obscureText: true,
+        decoration: const InputDecoration(
+          hintText: 'Enter new recovery password',
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, recoveryCtl.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
+
+    final newRecovery = newRecoveryResult == true ? recoveryCtl.text.trim() : null;
 
     if (!mounted || newRecovery == null || newRecovery.isEmpty) return;
     await _auth.setRecoveryPassword(newRecovery);
@@ -248,19 +217,16 @@ class _SecuritySettingsState extends State<SecuritySettings> {
   }
 
   Future<void> _onToggleLock(bool v) async {
-    final theme = Theme.of(context);
-    final confirm = await PanaraConfirmDialog.show<bool>(
-      context,
+    final confirm = await ConfirmDialog.show(
+      context: context,
       title: v ? 'Enable App Lock?' : 'Disable App Lock?',
       message: v
           ? 'Enabling requires creating a PIN and recovery password. Proceed?'
           : 'Disabling lock will remove the PIN and recovery password. Are you sure?',
-      confirmButtonText: "Confirm",
-      cancelButtonText: "Cancel",
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapCancel: () => Navigator.pop(context, false),
-      onTapConfirm: () => Navigator.pop(context, true),
-      panaraDialogType: v ? PanaraDialogType.success : PanaraDialogType.warning,
+      confirmLabel: "Confirm",
+      cancelLabel: "Cancel",
+      isDestructive: !v,
+      icon: v ? Icons.lock_outline : Icons.lock_open_outlined,
     );
 
     if (confirm != true) {

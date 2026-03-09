@@ -2,11 +2,11 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/notification_service.dart';
 import 'package:trackedify/shared/constants/constants.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import 'package:trackedify/shared/widgets/custom_dialog.dart';
 
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
@@ -54,7 +54,6 @@ class _NotificationSettingsState extends State<NotificationSettings> {
     setState(() => _notificationsEnabled = newValue);
 
     if (newValue) {
-      final theme = Theme.of(context);
       final granted = await _notificationUtil.requestPermission();
       if (!granted) {
         await DatabaseHelper().setNotificationEnabled(false);
@@ -63,15 +62,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           _notificationsEnabled = false;
           _saving = false;
         });
-        PanaraInfoDialog.show(
-          context,
+        InfoDialog.show(
+          context: context,
           title: "Permission denied",
           message:
               "We couldn't get notification permission. Please enable it from system settings if you change your mind.",
-          buttonText: "OK",
-          textColor: theme.textTheme.bodySmall?.color,
-          onTapDismiss: () => Navigator.pop(context),
-          panaraDialogType: PanaraDialogType.normal,
+          buttonLabel: "OK",
+          icon: Icons.error_outline,
         );
         return;
       }
@@ -140,7 +137,6 @@ class _NotificationSettingsState extends State<NotificationSettings> {
 
     setState(() => _saving = true);
     if (!mounted) return;
-    final theme = Theme.of(context);
 
     try {
       await DatabaseHelper().setNotificationTime(picked.hour, picked.minute);
@@ -176,15 +172,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
             _notificationsEnabled = false;
             _saving = false;
           });
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "Permission denied",
             message:
                 "We couldn't get notification permission. Reminder disabled. Please enable notifications in system settings to use reminders.",
-            buttonText: "OK",
-            textColor: theme.textTheme.bodySmall?.color,
-            onTapDismiss: () => Navigator.pop(context),
-            panaraDialogType: PanaraDialogType.normal,
+            buttonLabel: "OK",
+            icon: Icons.error_outline,
           );
         }
       } else {
@@ -209,16 +203,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
   }
 
   void _showTips() {
-    final theme = Theme.of(context);
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: "Tips - Notifications",
       message:
           "Turn on daily reminders to get a quick reminder to add expenses. If notifications don't appear, check system permissions.",
-      buttonText: "Got it",
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapDismiss: () => Navigator.pop(context),
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: "Got it",
+      icon: Icons.lightbulb_outline,
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:trackedify/services/auth_service.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/set_pin_page.dart';
+import '../../shared/widgets/custom_dialog.dart';
 
 class LockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -50,44 +51,34 @@ class _LockScreenState extends State<LockScreen> {
 
   Future<void> _forgotFlow() async {
     // Prompt user to enter recovery password
-    final recovery = await showDialog<String?>(
+    final ctl = TextEditingController();
+    final cs = Theme.of(context).colorScheme;
+
+    final confirmed = await ConfirmDialog.show(
       context: context,
-      builder: (context) {
-        final ctl = TextEditingController();
-        final cs = Theme.of(context).colorScheme;
-        return AlertDialog(
-          backgroundColor: cs.surface,
-          title: const Text('Recover PIN'),
-          content: TextField(
-            controller: ctl,
-            obscureText: true,
-            decoration: InputDecoration(
-              hintText: 'Enter recovery password',
-              filled: true,
-              fillColor: cs.onSurface.withValues(alpha: 0.06),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
+      title: 'Recover PIN',
+      confirmLabel: 'Submit',
+      cancelLabel: 'Cancel',
+      content: TextField(
+        controller: ctl,
+        obscureText: true,
+        decoration: InputDecoration(
+          hintText: 'Enter recovery password',
+          filled: true,
+          fillColor: cs.onSurface.withValues(alpha: 0.06),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(ctl.text.trim()),
-              child: const Text('Submit'),
-            ),
-          ],
-        );
-      },
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+      ),
     );
+
+    final recovery = confirmed == true ? ctl.text.trim() : null;
 
     if (!mounted || recovery == null || recovery.isEmpty) return;
 

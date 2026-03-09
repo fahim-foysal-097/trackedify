@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import 'package:trackedify/shared/widgets/custom_dialog.dart';
 
 class VoiceCommandsSettings extends StatefulWidget {
   const VoiceCommandsSettings({super.key});
@@ -45,8 +45,6 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
   Future<void> _toggleVoice(bool v) async {
     setState(() => _saving = true);
 
-    final theme = Theme.of(context);
-
     if (v) {
       // When enabling voice, ask for microphone permission first.
       final permStatus = await Permission.microphone.status;
@@ -70,30 +68,23 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
 
           if (isPermanentlyDenied) {
             if (!mounted) return;
-            PanaraInfoDialog.show(
-              context,
+            InfoDialog.show(
+              context: context,
               title: 'Microphone permission required',
               message:
                   'Microphone permission is blocked for this app. To enable voice commands, open system settings and enable Microphone permission for Trackedify.',
-              buttonText: 'Open settings',
-              textColor: theme.textTheme.bodySmall?.color,
-              onTapDismiss: () async {
-                Navigator.pop(context);
-                openAppSettings();
-              },
-              panaraDialogType: PanaraDialogType.warning,
-            );
+              buttonLabel: 'Open settings',
+              icon: Icons.mic_off,
+            ).then((_) => openAppSettings());
           } else {
             if (!mounted) return;
-            PanaraInfoDialog.show(
-              context,
+            InfoDialog.show(
+              context: context,
               title: 'Permission denied',
               message:
                   'Microphone permission was denied. Voice commands have been disabled. You can enable microphone permission in system settings to use voice features.',
-              buttonText: 'OK',
-              textColor: theme.textTheme.bodySmall?.color,
-              onTapDismiss: () => Navigator.pop(context),
-              panaraDialogType: PanaraDialogType.normal,
+              buttonLabel: 'OK',
+              icon: Icons.mic_off,
             );
           }
 
@@ -132,16 +123,13 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
   }
 
   void _showTipsDialog() {
-    final theme = Theme.of(context);
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message:
           'You can use voice to add expenses. Say for example: "Add food 20" or "Shopping 500". If it fails, check microphone permission and language settings.',
-      buttonText: 'Got it',
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapDismiss: () => Navigator.pop(context),
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 

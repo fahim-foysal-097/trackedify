@@ -5,13 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/views/pages/calculator.dart';
 import 'package:trackedify/views/pages/create_category_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
+
+import '../../shared/widgets/custom_dialog.dart';
 
 class EditExpensePage extends StatefulWidget {
   final Map<String, dynamic> expense;
@@ -196,17 +197,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
         : 'Are you sure you want to delete "$name"?';
 
     if (!mounted) return;
-    final theme = Theme.of(context);
-    final really = await PanaraConfirmDialog.show<bool>(
-      context,
+    final really = await ConfirmDialog.show(
+      context: context,
       title: 'Delete Category?',
       message: message,
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapCancel: () => Navigator.pop(context, false),
-      onTapConfirm: () => Navigator.pop(context, true),
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
 
     if (really != true) return;
@@ -540,78 +538,71 @@ class _EditExpensePageState extends State<EditExpensePage> {
           IconButton(
             icon: Icon(Icons.remove_red_eye_outlined, color: cs.onPrimary),
             onPressed: () {
-              showDialog(
+              InfoDialog.show(
                 context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Expense preview'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _previewDialogRow(
-                        'Category',
-                        selectedCategoryName ?? '—',
-                      ),
-                      _previewDialogRow('Amount', amountText),
-                      _previewDialogRow('Date', dbFormat.format(selectedDate)),
-                      _previewDialogRow(
-                        'Note',
-                        noteText == 'No note' ? '—' : noteText,
-                      ),
-                      if (_existingImages.isNotEmpty ||
-                          _newPickedImages.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Attached images:',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 80,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount:
-                                _existingImages.length +
-                                _newPickedImages.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 8),
-                            itemBuilder: (_, i) {
-                              if (i < _existingImages.length) {
-                                return GestureDetector(
-                                  onTap: () => _viewImageFullScreen(
-                                    _existingImages[i]['bytes'] as Uint8List,
-                                  ),
-                                  child: Image.memory(
-                                    _existingImages[i]['bytes'] as Uint8List,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  ),
-                                );
-                              } else {
-                                final idx = i - _existingImages.length;
-                                return GestureDetector(
-                                  onTap: () => _viewImageFullScreen(
-                                    _newPickedImages[idx],
-                                  ),
-                                  child: Image.memory(
-                                    _newPickedImages[idx],
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
+                title: 'Expense preview',
+                buttonLabel: 'Close',
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _previewDialogRow(
+                      'Category',
+                      selectedCategoryName ?? '—',
                     ),
+                    _previewDialogRow('Amount', amountText),
+                    _previewDialogRow('Date', dbFormat.format(selectedDate)),
+                    _previewDialogRow(
+                      'Note',
+                      noteText == 'No note' ? '—' : noteText,
+                    ),
+                    if (_existingImages.isNotEmpty ||
+                        _newPickedImages.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Attached images:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount:
+                              _existingImages.length +
+                              _newPickedImages.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(width: 8),
+                          itemBuilder: (_, i) {
+                            if (i < _existingImages.length) {
+                              return GestureDetector(
+                                onTap: () => _viewImageFullScreen(
+                                  _existingImages[i]['bytes'] as Uint8List,
+                                ),
+                                child: Image.memory(
+                                  _existingImages[i]['bytes'] as Uint8List,
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              );
+                            } else {
+                              final idx = i - _existingImages.length;
+                              return GestureDetector(
+                                onTap: () => _viewImageFullScreen(
+                                  _newPickedImages[idx],
+                                ),
+                                child: Image.memory(
+                                  _newPickedImages[idx],
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               );
@@ -715,17 +706,14 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   Future<void> _deleteExistingImage(int id) async {
-    final theme = Theme.of(context);
-    final confirm = await PanaraConfirmDialog.show<bool>(
-      context,
+    final confirm = await ConfirmDialog.show(
+      context: context,
       title: "Delete image?",
       message: "Delete this attached image?",
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      onTapCancel: () => Navigator.pop(context, false),
-      onTapConfirm: () => Navigator.pop(context, true),
-      textColor: theme.textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.error,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
 
     if (confirm != true) return;
@@ -832,15 +820,12 @@ class _EditExpensePageState extends State<EditExpensePage> {
   }
 
   void _showTipsDialog() {
-    final theme = Theme.of(context);
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: "Tips",
       message: tips.isNotEmpty ? tips : "No tips available right now.",
-      buttonText: "Got it",
-      textColor: theme.textTheme.bodySmall?.color,
-      onTapDismiss: () => Navigator.pop(context),
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: "Got it",
+      icon: Icons.lightbulb_outline,
     );
   }
 

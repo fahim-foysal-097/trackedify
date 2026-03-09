@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import 'package:trackedify/shared/widgets/custom_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
@@ -123,15 +123,14 @@ class UpdateService {
         }
         // On manual checks, inform user we could not reach GitHub
         if (manualCheck && context.mounted) {
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "Update Check Failed",
             message:
                 "Couldn't check for updates (GitHub returned ${res.statusCode}).",
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            buttonText: "OK",
-            onTapDismiss: () => Navigator.of(context).pop(),
-            panaraDialogType: PanaraDialogType.error,
+            buttonLabel: "OK",
+            icon: Icons.error_outline,
+            iconColor: Colors.red,
           );
         }
         return;
@@ -154,14 +153,13 @@ class UpdateService {
       if (tag.isEmpty) {
         if (kDebugMode) debugPrint("No tag_name in latest release payload.");
         if (manualCheck && context.mounted) {
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "No Release Found",
             message: "Couldn't get the latest release information.",
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            buttonText: "OK",
-            onTapDismiss: () => Navigator.of(context).pop(),
-            panaraDialogType: PanaraDialogType.error,
+            buttonLabel: "OK",
+            icon: Icons.error_outline,
+            iconColor: Colors.red,
           );
         }
         return;
@@ -175,14 +173,13 @@ class UpdateService {
       if (cmp == 0) {
         if (manualCheck && context.mounted) {
           // Show user message only if this was a manual check
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "Up to Date",
             message: "You are on the latest version (v$currentVersion)",
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            buttonText: "OK",
-            onTapDismiss: () => Navigator.of(context).pop(),
-            panaraDialogType: PanaraDialogType.success,
+            buttonLabel: "OK",
+            icon: Icons.check_circle_outline,
+            iconColor: Colors.green,
           );
         }
         return;
@@ -191,15 +188,13 @@ class UpdateService {
       if (cmp < 0) {
         // latestVersion < currentVersion  => user has a newer app build than GitHub's latest
         if (manualCheck && context.mounted) {
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "You are ahead of releases",
             message:
                 "Your installed version is v$currentVersion which is newer than the latest GitHub release (v$latestVersion). This can happen if the release was removed or you installed a pre-release build. No update is available.",
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            buttonText: "OK",
-            onTapDismiss: () => Navigator.of(context).pop(),
-            panaraDialogType: PanaraDialogType.normal,
+            buttonLabel: "OK",
+            icon: Icons.info_outline,
           );
         } else {
           if (kDebugMode) {
@@ -232,19 +227,16 @@ class UpdateService {
           );
         }
         if (manualCheck && context.mounted) {
-          PanaraInfoDialog.show(
-            context,
+          InfoDialog.show(
+            context: context,
             title: "Update Available (no installer)",
             message:
                 "A new version v$latestVersion is available, but no installer matching your device ABI ($arch) was found for automatic download. Please check the release page on GitHub.",
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            buttonText: "Open Release Page",
-            onTapDismiss: () {
-              Navigator.of(context).pop();
-              _openReleasePage(releaseHtmlUrl);
-            },
-            panaraDialogType: PanaraDialogType.normal,
-          );
+            buttonLabel: "Open Release Page",
+            icon: Icons.info_outline,
+          ).then((_) {
+            _openReleasePage(releaseHtmlUrl);
+          });
         }
         return;
       }
@@ -259,35 +251,32 @@ class UpdateService {
       }
 
       if (!context.mounted) return;
-      PanaraConfirmDialog.show(
-        context,
+      final update = await ConfirmDialog.show(
+        context: context,
         title: "Update Available",
         message:
             "A new version v$latestVersion is available (you are on v$currentVersion). Do you want to update?",
-        textColor: Theme.of(context).textTheme.bodySmall?.color,
-        confirmButtonText: "Update",
-        cancelButtonText: "Later",
-        onTapCancel: () => Navigator.of(context).pop(),
-        onTapConfirm: () {
-          Navigator.of(context).pop();
-          _downloadAndInstall(apkUrl, latestVersion, context);
-        },
-        panaraDialogType: PanaraDialogType.normal,
+        confirmLabel: "Update",
+        cancelLabel: "Later",
+        icon: Icons.system_update_alt,
       );
+      if (update == true) {
+        if (!context.mounted) return;
+        _downloadAndInstall(apkUrl, latestVersion, context);
+      }
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint("Update check failed: $e\n$st");
       }
       if (manualCheck && context.mounted) {
-        PanaraInfoDialog.show(
-          context,
+        InfoDialog.show(
+          context: context,
           title: "Update Check Failed",
           message:
               "An error occurred while checking for updates. Check your Internet connection and try again.",
-          textColor: Theme.of(context).textTheme.bodySmall?.color,
-          buttonText: "OK",
-          onTapDismiss: () => Navigator.of(context).pop(),
-          panaraDialogType: PanaraDialogType.error,
+          buttonLabel: "OK",
+          icon: Icons.error_outline,
+          iconColor: Colors.red,
         );
       }
     }

@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/services/update_service.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+import 'package:trackedify/shared/widgets/custom_dialog.dart';
 import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
@@ -163,20 +163,14 @@ class UserPageState extends State<UserPage> {
   Future<void> deleteProfilePicture() async {
     if (userId == null) return;
 
-    final confirm = await PanaraConfirmDialog.show<bool>(
-      context,
+    final confirm = await ConfirmDialog.show(
+      context: context,
       title: "Delete?",
       message: "Are you sure you want to delete your profile picture?",
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      onTapCancel: () {
-        Navigator.pop(context, false);
-      },
-      onTapConfirm: () {
-        Navigator.pop(context, true);
-      },
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.warning,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      isDestructive: true,
+      icon: Icons.delete_outline,
     );
 
     if (!mounted) return;
@@ -223,14 +217,12 @@ class UserPageState extends State<UserPage> {
     const tips =
         '''Tap the profile picture to edit and long-press to delete. Use the buttons below to export/import data, check for updates, and more.''';
 
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 
@@ -474,38 +466,35 @@ class UserPageState extends State<UserPage> {
                     icon: FontAwesomeIcons.trash,
                     label: 'Wipe Data',
                     accent: Colors.redAccent,
-                    onTap: () {
+                    onTap: () async {
                       if (!mounted) return;
-                      PanaraConfirmDialog.show(
-                        context,
+                      final wipe = await ConfirmDialog.show(
+                        context: context,
                         title: "Wipe Data?",
                         message: "Are you sure you want to delete all data?",
-                        confirmButtonText: "Delete",
-                        cancelButtonText: "Cancel",
-                        onTapCancel: () {
-                          Navigator.pop(context);
-                        },
-                        onTapConfirm: () async {
-                          await DatabaseHelper().wipeAllData();
-                          if (context.mounted) {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    const WidgetTree(),
-                              ),
-                              (route) => false,
-                            );
-                            AppSnackBar.showError(
-                              context,
-                              'All data deleted',
-                              icon: Icons.warning_rounded,
-                            );
-                          }
-                        },
-                        textColor: Theme.of(context).textTheme.bodySmall?.color,
-                        panaraDialogType: PanaraDialogType.error,
+                        confirmLabel: "Delete",
+                        cancelLabel: "Cancel",
+                        isDestructive: true,
+                        icon: Icons.delete_forever,
                       );
+                      if (wipe == true) {
+                        await DatabaseHelper().wipeAllData();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  const WidgetTree(),
+                            ),
+                            (route) => false,
+                          );
+                          AppSnackBar.showError(
+                            context,
+                            'All data deleted',
+                            icon: Icons.warning_rounded,
+                          );
+                        }
+                      }
                     },
                   ),
 
@@ -529,31 +518,30 @@ class UserPageState extends State<UserPage> {
                     icon: FontAwesomeIcons.fileExport,
                     label: 'Import',
                     accent: cs.tertiary,
-                    onTap: () {
-                      PanaraConfirmDialog.show(
-                        context,
+                    onTap: () async {
+                      final proceed = await ConfirmDialog.show(
+                        context: context,
                         title: "Import data from DB/JSON?",
                         message:
                             "This may replace all of your current data / append data (using JSON). Continue?",
-                        textColor: Theme.of(context).textTheme.bodySmall?.color,
-                        confirmButtonText: "Confirm",
-                        cancelButtonText: "Cancel",
-                        onTapCancel: () => Navigator.pop(context),
-                        onTapConfirm: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  const ImportPage(),
-                            ),
-                          ).then((_) {
-                            if (!context.mounted) return;
-                            Navigator.pop(context);
-                            NavBarController.apply();
-                          });
-                        },
-                        panaraDialogType: PanaraDialogType.error,
+                        confirmLabel: "Confirm",
+                        cancelLabel: "Cancel",
+                        isDestructive: true,
+                        icon: Icons.download_rounded,
                       );
+                      if (proceed == true) {
+                        if (!context.mounted) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                const ImportPage(),
+                          ),
+                        ).then((_) {
+                          if (!context.mounted) return;
+                          NavBarController.apply();
+                        });
+                      }
                     },
                   ),
 

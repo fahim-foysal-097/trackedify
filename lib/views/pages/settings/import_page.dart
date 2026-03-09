@@ -5,11 +5,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
+
+import '../../../shared/widgets/custom_dialog.dart';
 
 class ImportPage extends StatefulWidget {
   const ImportPage({super.key});
@@ -35,14 +36,12 @@ class _ImportPageState extends State<ImportPage> {
     const tips =
         '''You can import / restore you data from valid JSON and SQLite database. Importing from DB will replace all data. You can replace / append new data by importing valid JSON.''';
 
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Hints & Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 
@@ -234,34 +233,79 @@ class _ImportPageState extends State<ImportPage> {
     final action = await showDialog<_JsonImportAction>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Import JSON',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'Do you want to append the JSON data to your existing data, '
-            'or replace existing tables (expenses, categories, user_info)?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(_JsonImportAction.append),
-              child: const Text('Append'),
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Import JSON',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Do you want to append the JSON data to your existing data, '
+                  'or replace existing tables (expenses, categories, user_info)?',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(_JsonImportAction.append),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Append (Safe)', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(_JsonImportAction.replace),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Replace', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(null),
+                    style: TextButton.styleFrom(
+                      foregroundColor: isDark ? Colors.white70 : Colors.black54,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(_JsonImportAction.replace),
-              child: const Text('Replace'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -487,32 +531,13 @@ class _ImportPageState extends State<ImportPage> {
     if (!dbImported) return; // only continue if DB import was successful
 
     if (!mounted) return;
-    final shouldImportJson = await showDialog<bool>(
+    final shouldImportJson = await ConfirmDialog.show(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Import JSON?',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'Do you also want to import a JSON file now? (optional)',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
+      title: 'Import JSON?',
+      message: 'Do you also want to import a JSON file now? (optional)',
+      confirmLabel: 'Yes',
+      cancelLabel: 'No',
+      icon: Icons.input_rounded,
     );
     if (shouldImportJson == true) await _importJson();
   }

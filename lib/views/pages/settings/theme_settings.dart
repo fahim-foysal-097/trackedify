@@ -1,7 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/shared/widgets/custom_dialog.dart';
 
 class ThemeSettingsPage extends StatefulWidget {
   const ThemeSettingsPage({super.key});
@@ -17,14 +17,12 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
     const tips =
         '''Tip: You can choose different color schemes for Light and Dark. The System mode uses your system OS mode to pick which one to apply.''';
 
-    PanaraInfoDialog.show(
-      context,
+    InfoDialog.show(
+      context: context,
       title: 'Tips',
       message: tips,
-      buttonText: 'Got it',
-      onTapDismiss: () => Navigator.pop(context),
-      textColor: Theme.of(context).textTheme.bodySmall?.color,
-      panaraDialogType: PanaraDialogType.normal,
+      buttonLabel: 'Got it',
+      icon: Icons.lightbulb_outline,
     );
   }
 

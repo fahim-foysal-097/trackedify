@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -23,6 +22,7 @@ import 'package:trackedify/views/pages/add_expense_page.dart';
 import 'package:trackedify/views/pages/expense_history_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
 
+import '../../shared/widgets/custom_dialog.dart';
 import 'edit_expense_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -728,30 +728,24 @@ class HomePageState extends State<HomePage> {
             await Permission.microphone.isPermanentlyDenied;
         if (isPermanentlyDenied) {
           if (!mounted) return;
-          PanaraInfoDialog.show(
-            context,
+          final bool? result = await ConfirmDialog.show(
+            context: context,
             title: 'Microphone blocked',
-            message:
-                'Microphone permission is blocked for this app. To use voice commands, open system settings and allow Microphone permission.',
-            buttonText: 'Open settings',
-            onTapDismiss: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            panaraDialogType: PanaraDialogType.warning,
+            message: 'Microphone permission is blocked for this app. To use voice commands, open system settings and allow Microphone permission.',
+            confirmLabel: 'Open settings',
+            cancelLabel: 'Cancel',
+            icon: Icons.mic_off,
           );
+          if (result == true) {
+            openAppSettings();
+          }
         } else {
           if (!mounted) return;
-          PanaraInfoDialog.show(
-            context,
+          await InfoDialog.show(
+            context: context,
             title: 'Permission denied',
-            message:
-                'Microphone permission denied. Voice commands have been disabled.',
-            buttonText: 'OK',
-            onTapDismiss: () => Navigator.pop(context),
-            textColor: Theme.of(context).textTheme.bodySmall?.color,
-            panaraDialogType: PanaraDialogType.normal,
+            message: 'Microphone permission denied. Voice commands have been disabled.',
+            icon: Icons.mic_off,
           );
         }
         return;
@@ -971,17 +965,11 @@ class HomePageState extends State<HomePage> {
     final parsed = _parseVoiceCommand(text);
     if (parsed == null) {
       if (!mounted) return;
-      PanaraInfoDialog.show(
-        context,
+      InfoDialog.show(
+        context: context,
         title: 'Could not parse',
-        message:
-            'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20".',
-        buttonText: "Okay",
-        onTapDismiss: () {
-          Navigator.of(context).pop();
-        },
-        textColor: Theme.of(context).textTheme.bodySmall?.color,
-        panaraDialogType: PanaraDialogType.error,
+        message: 'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20".',
+        icon: Icons.error_outline,
       );
       return;
     }
@@ -991,43 +979,28 @@ class HomePageState extends State<HomePage> {
     final amountCtl = TextEditingController(text: parsed['amount'].toString());
     final categoryCtl = TextEditingController(text: parsed['category']);
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ConfirmDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Expense'),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadiusGeometry.all(Radius.circular(10)),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: amountCtl,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(labelText: 'Amount'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: categoryCtl,
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
+      title: 'Confirm Expense',
+      confirmLabel: 'Add',
+      cancelLabel: 'Cancel',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: amountCtl,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
+            decoration: const InputDecoration(labelText: 'Amount'),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Add'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: categoryCtl,
+            decoration: const InputDecoration(labelText: 'Category'),
           ),
         ],
       ),
@@ -1410,23 +1383,15 @@ class HomePageState extends State<HomePage> {
                                 return false;
                               } else if (direction ==
                                   DismissDirection.endToStart) {
-                                final confirm =
-                                    await PanaraConfirmDialog.show<bool>(
-                                      context,
-                                      title: 'Delete Expense?',
-                                      message:
-                                          'Are you sure you want to delete this expense?',
-                                      confirmButtonText: "Delete",
-                                      cancelButtonText: "Cancel",
-                                      onTapCancel: () =>
-                                          Navigator.pop(context, false),
-                                      onTapConfirm: () =>
-                                          Navigator.pop(context, true),
-                                      textColor: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall?.color,
-                                      panaraDialogType: PanaraDialogType.error,
-                                    );
+                                final confirm = await ConfirmDialog.show(
+                                  context: context,
+                                  title: 'Delete Expense?',
+                                  message: 'Are you sure you want to delete this expense?',
+                                  confirmLabel: 'Delete',
+                                  cancelLabel: 'Cancel',
+                                  isDestructive: true,
+                                  icon: Icons.delete_outline,
+                                );
                                 return confirm == true;
                               }
                               return false;
