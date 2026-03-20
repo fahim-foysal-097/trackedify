@@ -528,10 +528,7 @@ class _AddPageState extends State<AddPage> {
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _previewDialogRow(
-                      'Category',
-                      selectedCategoryName ?? '—',
-                    ),
+                    _previewDialogRow('Category', selectedCategoryName ?? '-'),
                     _previewDialogRow('Amount', amountText),
                     _previewDialogRow(
                       'Date',
@@ -539,7 +536,7 @@ class _AddPageState extends State<AddPage> {
                     ),
                     _previewDialogRow(
                       'Note',
-                      noteText == 'No note' ? '—' : noteText,
+                      noteText == 'No note' ? '-' : noteText,
                     ),
                     if (_pickedImages.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -553,11 +550,9 @@ class _AddPageState extends State<AddPage> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _pickedImages.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 8),
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (_, i) => GestureDetector(
-                            onTap: () =>
-                                _viewImageFullScreen(_pickedImages[i]),
+                            onTap: () => _viewImageFullScreen(_pickedImages[i]),
                             child: Image.memory(
                               _pickedImages[i],
                               width: 80,
@@ -664,58 +659,50 @@ class _AddPageState extends State<AddPage> {
     }
   }
 
-  /// Get latest expense id (most recently inserted). Relying on sequential single-user workflow.
-  Future<int?> _getLatestExpenseId() async {
-    final db = await DatabaseHelper().database;
-    final rows = await db.query('expenses', orderBy: 'id DESC', limit: 1);
-    if (rows.isEmpty) return null;
-    return rows.first['id'] as int?;
-  }
-
   Future<void> _onSavePressed() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
     FocusScope.of(context).unfocus();
     HapticFeedback.mediumImpact();
 
     if (selectedCategoryName == null || selectedCategoryId == null) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showInfo(context, 'Please select a category');
       return;
     }
 
     final category = getSelectedCategory();
     if (category == null || selectedCategoryId == null) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showError(context, 'Invalid category');
       return;
     }
 
     final amount = double.tryParse(expenseController.text);
     if (amount == null) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showInfo(context, 'Please enter an amount');
       return;
     }
 
     if (amount <= 0) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showInfo(context, 'Please enter a valid amount');
       return;
     }
 
-    setState(() => _saving = true);
-
     final noteText = noteController.text.trim();
 
     try {
-      await Future.sync(
-        () => addExpense(
-          categoryId: selectedCategoryId!,
-          amount: amount,
-          date: selectedDate,
-          note: noteText,
-        ),
+      final expenseId = await addExpense(
+        categoryId: selectedCategoryId!,
+        amount: amount,
+        date: selectedDate,
+        note: noteText,
       );
 
-      // after insert, get the latest expense id (most recent)
-      final expenseId = await _getLatestExpenseId();
-
-      if (expenseId != null && _pickedImages.isNotEmpty) {
+      if (_pickedImages.isNotEmpty) {
         await _saveImagesForExpense(expenseId);
       }
 
@@ -885,13 +872,8 @@ class _AddPageState extends State<AddPage> {
                                 ),
                               ],
                               onChanged: (_) => setState(() {}),
-                              onSubmitted: (_) {
-                                if (!_saving &&
-                                    selectedCategoryName != null &&
-                                    expenseController.text.isNotEmpty) {
-                                  _onSavePressed();
-                                }
-                              },
+                              onSubmitted: (_) =>
+                                  FocusScope.of(context).unfocus(),
                               decoration: InputDecoration(
                                 hintText:
                                     "Amount (${CurrencyController.instance.symbol})",
@@ -1006,13 +988,7 @@ class _AddPageState extends State<AddPage> {
                         maxLines: 5,
                         onChanged: (_) => setState(() {}),
                         textInputAction: TextInputAction.done,
-                        onSubmitted: (_) {
-                          if (!_saving &&
-                              selectedCategoryName != null &&
-                              expenseController.text.isNotEmpty) {
-                            _onSavePressed();
-                          }
-                        },
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                         decoration: InputDecoration(
                           hintText: "Add a note (optional)",
                           filled: true,

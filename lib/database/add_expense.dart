@@ -1,6 +1,6 @@
 import 'package:trackedify/database/database_helper.dart';
 
-Future<void> addExpense({
+Future<int> addExpense({
   required int categoryId,
   required double amount,
   required DateTime date,
@@ -8,7 +8,7 @@ Future<void> addExpense({
 }) async {
   final formattedDate = date.toIso8601String().split('T').first;
 
-  await DatabaseHelper().insertExpense(
+  return DatabaseHelper().insertExpense(
     categoryId: categoryId,
     amount: amount,
     date: formattedDate,

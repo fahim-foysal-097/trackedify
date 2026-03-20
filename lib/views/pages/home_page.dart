@@ -731,7 +731,8 @@ class HomePageState extends State<HomePage> {
           final bool? result = await ConfirmDialog.show(
             context: context,
             title: 'Microphone blocked',
-            message: 'Microphone permission is blocked for this app. To use voice commands, open system settings and allow Microphone permission.',
+            message:
+                'Microphone permission is blocked for this app. To use voice commands, open system settings and allow Microphone permission.',
             confirmLabel: 'Open settings',
             cancelLabel: 'Cancel',
             icon: Icons.mic_off,
@@ -744,7 +745,8 @@ class HomePageState extends State<HomePage> {
           await InfoDialog.show(
             context: context,
             title: 'Permission denied',
-            message: 'Microphone permission denied. Voice commands have been disabled.',
+            message:
+                'Microphone permission denied. Voice commands have been disabled.',
             icon: Icons.mic_off,
           );
         }
@@ -968,7 +970,8 @@ class HomePageState extends State<HomePage> {
       InfoDialog.show(
         context: context,
         title: 'Could not parse',
-        message: 'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20".',
+        message:
+            'Sorry, could not parse the expense command. Try something like "Add shopping 20" or "Food 20".',
         icon: Icons.error_outline,
       );
       return;
@@ -989,9 +992,7 @@ class HomePageState extends State<HomePage> {
         children: [
           TextField(
             controller: amountCtl,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
@@ -1386,7 +1387,8 @@ class HomePageState extends State<HomePage> {
                                 final confirm = await ConfirmDialog.show(
                                   context: context,
                                   title: 'Delete Expense?',
-                                  message: 'Are you sure you want to delete this expense?',
+                                  message:
+                                      'Are you sure you want to delete this expense?',
                                   confirmLabel: 'Delete',
                                   cancelLabel: 'Cancel',
                                   isDestructive: true,

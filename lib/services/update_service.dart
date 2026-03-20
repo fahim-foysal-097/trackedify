@@ -419,7 +419,7 @@ class UpdateService {
             await entity.delete();
             deletedCount++;
           } else if (entity is Directory) {
-            // Attempt to delete empty directories later — ignore errors.
+            // Attempt to delete empty directories later - ignore errors.
             try {
               final children = entity.listSync();
               if (children.isEmpty) {

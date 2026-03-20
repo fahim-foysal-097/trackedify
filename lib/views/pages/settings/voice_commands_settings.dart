@@ -92,7 +92,7 @@ class _VoiceCommandsSettingsState extends State<VoiceCommandsSettings> {
         }
       }
 
-      // Permission granted — persist enabled and update UI
+      // Permission granted - persist enabled and update UI
       await DatabaseHelper().setVoiceEnabled(true);
       if (!mounted) return;
       setState(() {

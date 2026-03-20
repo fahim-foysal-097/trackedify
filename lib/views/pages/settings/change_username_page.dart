@@ -122,7 +122,8 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(
-                            alpha: Theme.of(context).brightness == Brightness.dark
+                            alpha:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? 0.3
                                 : 0.05,
                           ),

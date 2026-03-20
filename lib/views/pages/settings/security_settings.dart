@@ -176,7 +176,9 @@ class _SecuritySettingsState extends State<SecuritySettings> {
       ),
     );
 
-    final newRecovery = newRecoveryResult == true ? recoveryCtl.text.trim() : null;
+    final newRecovery = newRecoveryResult == true
+        ? recoveryCtl.text.trim()
+        : null;
 
     if (!mounted || newRecovery == null || newRecovery.isEmpty) return;
     await _auth.setRecoveryPassword(newRecovery);

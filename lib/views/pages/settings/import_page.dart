@@ -236,7 +236,9 @@ class _ImportPageState extends State<ImportPage> {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Dialog(
           backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -265,30 +267,42 @@ class _ImportPageState extends State<ImportPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(_JsonImportAction.append),
+                    onPressed: () =>
+                        Navigator.of(context).pop(_JsonImportAction.append),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Append (Safe)', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Append (Safe)',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(_JsonImportAction.replace),
+                    onPressed: () =>
+                        Navigator.of(context).pop(_JsonImportAction.replace),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Replace', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Replace',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -300,7 +314,10 @@ class _ImportPageState extends State<ImportPage> {
                       foregroundColor: isDark ? Colors.white70 : Colors.black54,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ],
@@ -507,7 +524,7 @@ class _ImportPageState extends State<ImportPage> {
 
       AppSnackBar.showSuccess(
         context,
-        'JSON import done — expenses: +$insertedExpenses (skipped $skippedExpenses), '
+        'JSON import done - expenses: +$insertedExpenses (skipped $skippedExpenses), '
         'categories: +$insertedCategories (skipped $skippedCategories), user_info: $insertedUsers',
         icon: Icons.check_circle_outline,
         duration: const Duration(seconds: 5),

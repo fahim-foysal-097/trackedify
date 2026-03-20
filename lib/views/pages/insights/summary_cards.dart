@@ -59,7 +59,7 @@ class InsightsCards extends StatelessWidget {
     final percent = safeDouble(insights['percentChange']);
     final percentLabel = percent.isFinite
         ? '${percent.toStringAsFixed(1)}%'
-        : '—';
+        : '-';
 
     return Column(
       children: [

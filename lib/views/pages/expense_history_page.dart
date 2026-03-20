@@ -213,7 +213,6 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
 
     // Show undo snackbar
     if (!mounted) return;
-    if (!mounted) return;
     AppSnackBar.showWithUndo(context, 'Expense deleted', _undoDelete);
 
     // Auto-dismiss undo after 5 seconds
@@ -296,7 +295,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
       isDestructive: true,
       icon: Icons.delete_outline,
     );
-    
+
     if (result == true) {
       deleteExpense(expense['id']);
     }

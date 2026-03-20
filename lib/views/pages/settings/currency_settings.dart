@@ -127,7 +127,8 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
     return ConfirmDialog.show(
       context: context,
       title: 'Convert Amounts?',
-      message: 'Do you want to convert your existing expense amounts from '
+      message:
+          'Do you want to convert your existing expense amounts from '
           '${fromName.isNotEmpty ? fromName : fromCode.toUpperCase()} '
           'to ${toName.isNotEmpty ? toName : toCode.toUpperCase()} '
           'using the current exchange rate?\n\n'

@@ -23,7 +23,10 @@ class CustomButton extends StatelessWidget {
         return ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: ThemeController.instance.effectiveColorForRole(context, 'primary'),
+            backgroundColor: ThemeController.instance.effectiveColorForRole(
+              context,
+              'primary',
+            ),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
@@ -48,7 +51,9 @@ class CustomButton extends StatelessWidget {
             label,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black54,
             ),
           ),
         );

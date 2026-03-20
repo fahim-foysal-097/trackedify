@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -284,7 +284,7 @@ class DatabaseHelper {
                   if (newId > 0) {
                     categoryId = newId;
                   } else {
-                    // Already inserted due to race — re-fetch
+                    // Already inserted due to race - re-fetch
                     final reMatch = await txn.query(
                       'categories',
                       columns: ['id'],
@@ -313,10 +313,28 @@ class DatabaseHelper {
             // 8. Drop old table
             await txn.execute('DROP TABLE expenses_old');
 
-            // 9. Re-enable FK enforcement
+            // Recreate img_notes - ALTER TABLE RENAME rewrites FKs in other tables
+            await txn.execute('ALTER TABLE img_notes RENAME TO img_notes_old');
+            await txn.execute('''
+              CREATE TABLE img_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                expense_id INTEGER,
+                image BLOB NOT NULL,
+                caption TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY(expense_id) REFERENCES expenses(id) ON DELETE CASCADE
+              )
+            ''');
+            await txn.execute('''
+              INSERT INTO img_notes (id, expense_id, image, caption, created_at)
+              SELECT id, expense_id, image, caption, created_at FROM img_notes_old
+            ''');
+            await txn.execute('DROP TABLE img_notes_old');
+
+            // 10. Re-enable FK enforcement
             await txn.execute('PRAGMA foreign_keys = ON');
 
-            // 10. Create the compatibility view (LEFT JOIN so no expense is invisible)
+            // 11. Create the compatibility view (LEFT JOIN so no expense is invisible)
             await txn.execute('DROP VIEW IF EXISTS expenses_with_category');
             await txn.execute('''
               CREATE VIEW expenses_with_category AS
@@ -329,6 +347,33 @@ class DatabaseHelper {
                 FROM expenses e
                 LEFT JOIN categories c ON e.category_id = c.id
             ''');
+          });
+        }
+
+        // ─── Version 9: Fix img_notes FK for users who already ran broken v8 ──
+        if (oldVersion < 9 && oldVersion >= 8) {
+          await db.transaction((txn) async {
+            await txn.execute('PRAGMA foreign_keys = OFF');
+
+            // Recreate img_notes with correct FK
+            await txn.execute('ALTER TABLE img_notes RENAME TO img_notes_old');
+            await txn.execute('''
+              CREATE TABLE img_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                expense_id INTEGER,
+                image BLOB NOT NULL,
+                caption TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY(expense_id) REFERENCES expenses(id) ON DELETE CASCADE
+              )
+            ''');
+            await txn.execute('''
+              INSERT INTO img_notes (id, expense_id, image, caption, created_at)
+              SELECT id, expense_id, image, caption, created_at FROM img_notes_old
+            ''');
+            await txn.execute('DROP TABLE img_notes_old');
+
+            await txn.execute('PRAGMA foreign_keys = ON');
           });
         }
       },

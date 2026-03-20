@@ -144,7 +144,7 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
     final daysInMonth = totals.length;
     final allZero = totals.values.every((v) => v == 0.0);
 
-    // Build available months list (newest first) — include current month even if no expenses
+    // Build available months list (newest first) - include current month even if no expenses
     final nowKey = DateFormat('yyyy-MM').format(DateTime.now());
     final availableMonths = <String>{...groupedByMonth.keys, nowKey}.toList()
       ..sort((a, b) => b.compareTo(a));
@@ -171,8 +171,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
             ),
           ],
           border: Border.all(
-            color: isDark 
-                ? Colors.white.withValues(alpha: 0.05) 
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
                 : Colors.black.withValues(alpha: 0.05),
           ),
         ),
@@ -268,8 +268,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
           ),
         ],
         border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.05) 
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
               : Colors.black.withValues(alpha: 0.05),
         ),
       ),
@@ -444,21 +444,21 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
-          colors: isDark 
-            ? [
-                cs.primaryContainer.withValues(alpha: 0.6),
-                cs.primaryContainer.withValues(alpha: 0.2),
-              ]
-            : [
-                cs.primary.withValues(alpha: 0.95),
-                cs.primary.withValues(alpha: 0.8),
-              ],
+          colors: isDark
+              ? [
+                  cs.primaryContainer.withValues(alpha: 0.6),
+                  cs.primaryContainer.withValues(alpha: 0.2),
+                ]
+              : [
+                  cs.primary.withValues(alpha: 0.95),
+                  cs.primary.withValues(alpha: 0.8),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark 
+            color: isDark
                 ? Colors.black.withValues(alpha: 0.3)
                 : cs.primary.withValues(alpha: 0.25),
             blurRadius: 20,
@@ -466,8 +466,8 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
           ),
         ],
         border: Border.all(
-          color: isDark 
-              ? cs.primary.withValues(alpha: 0.2) 
+          color: isDark
+              ? cs.primary.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),

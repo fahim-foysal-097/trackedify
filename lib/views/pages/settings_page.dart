@@ -256,8 +256,7 @@ class SettingsPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const ImportPage(),
+                          builder: (BuildContext context) => const ImportPage(),
                         ),
                       ).then((_) {
                         if (!context.mounted) return;

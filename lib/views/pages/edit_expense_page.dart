@@ -545,15 +545,12 @@ class _EditExpensePageState extends State<EditExpensePage> {
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _previewDialogRow(
-                      'Category',
-                      selectedCategoryName ?? '—',
-                    ),
+                    _previewDialogRow('Category', selectedCategoryName ?? '-'),
                     _previewDialogRow('Amount', amountText),
                     _previewDialogRow('Date', dbFormat.format(selectedDate)),
                     _previewDialogRow(
                       'Note',
-                      noteText == 'No note' ? '—' : noteText,
+                      noteText == 'No note' ? '-' : noteText,
                     ),
                     if (_existingImages.isNotEmpty ||
                         _newPickedImages.isNotEmpty) ...[
@@ -568,10 +565,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount:
-                              _existingImages.length +
-                              _newPickedImages.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 8),
+                              _existingImages.length + _newPickedImages.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (_, i) {
                             if (i < _existingImages.length) {
                               return GestureDetector(
@@ -588,9 +583,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
                             } else {
                               final idx = i - _existingImages.length;
                               return GestureDetector(
-                                onTap: () => _viewImageFullScreen(
-                                  _newPickedImages[idx],
-                                ),
+                                onTap: () =>
+                                    _viewImageFullScreen(_newPickedImages[idx]),
                                 child: Image.memory(
                                   _newPickedImages[idx],
                                   width: 80,
@@ -759,21 +753,24 @@ class _EditExpensePageState extends State<EditExpensePage> {
   // Save flow
   // -------------------------
   Future<void> saveChanges() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
     HapticFeedback.mediumImpact();
     FocusScope.of(context).unfocus();
 
     if (selectedCategoryName == null || selectedCategoryName!.isEmpty) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showInfo(context, 'Please select a category');
       return;
     }
 
     final amount = double.tryParse(expenseController.text);
     if (amount == null || amount <= 0) {
+      if (mounted) setState(() => _saving = false);
       AppSnackBar.showInfo(context, 'Please enter a valid amount');
       return;
     }
-
-    setState(() => _saving = true);
 
     try {
       final db = await DatabaseHelper().database;
@@ -804,7 +801,6 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       AppSnackBar.showSuccess(context, 'Expense updated');
 
