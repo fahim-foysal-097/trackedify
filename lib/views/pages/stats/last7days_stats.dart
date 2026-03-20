@@ -12,7 +12,11 @@ class Last7daysStats extends StatefulWidget {
   State<Last7daysStats> createState() => Last7daysStatsState();
 }
 
-class Last7daysStatsState extends State<Last7daysStats> {
+class Last7daysStatsState extends State<Last7daysStats>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<double> dailyTotals = List.filled(7, 0);
   List<DateTime> last7Days = [];
   bool isLoading = true;
@@ -111,6 +115,7 @@ class Last7daysStatsState extends State<Last7daysStats> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final cs = Theme.of(context).colorScheme;
 
     if (isLoading) {

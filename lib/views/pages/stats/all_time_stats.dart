@@ -13,7 +13,11 @@ class AllTimeStats extends StatefulWidget {
   State<AllTimeStats> createState() => AllTimeStatsState();
 }
 
-class AllTimeStatsState extends State<AllTimeStats> {
+class AllTimeStatsState extends State<AllTimeStats>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   Map<String, Map<String, dynamic>> categoryMap = {}; // name -> {color, icon}
   Map<String, double> categoryTotals = {};
   Map<String, int> categoryCounts = {};
@@ -185,6 +189,7 @@ class AllTimeStatsState extends State<AllTimeStats> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final cs = Theme.of(context).colorScheme;
     final textColor = cs.onSurface;
     final subtitleColor = cs.onSurface.withValues(alpha: 0.7);

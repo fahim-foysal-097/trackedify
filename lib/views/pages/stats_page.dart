@@ -95,27 +95,10 @@ class StatsPageState extends State<StatsPage> {
             // --- Monthly tab ---
             Padding(
               padding: const EdgeInsets.all(4.0),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return RefreshIndicator(
-                    color: cs.primary,
-                    onRefresh: refreshAll,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 8),
-                            MonthlyOverviewTab(key: _monthlyKey),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              child: RefreshIndicator(
+                color: cs.primary,
+                onRefresh: refreshAll,
+                child: MonthlyOverviewTab(key: _monthlyKey),
               ),
             ),
 

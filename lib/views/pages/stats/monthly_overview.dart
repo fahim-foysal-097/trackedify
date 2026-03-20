@@ -12,7 +12,11 @@ class MonthlyOverviewTab extends StatefulWidget {
   State<MonthlyOverviewTab> createState() => MonthlyOverviewTabState();
 }
 
-class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
+class MonthlyOverviewTabState extends State<MonthlyOverviewTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<Map<String, dynamic>> monthlyData = [];
   Map<String, List<Map<String, dynamic>>> groupedByMonth = {};
   String? selectedMonth; // yyyy-MM
@@ -624,76 +628,85 @@ class MonthlyOverviewTabState extends State<MonthlyOverviewTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final cs = Theme.of(context).colorScheme;
 
     if (isLoading) {
-      return Center(
-        child: Column(
-          children: [
-            SizedBox(height: (MediaQuery.of(context).size.height / 2) - 200),
-            CupertinoActivityIndicator(radius: 12, color: cs.primary),
-          ],
-        ),
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
+              child: CupertinoActivityIndicator(radius: 12, color: cs.primary),
+            ),
+          ),
+        ],
       );
     }
 
     final hasAnyData = monthlyData.isNotEmpty || groupedByMonth.isNotEmpty;
     if (!hasAnyData) {
-      return Center(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height / 2),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'No monthly expenses to show',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: cs.onSurface.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.bold,
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'No monthly expenses to show',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: cs.onSurface.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Please add some expenses.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: cs.onSurface.withValues(alpha: 0.7),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Please add some expenses.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(right: 6, left: 6),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.only(right: 6, left: 6),
+          sliver: SliverList.list(
+            children: [
+              const SizedBox(height: 12),
 
-          // Chart area for selected month
-          _buildChartCard(),
+              // Chart area for selected month
+              _buildChartCard(),
 
-          const SizedBox(height: 12),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
 
-          // Monthly cards list (summary for each month we have records for)
-          ListView.builder(
+        // Monthly cards list (lazily built as they scroll into view)
+        SliverPadding(
+          padding: const EdgeInsets.only(right: 6, left: 6),
+          sliver: SliverList.builder(
             itemCount: monthlyData.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               final monthInfo = monthlyData[index];
               return _buildMonthCard(monthInfo);
             },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
