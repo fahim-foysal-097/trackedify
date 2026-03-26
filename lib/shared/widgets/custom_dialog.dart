@@ -3,6 +3,47 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import 'custom_button.dart';
 
+// ---------------------------------------------------------------------------
+// Shared heavy transition helper
+// ---------------------------------------------------------------------------
+
+/// Shows a dialog with a "heavy" scale+fade entrance and darker backdrop.
+///
+/// [barrierDismissible] controls whether tapping outside closes the dialog.
+/// Destructive / important dialogs should pass `false`.
+Future<T?> _showHeavyDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool barrierDismissible = true,
+}) {
+  return showGeneralDialog<T>(
+    context: context,
+    barrierLabel: 'Dialog',
+    barrierDismissible: barrierDismissible,
+    barrierColor: Colors.black.withValues(alpha: 0.6),
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (_, _, _) => builder(context),
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curvedAnimation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 1.08, end: 1.0).animate(curvedAnimation),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ConfirmDialog
+// ---------------------------------------------------------------------------
+
 class ConfirmDialog extends StatelessWidget {
   final String title;
   final String? message;
@@ -34,6 +75,8 @@ class ConfirmDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: isDark ? AppColors.cardDark : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 24,
+      shadowColor: Colors.black45,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -111,6 +154,11 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 
+  /// Shows a confirm dialog with a heavy scale+fade transition.
+  ///
+  /// Destructive dialogs are automatically non-dismissible (the user must
+  /// tap a button). Non-destructive dialogs can be dismissed by tapping
+  /// outside (treated as cancel).
   static Future<bool?> show({
     required BuildContext context,
     required String title,
@@ -121,8 +169,9 @@ class ConfirmDialog extends StatelessWidget {
     bool isDestructive = false,
     IconData? icon,
   }) {
-    return showDialog<bool>(
+    return _showHeavyDialog<bool>(
       context: context,
+      barrierDismissible: !isDestructive,
       builder: (context) => ConfirmDialog(
         title: title,
         message: message,
@@ -135,6 +184,10 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// InfoDialog
+// ---------------------------------------------------------------------------
 
 class InfoDialog extends StatelessWidget {
   final String title;
@@ -162,6 +215,8 @@ class InfoDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: isDark ? AppColors.cardDark : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 24,
+      shadowColor: Colors.black45,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -215,6 +270,8 @@ class InfoDialog extends StatelessWidget {
     );
   }
 
+  /// Shows an info dialog with a heavy scale+fade transition.
+  /// Always dismissible by tapping outside (informational only).
   static Future<void> show({
     required BuildContext context,
     required String title,
@@ -224,8 +281,9 @@ class InfoDialog extends StatelessWidget {
     IconData? icon,
     Color? iconColor,
   }) {
-    return showDialog(
+    return _showHeavyDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) => InfoDialog(
         title: title,
         message: message,
@@ -237,6 +295,10 @@ class InfoDialog extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// InputDialog
+// ---------------------------------------------------------------------------
 
 class InputDialog extends StatefulWidget {
   final String title;
@@ -263,6 +325,8 @@ class InputDialog extends StatefulWidget {
   @override
   State<InputDialog> createState() => _InputDialogState();
 
+  /// Shows an input dialog with a heavy scale+fade transition.
+  /// Non-dismissible - user must submit or cancel explicitly.
   static Future<String?> show({
     required BuildContext context,
     required String title,
@@ -274,8 +338,9 @@ class InputDialog extends StatefulWidget {
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
-    return showDialog<String>(
+    return _showHeavyDialog<String>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => InputDialog(
         title: title,
         hint: hint,
@@ -324,6 +389,8 @@ class _InputDialogState extends State<InputDialog> {
     return Dialog(
       backgroundColor: isDark ? AppColors.cardDark : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 24,
+      shadowColor: Colors.black45,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
