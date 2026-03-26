@@ -108,6 +108,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
 
     await _ctrl.setCurrency(code, name);
     if (!mounted) return;
+    setState(() {}); // Rebuild to reflect new active currency
     AppSnackBar.showSuccess(
       context,
       'Currency changed to ${name.isNotEmpty ? name : code.toUpperCase()}',
@@ -133,9 +134,10 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
           'to ${toName.isNotEmpty ? toName : toCode.toUpperCase()} '
           'using the current exchange rate?\n\n'
           'This will permanently update all amounts in the database. '
-          'Selecting "Cancel" or tapping outside retains the new symbol but skips conversion.',
+          'Selecting "Skip" retains the new symbol but skips conversion.',
       confirmLabel: 'Convert',
       cancelLabel: 'Skip',
+      isDestructive: true,
       icon: Icons.currency_exchange,
     );
   }
@@ -324,18 +326,103 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
           ),
         ),
 
-        // Currently selected
+        // Currently selected - prominent gradient card
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: cs.primary, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                'Current: ${_ctrl.symbol} ${_ctrl.name} (${_ctrl.code.toUpperCase()})',
-                style: theme.textTheme.bodySmall?.copyWith(color: cs.primary),
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _ctrl.symbol,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _ctrl.name.isNotEmpty
+                            ? '${_ctrl.name[0].toUpperCase()}${_ctrl.name.substring(1)}'
+                            : _ctrl.code.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _ctrl.code.toUpperCase(),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Active',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
 
