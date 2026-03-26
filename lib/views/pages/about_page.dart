@@ -351,32 +351,44 @@ class _AboutPageState extends State<AboutPage>
       ),
       body: Stack(
         children: [
-          // Animated blobs background
-          ...List.generate(6, (index) {
-            final colors = [
-              const Color(0xFF6366F1),
-              const Color(0xFF8B5CF6),
-              const Color(0xFFEC4899),
-              const Color(0xFFF59E0B),
-              const Color(0xFF10B981),
-              const Color(0xFF3B82F6),
-            ];
-            final sizes = [120.0, 150.0, 100.0, 180.0, 130.0, 160.0];
-            final positions = [
-              const Offset(50, 100),
-              const Offset(250, 200),
-              const Offset(100, 400),
-              const Offset(300, 500),
-              const Offset(50, 600),
-              const Offset(280, 300),
-            ];
-            return _buildAnimatedBlob(
-              color: colors[index % colors.length],
-              size: sizes[index % sizes.length],
-              position: positions[index % positions.length],
-              animation: _blobAnimations[index],
-            );
-          }),
+          // Pre-blurred animated blobs background - blur applied once
+          // via ImageFiltered to avoid per-frame BackdropFilter flicker
+          RepaintBoundary(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(
+                sigmaX: 20,
+                sigmaY: 20,
+                tileMode: TileMode.decal,
+              ),
+              child: Stack(
+                children: List.generate(6, (index) {
+                  final colors = [
+                    const Color(0xFF6366F1),
+                    const Color(0xFF8B5CF6),
+                    const Color(0xFFEC4899),
+                    const Color(0xFFF59E0B),
+                    const Color(0xFF10B981),
+                    const Color(0xFF3B82F6),
+                  ];
+                  final sizes = [120.0, 150.0, 100.0, 180.0, 130.0, 160.0];
+                  final positions = [
+                    const Offset(50, 100),
+                    const Offset(250, 200),
+                    const Offset(100, 400),
+                    const Offset(300, 500),
+                    const Offset(50, 600),
+                    const Offset(280, 300),
+                  ];
+                  return _buildAnimatedBlob(
+                    color: colors[index % colors.length],
+                    size: sizes[index % sizes.length],
+                    position: positions[index % positions.length],
+                    animation: _blobAnimations[index],
+                  );
+                }),
+              ),
+            ),
+          ),
           RefreshIndicator(
             onRefresh: _fetchLatestRelease,
             color: const Color(0xFF6366F1),
@@ -775,23 +787,20 @@ class _AboutPageState extends State<AboutPage>
     required EdgeInsets padding,
     double borderRadius = 24,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1.5,
-            ),
-          ),
-          padding: padding,
-          child: child,
+    // No BackdropFilter here - the blob layer is already pre-blurred
+    // via ImageFiltered, so we just use a semi-transparent container
+    // for the frosted-glass look without per-frame flicker.
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1.5,
         ),
       ),
+      padding: padding,
+      child: child,
     );
   }
 

@@ -87,6 +87,20 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
     final currentCode = _ctrl.code;
     if (code == currentCode) return;
 
+    final displayName = name.isNotEmpty ? name : code.toUpperCase();
+    final wantsToChange = await ConfirmDialog.show(
+      context: context,
+      title: 'Change Currency?',
+      message: 'Do you want to change your active currency to $displayName?',
+      confirmLabel: 'Continue',
+      cancelLabel: 'Cancel',
+      isDestructive: false,
+      icon: Icons.currency_exchange,
+    );
+
+    if (!mounted) return;
+    if (wantsToChange != true) return;
+
     // Prompt for conversion
     final shouldConvert = await _showConversionDialog(
       context,
@@ -111,7 +125,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage>
     setState(() {}); // Rebuild to reflect new active currency
     AppSnackBar.showSuccess(
       context,
-      'Currency changed to ${name.isNotEmpty ? name : code.toUpperCase()}',
+      'Currency changed to $displayName',
       icon: Icons.currency_exchange,
     );
   }
