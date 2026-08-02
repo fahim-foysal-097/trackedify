@@ -136,6 +136,7 @@ class HomePageState extends State<HomePage> {
         for (var cat in dbCategories)
           cat['name']: {
             'color': Color(cat['color']),
+            // ignore: non_const_argument_for_const_parameter
             'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
           },
       };
@@ -799,12 +800,12 @@ class HomePageState extends State<HomePage> {
             _handleVoiceCommand(_lastWords);
           }
         },
-        listenFor: const Duration(seconds: 12),
-        pauseFor: const Duration(seconds: 3),
-        localeId: 'en_US',
         listenOptions: stt.SpeechListenOptions(
           cancelOnError: true,
           partialResults: true,
+          listenFor: const Duration(seconds: 12),
+          pauseFor: const Duration(seconds: 3),
+          localeId: 'en_US',
         ),
       );
     } catch (e) {

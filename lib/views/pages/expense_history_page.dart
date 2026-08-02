@@ -89,6 +89,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
         for (var cat in dbCategories)
           cat['name']: {
             'color': Color(cat['color']),
+            // ignore: non_const_argument_for_const_parameter
             'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
           },
       };

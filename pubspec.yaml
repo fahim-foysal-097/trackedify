@@ -41,19 +41,19 @@ dependencies:
   image_picker: ^1.2.0
   flutter_native_splash: ^2.4.6
   math_expressions: ^3.1.0
-  file_picker: ^10.3.3
+  file_picker: ^12.0.0-beta.7
   flutter_file_dialog: ^3.0.2
   crypto: ^3.0.6
   flutter_secure_storage: ^10.0.0
   speech_to_text: ^7.3.0
-  awesome_notifications: ^0.11.0
+  awesome_notifications: ^0.12.1
   android_notification_icons: ^0.0.1
-  package_info_plus: ^9.0.0
+  package_info_plus: ^10.2.1
   http: ^1.5.0
-  permission_handler: ^12.0.1
+  permission_handler: ^13.0.0
   open_filex: ^4.7.0
-  device_info_plus: ^12.1.0
-  saver_gallery: ^4.0.1
+  device_info_plus: ^13.2.0
+  saver_gallery: ^5.1.0
   flutter_heatmap_calendar: ^1.0.5
   flex_color_scheme: ^8.3.0
   shared_preferences: ^2.5.3

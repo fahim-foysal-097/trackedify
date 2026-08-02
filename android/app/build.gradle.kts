@@ -3,14 +3,13 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 dependencies {
-    // for predicitive back gestures
-    implementation("androidx.activity:activity:1.8.0")
+    // for predictive back gestures
+    implementation("androidx.activity:activity:1.13.0")
 }
 
 val keystoreProperties = Properties()
@@ -21,16 +20,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.fahim.trackedify"
-    compileSdk = 36
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -60,6 +55,12 @@ android {
             // Disables resource shrinking (for notification)
             isShrinkResources = false
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

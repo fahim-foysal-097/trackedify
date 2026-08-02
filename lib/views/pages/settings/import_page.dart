@@ -126,7 +126,7 @@ class _ImportPageState extends State<ImportPage> {
     bool spinnerShown = false;
     try {
       // let user pick .db file
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['db'],
       );
@@ -333,7 +333,7 @@ class _ImportPageState extends State<ImportPage> {
     bool spinnerShown = false;
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );

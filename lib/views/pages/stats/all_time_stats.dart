@@ -61,6 +61,7 @@ class AllTimeStatsState extends State<AllTimeStats>
         (cat['name'] as String): {
           'color': Color(cat['color'] as int),
           'icon': IconData(
+            // ignore: non_const_argument_for_const_parameter
             cat['icon_code'] as int,
             fontFamily: 'MaterialIcons',
           ),

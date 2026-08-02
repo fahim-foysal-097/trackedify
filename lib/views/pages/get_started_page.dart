@@ -112,7 +112,7 @@ class _GetStartedPageState extends State<GetStartedPage> {
     bool spinnerShown = false;
     try {
       // let user pick .db file
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['db'],
       );

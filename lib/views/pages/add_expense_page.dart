@@ -80,6 +80,7 @@ class _AddPageState extends State<AddPage> {
           'id': cat['id'],
           'name': cat['name'],
           'color': Color(cat['color']),
+          // ignore: non_const_argument_for_const_parameter
           'icon': IconData(cat['icon_code'], fontFamily: 'MaterialIcons'),
         };
       }).toList();
