@@ -154,7 +154,6 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
-        // If pointer is near the bottom edge, schedule re-hiding of nav after 3s.
         if (event.position.dy >= MediaQuery.of(context).size.height - 120) {
           _scheduleAutoHide();
         }
@@ -205,14 +204,12 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
                     transitionDuration: const Duration(milliseconds: 300),
                   ),
                 ).then((_) {
-                  // After coming back, refresh the current page
                   final idx = selectedPageNotifier.value;
                   if (idx == 0) homeKey.currentState?.refresh();
                   if (idx == 1) statsKey.currentState?.refreshAll();
                   if (idx == 2) insightKey.currentState?.refresh();
                   if (idx == 3) userKey.currentState?.refresh();
 
-                  // reapply navrules after coming back
                   NavBarController.apply();
                 });
               },
@@ -233,12 +230,31 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
           ),
         ),
 
+        // OPTIMIZED ANIMATED PAGE SWITCHER
         body: ValueListenableBuilder<int>(
           valueListenable: selectedPageNotifier,
           builder: (context, selectedPage, child) {
-            return IndexedStack(
-              index: selectedPage,
-              children: pages,
+            return Stack(
+              children: List.generate(pages.length, (index) {
+                final isSelected = index == selectedPage;
+
+                return IgnorePointer(
+                  ignoring: !isSelected,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    opacity: isSelected ? 1.0 : 0.0,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      offset: isSelected
+                          ? Offset.zero
+                          : const Offset(0.03, 0.0),
+                      child: pages[index],
+                    ),
+                  ),
+                );
+              }),
             );
           },
         ),
