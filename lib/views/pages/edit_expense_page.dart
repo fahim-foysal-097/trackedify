@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/database_helper.dart';
@@ -482,7 +481,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                   )
                 : Center(
                     child: Icon(
-                      FontAwesomeIcons.tags,
+                      Icons.local_offer_rounded,
                       color: theme.textTheme.bodySmall?.color?.withValues(
                         alpha: 0.6,
                       ),
@@ -920,7 +919,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                                 ),
                               )
                             : Icon(
-                                FontAwesomeIcons.tags,
+                                Icons.local_offer_rounded,
                                 size: 18,
                                 color: theme.textTheme.bodySmall?.color,
                               ),
@@ -957,7 +956,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Icon(
-                                  FontAwesomeIcons.wallet,
+                                  Icons.account_balance_wallet_rounded,
                                   size: 18,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
@@ -1003,7 +1002,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               filled: true,
                               fillColor: cs.surface,
                               prefixIcon: Icon(
-                                FontAwesomeIcons.solidClock,
+                                Icons.access_time_filled_rounded,
                                 size: 18,
                                 color: theme.textTheme.bodySmall?.color,
                               ),
@@ -1060,7 +1059,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         filled: true,
                         fillColor: cs.surface,
                         prefixIcon: Icon(
-                          FontAwesomeIcons.solidNoteSticky,
+                          Icons.note_alt_rounded,
                           size: 18,
                           color: theme.textTheme.bodySmall?.color,
                         ),

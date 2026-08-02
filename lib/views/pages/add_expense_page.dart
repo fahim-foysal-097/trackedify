@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:trackedify/database/add_expense.dart';
@@ -455,7 +454,7 @@ class _AddPageState extends State<AddPage> {
                   )
                 : Center(
                     child: Icon(
-                      FontAwesomeIcons.tags,
+                      Icons.local_offer_rounded,
                       color: theme.textTheme.bodySmall?.color?.withValues(
                         alpha: 0.6,
                       ),
@@ -842,7 +841,7 @@ class _AddPageState extends State<AddPage> {
                                   ),
                                 )
                               : Icon(
-                                  FontAwesomeIcons.tags,
+                                  Icons.local_offer_rounded,
                                   size: 18,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
@@ -883,7 +882,7 @@ class _AddPageState extends State<AddPage> {
                                 prefixIcon: Padding(
                                   padding: const EdgeInsets.all(12.0),
                                   child: Icon(
-                                    FontAwesomeIcons.wallet,
+                                    Icons.account_balance_wallet_rounded,
                                     size: 18,
                                     color: theme.textTheme.bodySmall?.color,
                                   ),
@@ -932,7 +931,7 @@ class _AddPageState extends State<AddPage> {
                                 filled: true,
                                 fillColor: cs.surface,
                                 prefixIcon: Icon(
-                                  FontAwesomeIcons.solidClock,
+                                  Icons.access_time_filled_rounded,
                                   size: 18,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
@@ -995,7 +994,7 @@ class _AddPageState extends State<AddPage> {
                           filled: true,
                           fillColor: cs.surface,
                           prefixIcon: Icon(
-                            FontAwesomeIcons.solidNoteSticky,
+                            Icons.note_alt_rounded,
                             size: 18,
                             color: theme.textTheme.bodySmall?.color,
                           ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/views/pages/settings_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
@@ -84,7 +83,7 @@ class _WelcomeWidgetState extends State<WelcomeWidget> {
                 color: onPrimary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(FontAwesomeIcons.gear, color: onPrimary, size: 22),
+              child: Icon(Icons.settings_rounded, color: onPrimary, size: 22),
             ),
           ),
         ],

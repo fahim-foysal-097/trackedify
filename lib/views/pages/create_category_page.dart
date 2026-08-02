@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/data/category_suggestion_data.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
@@ -271,7 +270,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   Widget _buildPreviewCard() {
     final displayIcon =
-        selectedIcon ?? aiSuggestedIcon ?? FontAwesomeIcons.tags;
+        selectedIcon ?? aiSuggestedIcon ?? Icons.local_offer_rounded;
     final showStar = selectedIcon == null && aiSuggestedIcon != null;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -640,7 +639,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
                         radius: 20,
                         backgroundColor: _effectiveColor,
                         child: const Icon(
-                          FontAwesomeIcons.tags,
+                          Icons.local_offer_rounded,
                           size: 18,
                           color: Colors.white,
                         ),

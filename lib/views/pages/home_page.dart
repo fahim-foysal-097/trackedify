@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -1166,8 +1165,8 @@ class HomePageState extends State<HomePage> {
                             : 'Voice commands disabled',
                         icon: Icon(
                           _voiceEnabled
-                              ? FontAwesomeIcons.microphone
-                              : FontAwesomeIcons.microphoneSlash,
+                              ? Icons.mic_rounded
+                              : Icons.mic_off_rounded,
                           color: !_voiceEnabled
                               ? theme.disabledColor
                               : (_isListening ? cs.error : textColorMuted),
@@ -1446,8 +1445,7 @@ class HomePageState extends State<HomePage> {
                                             if (hasNote) ...[
                                               const SizedBox(width: 5),
                                               Icon(
-                                                FontAwesomeIcons
-                                                    .solidNoteSticky,
+                                                Icons.note_alt_rounded,
                                                 size: 16,
                                                 color: textColorMuted,
                                               ),
@@ -1458,7 +1456,7 @@ class HomePageState extends State<HomePage> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    FontAwesomeIcons.solidImage,
+                                                    Icons.image_rounded,
                                                     size: 16,
                                                     color: textColorMuted,
                                                   ),

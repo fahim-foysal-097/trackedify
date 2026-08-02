@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:trackedify/database/database_helper.dart';
@@ -1466,7 +1465,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                 child: Row(
                                   children: [
                                     Icon(
-                                      FontAwesomeIcons.solidImage,
+                                      Icons.image_rounded,
                                       size: 14,
                                       color: textColorMuted,
                                     ),
@@ -1488,7 +1487,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        FontAwesomeIcons.solidNoteSticky,
+                                        Icons.note_alt_rounded,
                                         size: 14,
                                         color: textColorMuted,
                                       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
 import 'package:trackedify/shared/widgets/custom_button.dart';
@@ -147,7 +146,7 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            FontAwesomeIcons.userPen,
+                            Icons.manage_accounts_rounded,
                             size: 36,
                             color: cs.primary,
                           ),

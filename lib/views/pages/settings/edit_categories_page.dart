@@ -3,7 +3,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/shared/widgets/app_snackbar.dart';
@@ -141,7 +140,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
       hasExpenses
           ? 'Category and $expenseCount expense${expenseCount == 1 ? '' : 's'} deleted'
           : 'Category deleted',
-      icon: FontAwesomeIcons.trash,
+      icon: Icons.delete_rounded,
     );
     await _reload();
   }
@@ -200,7 +199,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
       hasExpenses
           ? 'Deleted ${ids.length} categories and $expenseCount expense${expenseCount == 1 ? '' : 's'}'
           : 'Deleted ${ids.length} categories',
-      icon: FontAwesomeIcons.trash,
+      icon: Icons.delete_rounded,
     );
 
     setState(() {
@@ -297,7 +296,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           children: [
             const SizedBox(height: 28),
             Icon(
-              FontAwesomeIcons.tags,
+              Icons.local_offer_rounded,
               size: 64,
               color: cs.onSurface.withValues(alpha: 0.35),
             ),
@@ -418,7 +417,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                       }
                     },
                     icon: Icon(
-                      FontAwesomeIcons.pen,
+                      Icons.edit_rounded,
                       size: 16,
                       color: theme.iconTheme.color,
                     ),
@@ -433,11 +432,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                         _confirmAndDeleteSingle(id, name);
                       }
                     },
-                    icon: Icon(
-                      FontAwesomeIcons.trash,
-                      size: 16,
-                      color: cs.error,
-                    ),
+                    icon: Icon(Icons.delete_rounded, size: 16, color: cs.error),
                     splashRadius: 22,
                   ),
                 ],
@@ -568,7 +563,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                   onPressed: _confirmAndDeleteSelected,
                   backgroundColor: cs.primary,
                   child: Icon(
-                    FontAwesomeIcons.trash,
+                    Icons.delete_rounded,
                     color: cs.onPrimary,
                     size: 18,
                   ),

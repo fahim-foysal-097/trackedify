@@ -6,7 +6,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -453,13 +452,13 @@ class _AboutPageState extends State<AboutPage>
                           runSpacing: 12,
                           children: [
                             _buildInfoChip(
-                              icon: FontAwesomeIcons.codeBranch,
+                              icon: Icons.info_outline,
                               label: _version.isNotEmpty ? _version : "?",
                               color: Colors.white.withValues(alpha: 0.2),
                             ),
                             if (_buildNumber.isNotEmpty)
                               _buildInfoChip(
-                                icon: FontAwesomeIcons.hashtag,
+                                icon: Icons.tag,
                                 label: 'Build $_buildNumber',
                                 color: Colors.white.withValues(alpha: 0.2),
                               ),
@@ -500,7 +499,7 @@ class _AboutPageState extends State<AboutPage>
                           runSpacing: 12,
                           children: [
                             _buildActionButton(
-                              icon: FontAwesomeIcons.squareGithub,
+                              icon: Icons.code_rounded,
                               label: 'GitHub',
                               onPressed: () => _launchURL(
                                 'https://github.com/fahim-foysal-097/trackedify',
@@ -747,7 +746,7 @@ class _AboutPageState extends State<AboutPage>
                               _launchURL('https://github.com/fahim-foysal-097'),
                           borderRadius: BorderRadius.circular(12),
                           child: _buildCreditItem(
-                            icon: FontAwesomeIcons.squareGithub,
+                            icon: Icons.code_rounded,
                             title: 'GitHub Profile',
                             subtitle: '@fahim-foysal-097',
                             trailing: const Icon(
@@ -818,7 +817,7 @@ class _AboutPageState extends State<AboutPage>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FaIcon(icon, color: Colors.white, size: 14),
+          Icon(icon, color: Colors.white, size: 14),
           const SizedBox(width: 8),
           Text(
             label,

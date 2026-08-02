@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -445,7 +444,7 @@ class UserPageState extends State<UserPage> {
                 ),
                 children: [
                   _buildActionTile(
-                    icon: FontAwesomeIcons.gear,
+                    icon: Icons.settings_rounded,
                     label: 'Settings',
                     accent: Colors.blueAccent,
                     onTap: () {
@@ -463,7 +462,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.trash,
+                    icon: Icons.delete_rounded,
                     label: 'Wipe Data',
                     accent: Colors.redAccent,
                     onTap: () async {
@@ -499,7 +498,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.fileImport,
+                    icon: Icons.upload_file_rounded,
                     label: 'Export',
                     accent: cs.secondary,
                     onTap: () {
@@ -515,7 +514,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.fileExport,
+                    icon: Icons.download_rounded,
                     label: 'Import',
                     accent: cs.tertiary,
                     onTap: () async {
@@ -546,7 +545,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.download,
+                    icon: Icons.system_update_alt_rounded,
                     label: 'Check Update',
                     accent: Colors.blueAccent,
                     onTap: () async {
@@ -559,7 +558,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.solidClock,
+                    icon: Icons.alarm_rounded,
                     label: 'Daily Reminder',
                     accent: Colors.orange,
                     onTap: () {
@@ -576,7 +575,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.solidNoteSticky,
+                    icon: Icons.new_releases_rounded,
                     label: 'Release Notes',
                     accent: Colors.green,
                     onTap: () => _launchURL(
@@ -585,7 +584,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.chrome,
+                    icon: Icons.language_rounded,
                     label: 'Website',
                     accent: Colors.deepPurple,
                     onTap: () => _launchURL(
@@ -594,7 +593,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.bug,
+                    icon: Icons.bug_report_rounded,
                     label: 'Report Bug',
                     accent: Colors.red,
                     onTap: () => _launchURL(
@@ -603,7 +602,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: FontAwesomeIcons.circleInfo,
+                    icon: Icons.info_rounded,
                     label: 'About',
                     accent: Colors.lightBlue,
                     onTap: () {

@@ -1,7 +1,6 @@
 // ---------------- NavBarWidget - themed ----------------
 
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:trackedify/data/notifiers.dart';
 import 'package:trackedify/services/theme_controller.dart';
 import 'package:trackedify/shared/constants/constants.dart';
@@ -49,7 +48,7 @@ class NavBarWidget extends StatelessWidget {
                     children: [
                       // left side items
                       _navItem(
-                        icon: FontAwesomeIcons.solidHouse,
+                        icon: Icons.home_rounded,
                         label: 'Home',
                         selected: selectedPage == 0,
                         selectedColor: selectedIconColor,
@@ -57,7 +56,7 @@ class NavBarWidget extends StatelessWidget {
                         onTap: () => selectedPageNotifier.value = 0,
                       ),
                       _navItem(
-                        icon: FontAwesomeIcons.chartPie,
+                        icon: Icons.pie_chart_rounded,
                         label: 'Stats',
                         selected: selectedPage == 1,
                         selectedColor: selectedIconColor,
@@ -70,7 +69,7 @@ class NavBarWidget extends StatelessWidget {
 
                       // right side items
                       _navItem(
-                        icon: FontAwesomeIcons.chartSimple,
+                        icon: Icons.bar_chart_rounded,
                         label: 'Insights',
                         selected: selectedPage == 2,
                         selectedColor: selectedIconColor,
@@ -78,7 +77,7 @@ class NavBarWidget extends StatelessWidget {
                         onTap: () => selectedPageNotifier.value = 2,
                       ),
                       _navItem(
-                        icon: FontAwesomeIcons.solidUser,
+                        icon: Icons.person_rounded,
                         label: 'User',
                         selected: selectedPage == 3,
                         selectedColor: selectedIconColor,
