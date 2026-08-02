@@ -1445,8 +1445,8 @@ class HomePageState extends State<HomePage> {
                                             if (hasNote) ...[
                                               const SizedBox(width: 5),
                                               Icon(
-                                                Icons.note_alt_rounded,
-                                                size: 16,
+                                                Icons.insert_drive_file_rounded,
+                                                size: 18,
                                                 color: textColorMuted,
                                               ),
                                             ],
@@ -1457,7 +1457,7 @@ class HomePageState extends State<HomePage> {
                                                 children: [
                                                   Icon(
                                                     Icons.image_rounded,
-                                                    size: 16,
+                                                    size: 18,
                                                     color: textColorMuted,
                                                   ),
                                                   const SizedBox(width: 3),

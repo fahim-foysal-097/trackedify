@@ -48,7 +48,7 @@ class NavBarWidget extends StatelessWidget {
                     children: [
                       // left side items
                       _navItem(
-                        icon: Icons.home_rounded,
+                        icon: Icons.wallet,
                         label: 'Home',
                         selected: selectedPage == 0,
                         selectedColor: selectedIconColor,
@@ -56,7 +56,7 @@ class NavBarWidget extends StatelessWidget {
                         onTap: () => selectedPageNotifier.value = 0,
                       ),
                       _navItem(
-                        icon: Icons.pie_chart_rounded,
+                        icon: Icons.data_saver_off,
                         label: 'Stats',
                         selected: selectedPage == 1,
                         selectedColor: selectedIconColor,
@@ -69,7 +69,7 @@ class NavBarWidget extends StatelessWidget {
 
                       // right side items
                       _navItem(
-                        icon: Icons.bar_chart_rounded,
+                        icon: Icons.insights,
                         label: 'Insights',
                         selected: selectedPage == 2,
                         selectedColor: selectedIconColor,
@@ -77,7 +77,7 @@ class NavBarWidget extends StatelessWidget {
                         onTap: () => selectedPageNotifier.value = 2,
                       ),
                       _navItem(
-                        icon: Icons.person_rounded,
+                        icon: Icons.person_2,
                         label: 'User',
                         selected: selectedPage == 3,
                         selectedColor: selectedIconColor,
@@ -128,7 +128,7 @@ class NavBarWidget extends StatelessWidget {
                     scale: selected ? 1.15 : 1.0,
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeOut,
-                    child: Icon(icon, size: 20, color: color),
+                    child: Icon(icon, size: 22, color: color),
                   ),
                   const SizedBox(height: 4),
                   AnimatedDefaultTextStyle(

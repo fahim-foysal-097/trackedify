@@ -174,7 +174,7 @@ class OverviewWidgetState extends State<OverviewWidget> {
                               Row(
                                 children: [
                                   Icon(
-                                    Icons.analytics_outlined,
+                                    Icons.assessment_outlined,
                                     color: cs.onPrimary,
                                     size: 28 * scaleFactor,
                                   ),

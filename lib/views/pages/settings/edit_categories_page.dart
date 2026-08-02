@@ -296,7 +296,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
           children: [
             const SizedBox(height: 28),
             Icon(
-              Icons.local_offer_rounded,
+              Icons.report_rounded,
               size: 64,
               color: cs.onSurface.withValues(alpha: 0.35),
             ),
@@ -417,11 +417,11 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                       }
                     },
                     icon: Icon(
-                      Icons.edit_rounded,
-                      size: 16,
+                      Icons.brush,
+                      size: 24,
                       color: theme.iconTheme.color,
                     ),
-                    splashRadius: 22,
+                    splashRadius: 30,
                   ),
                   IconButton(
                     tooltip: 'Delete',
@@ -432,8 +432,8 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                         _confirmAndDeleteSingle(id, name);
                       }
                     },
-                    icon: Icon(Icons.delete_rounded, size: 16, color: cs.error),
-                    splashRadius: 22,
+                    icon: Icon(Icons.delete_rounded, size: 24, color: cs.error),
+                    splashRadius: 30,
                   ),
                 ],
               ),

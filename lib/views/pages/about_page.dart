@@ -752,7 +752,7 @@ class _AboutPageState extends State<AboutPage>
                             trailing: const Icon(
                               Icons.open_in_new,
                               color: Colors.white70,
-                              size: 18,
+                              size: 22,
                             ),
                           ),
                         ),
@@ -817,7 +817,7 @@ class _AboutPageState extends State<AboutPage>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 14),
+          Icon(icon, color: Colors.white, size: 22),
           const SizedBox(width: 8),
           Text(
             label,
@@ -839,7 +839,7 @@ class _AboutPageState extends State<AboutPage>
   }) {
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 16),
+      icon: Icon(icon, size: 22),
       label: Text(label),
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Colors.white70),
@@ -864,7 +864,7 @@ class _AboutPageState extends State<AboutPage>
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white70, size: 20),
+          Icon(icon, color: Colors.white70, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

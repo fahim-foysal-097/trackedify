@@ -1466,7 +1466,7 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   children: [
                                     Icon(
                                       Icons.image_rounded,
-                                      size: 14,
+                                      size: 18,
                                       color: textColorMuted,
                                     ),
                                     const SizedBox(width: 6),
@@ -1487,8 +1487,8 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        Icons.note_alt_rounded,
-                                        size: 14,
+                                        Icons.insert_drive_file_rounded,
+                                        size: 18,
                                         color: textColorMuted,
                                       ),
                                       const SizedBox(width: 6),
@@ -1516,71 +1516,60 @@ class _ExpenseHistoryPageState extends State<ExpenseHistoryPage> {
                       children: subtitleWidgets,
                     );
 
-                    final itemChild = Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (ctrl.effectiveColorForRole(
-                                context,
-                                'primary',
-                              )).withValues(alpha: 0.08)
-                            : cs.surface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.transparent,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          onTap: () {
-                            if (selectionMode) {
-                              toggleSelection(expense['id']);
-                            } else {
-                              _showExpenseDrawer(expense);
-                            }
-                          },
-                          onLongPress: () {
-                            setState(() {
-                              selectionMode = true;
-                              toggleSelection(expense['id']);
-                            });
-                          },
-                          leading: selectionMode
-                              ? Checkbox(
-                                  activeColor: ctrl.effectiveColorForRole(
-                                    context,
-                                    'primary',
-                                  ),
-                                  focusColor: ctrl.effectiveColorForRole(
-                                    context,
-                                    'primary',
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  value: isSelected,
-                                  onChanged: (_) =>
-                                      toggleSelection(expense['id']),
-                                )
-                              : CircleAvatar(
-                                  backgroundColor: cat['color'],
-                                  child: Icon(cat['icon'], color: cs.onPrimary),
+                    final itemChild = Material(
+                      color: isSelected
+                          ? (ctrl.effectiveColorForRole(
+                              context,
+                              'primary',
+                            )).withValues(alpha: 0.08)
+                          : cs.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      child: ListTile(
+                        onTap: () {
+                          if (selectionMode) {
+                            toggleSelection(expense['id']);
+                          } else {
+                            _showExpenseDrawer(expense);
+                          }
+                        },
+                        onLongPress: () {
+                          setState(() {
+                            selectionMode = true;
+                            toggleSelection(expense['id']);
+                          });
+                        },
+                        leading: selectionMode
+                            ? Checkbox(
+                                activeColor: ctrl.effectiveColorForRole(
+                                  context,
+                                  'primary',
                                 ),
-                          title: Text(
-                            expense['category'] ?? '',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                                focusColor: ctrl.effectiveColorForRole(
+                                  context,
+                                  'primary',
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                value: isSelected,
+                                onChanged: (_) =>
+                                    toggleSelection(expense['id']),
+                              )
+                            : CircleAvatar(
+                                backgroundColor: cat['color'],
+                                child: Icon(cat['icon'], color: cs.onPrimary),
+                              ),
+                        title: Text(
+                          expense['category'] ?? '',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
                           ),
-                          subtitle: subtitle,
-                          trailing: Text(
-                            "-${CurrencyController.instance.formatAmount(expense['amount'])}",
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                        ),
+                        subtitle: subtitle,
+                        trailing: Text(
+                          "-${CurrencyController.instance.formatAmount(expense['amount'])}",
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

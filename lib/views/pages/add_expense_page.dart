@@ -454,7 +454,8 @@ class _AddPageState extends State<AddPage> {
                   )
                 : Center(
                     child: Icon(
-                      Icons.local_offer_rounded,
+                      Icons.tag_rounded,
+                      size: 26,
                       color: theme.textTheme.bodySmall?.color?.withValues(
                         alpha: 0.6,
                       ),
@@ -841,8 +842,8 @@ class _AddPageState extends State<AddPage> {
                                   ),
                                 )
                               : Icon(
-                                  Icons.local_offer_rounded,
-                                  size: 18,
+                                  Icons.label,
+                                  size: 24,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
                           border: OutlineInputBorder(
@@ -882,8 +883,8 @@ class _AddPageState extends State<AddPage> {
                                 prefixIcon: Padding(
                                   padding: const EdgeInsets.all(12.0),
                                   child: Icon(
-                                    Icons.account_balance_wallet_rounded,
-                                    size: 18,
+                                    Icons.wallet_rounded,
+                                    size: 24,
                                     color: theme.textTheme.bodySmall?.color,
                                   ),
                                 ),
@@ -932,7 +933,7 @@ class _AddPageState extends State<AddPage> {
                                 fillColor: cs.surface,
                                 prefixIcon: Icon(
                                   Icons.access_time_filled_rounded,
-                                  size: 18,
+                                  size: 24,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
                                 border: OutlineInputBorder(
@@ -994,8 +995,8 @@ class _AddPageState extends State<AddPage> {
                           filled: true,
                           fillColor: cs.surface,
                           prefixIcon: Icon(
-                            Icons.note_alt_rounded,
-                            size: 18,
+                            Icons.note_rounded,
+                            size: 24,
                             color: theme.textTheme.bodySmall?.color,
                           ),
                           border: OutlineInputBorder(

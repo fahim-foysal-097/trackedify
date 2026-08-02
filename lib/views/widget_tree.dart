@@ -236,33 +236,9 @@ class _WidgetTreeState extends State<WidgetTree> with WidgetsBindingObserver {
         body: ValueListenableBuilder<int>(
           valueListenable: selectedPageNotifier,
           builder: (context, selectedPage, child) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position:
-                        Tween<Offset>(
-                          begin: const Offset(0.15, 0.0),
-                          end: Offset.zero,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          ),
-                        ),
-                    child: child,
-                  ),
-                );
-              },
-              child: IndexedStack(
-                key: ValueKey<int>(selectedPage),
-                index: selectedPage,
-                children: pages,
-              ),
+            return IndexedStack(
+              index: selectedPage,
+              children: pages,
             );
           },
         ),

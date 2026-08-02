@@ -956,8 +956,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  size: 18,
+                                  Icons.wallet_rounded,
+                                  size: 24,
                                   color: theme.textTheme.bodySmall?.color,
                                 ),
                               ),
@@ -1003,7 +1003,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
                               fillColor: cs.surface,
                               prefixIcon: Icon(
                                 Icons.access_time_filled_rounded,
-                                size: 18,
+                                size: 24,
                                 color: theme.textTheme.bodySmall?.color,
                               ),
                               border: OutlineInputBorder(
@@ -1059,8 +1059,8 @@ class _EditExpensePageState extends State<EditExpensePage> {
                         filled: true,
                         fillColor: cs.surface,
                         prefixIcon: Icon(
-                          Icons.note_alt_rounded,
-                          size: 18,
+                          Icons.note_rounded,
+                          size: 24,
                           color: theme.textTheme.bodySmall?.color,
                         ),
                         border: OutlineInputBorder(

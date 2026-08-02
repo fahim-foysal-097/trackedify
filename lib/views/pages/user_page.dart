@@ -348,8 +348,8 @@ class UserPageState extends State<UserPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Icon(
-                                      Icons.edit,
-                                      size: 16,
+                                      Icons.add_a_photo,
+                                      size: 18,
                                       color: cs.onSurface.withValues(
                                         alpha: 0.8,
                                       ),
@@ -498,7 +498,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: Icons.upload_file_rounded,
+                    icon: Icons.upload_rounded,
                     label: 'Export',
                     accent: cs.secondary,
                     onTap: () {
@@ -545,7 +545,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: Icons.system_update_alt_rounded,
+                    icon: Icons.cloud_download_rounded,
                     label: 'Check Update',
                     accent: Colors.blueAccent,
                     onTap: () async {
@@ -558,7 +558,7 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: Icons.alarm_rounded,
+                    icon: Icons.access_time_filled_rounded,
                     label: 'Daily Reminder',
                     accent: Colors.orange,
                     onTap: () {
@@ -682,7 +682,7 @@ class UserPageState extends State<UserPage> {
                   color: effectiveAccent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: effectiveAccent),
+                child: Icon(icon, size: 20, color: effectiveAccent),
               ),
               const SizedBox(width: 12),
               Expanded(
