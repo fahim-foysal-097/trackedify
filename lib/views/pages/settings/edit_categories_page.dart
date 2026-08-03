@@ -1,5 +1,3 @@
-// ignore_for_file: non_const_argument_for_const_parameter
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -340,6 +338,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
             Theme.of(context).colorScheme.primary.toARGB32();
         final iconCode = row['icon_code'] as int? ?? Icons.label.codePoint;
 
+        // ignore: non_const_argument_for_const_parameter
         final icon = IconData(iconCode, fontFamily: 'MaterialIcons');
         final color = Color(colorInt);
 
@@ -749,6 +748,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
             child: Container(
               padding: const EdgeInsets.all(10),
               child: Icon(
+                // ignore: non_const_argument_for_const_parameter
                 IconData(ic.codePoint, fontFamily: 'MaterialIcons'),
                 size: selected ? 28 : 24,
                 color: selected ? _selectedColor : theme.iconTheme.color,
@@ -894,6 +894,7 @@ class _EditCategorySheetState extends State<EditCategorySheet> {
                             ),
                             child: Icon(
                               IconData(
+                                // ignore: non_const_argument_for_const_parameter
                                 _selectedIconCode,
                                 fontFamily: 'MaterialIcons',
                               ),

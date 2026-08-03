@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
 
 class ExpenseCalculator extends StatefulWidget {
-  final Function(double) onResult;
+  final ValueChanged<double> onResult;
 
   const ExpenseCalculator({super.key, required this.onResult});
 
@@ -11,6 +11,8 @@ class ExpenseCalculator extends StatefulWidget {
 }
 
 class _ExpenseCalculatorState extends State<ExpenseCalculator> {
+  static final ExpressionParser _parser = GrammarParser();
+
   String _expression = '';
   String _result = '0';
 
@@ -39,12 +41,12 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
   }
 
   void _calculate() {
-    try {
-      if (_expression.isEmpty) return;
+    if (_expression.isEmpty) return;
 
+    try {
       String exp = _expression.replaceAll('×', '*').replaceAll('÷', '/');
 
-      // Handle simple percentages for expressions like 100 + 20% or 100 - 20%
+      // Handle simple percentages (e.g., 100 + 20% or 100 - 20%)
       exp = exp.replaceAllMapped(
         RegExp(r'(\d+(\.\d+)?)([\+\-])(\d+(\.\d+)?)%'),
         (match) {
@@ -56,19 +58,18 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
         },
       );
 
-      // Handle standalone percentages like 20%
+      // Handle standalone percentages (e.g., 20%)
       exp = exp.replaceAllMapped(
         RegExp(r'(\d+(\.\d+)?)%'),
         (match) => '(${match.group(1)!}/100)',
       );
 
-      ShuntingYardParser p = ShuntingYardParser();
-      Expression expression = p.parse(exp);
-      ContextModel cm = ContextModel();
-      RealEvaluator evaluator = RealEvaluator(cm);
-      double eval = evaluator.evaluate(expression) as double;
+      final Expression parsedExp = _parser.parse(exp);
+      final ContextModel cm = ContextModel();
+      final RealEvaluator evaluator = RealEvaluator(cm);
+      final double eval = evaluator.evaluate(parsedExp).toDouble();
 
-      // Prevent negative results
+      // Prevent negative or invalid math results for expenses
       if (eval.isNaN || eval.isInfinite || eval < 0) {
         setState(() {
           _result = 'Error';
@@ -79,11 +80,11 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
 
       setState(() {
         _result = eval.toStringAsFixed(2);
-        _expression = _result; // for chained calculations
+        _expression = _result; // Allow chained calculations
       });
 
       widget.onResult(eval);
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _result = 'Error';
         _expression = '';
@@ -93,107 +94,59 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
 
   @override
   Widget build(BuildContext context) {
-    // Theme-aware colors
-    final ColorScheme cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
-    // Primary operator color (uses primary)
-    final Color opBg = cs.primary;
-    final Color opText = cs.onPrimary;
-
-    // Accent for "=" button
-    final Color equalsBg = cs.secondary;
-    final Color equalsText = cs.onSecondary;
-
-    // Danger / clear
-    final Color clearBg = cs.error;
-    final Color clearText = cs.onError;
-
-    // Backspace - use tertiary or fallback to orange-like
-    final Color backBg = (cs.tertiary != Colors.transparent)
-        ? cs.tertiary
-        : Colors.orange;
-    final Color backText = cs.onTertiary;
-
-    // Number button background & text
-    final Color numberBg = cs.surface;
-    final Color numberText = cs.onSurface;
-
-    // Bracket / dot buttons slightly muted
-    final Color mutedBg = cs.surfaceContainer;
-    final Color mutedText = cs.onSurfaceVariant;
-
-    // Container background
-    final Color containerBg = cs.surface;
-
-    // Divider color
-    final Color dividerColor = cs.onSurface.withValues(alpha: 0.12);
-
-    // Button height adapt to width (small responsiveness)
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
     final buttonHeight = width > 420 ? 70.0 : 60.0;
 
-    Widget themedButton(
-      String text, {
-      required Color bg,
-      required Color fg,
-      Function()? onTap,
-    }) {
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(6.0),
-          child: Material(
-            color: bg,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: onTap ?? () => _append(text),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                height: buttonHeight,
-                alignment: Alignment.center,
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: fg,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final opBg = cs.primaryContainer;
+    final opFg = cs.onPrimaryContainer;
+
+    final equalsBg = cs.primary;
+    final equalsFg = cs.onPrimary;
+
+    final clearBg = cs.errorContainer;
+    final clearFg = cs.onErrorContainer;
+
+    final backBg = cs.tertiaryContainer;
+    final backFg = cs.onTertiaryContainer;
+
+    final numberBg = cs.surfaceContainerHigh;
+    final numberFg = cs.onSurface;
+
+    final mutedBg = cs.surfaceContainer;
+    final mutedFg = cs.onSurfaceVariant;
 
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: containerBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          color: cs.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Display
+            // Display Area
             Container(
               alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     _expression.isEmpty ? '0' : _expression,
-                    style: TextStyle(
-                      fontSize: 20,
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       color: cs.onSurface.withValues(alpha: 0.7),
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     _result,
-                    style: TextStyle(
-                      fontSize: 32,
+                    style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: cs.onSurface,
                     ),
@@ -201,102 +154,117 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
                 ],
               ),
             ),
-            Divider(thickness: 1, color: dividerColor),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    // Clear
-                    themedButton(
-                      'C',
-                      bg: clearBg,
-                      fg: clearText,
-                      onTap: _clear,
-                    ),
-                    // Backspace
-                    themedButton('⌫', bg: backBg, fg: backText, onTap: _delete),
-                    // Percent
-                    themedButton(
-                      '%',
-                      bg: opBg,
-                      fg: opText,
-                      onTap: () {
-                        if (_expression.isNotEmpty) {
-                          _append('%');
-                          _calculate();
-                        }
-                      },
-                    ),
-                    // Divide
-                    themedButton('÷', bg: opBg, fg: opText),
-                  ],
-                ),
-                Row(
-                  children: [
-                    themedButton('7', bg: numberBg, fg: numberText),
-                    themedButton('8', bg: numberBg, fg: numberText),
-                    themedButton('9', bg: numberBg, fg: numberText),
-                    themedButton('×', bg: opBg, fg: opText),
-                  ],
-                ),
-                Row(
-                  children: [
-                    themedButton('4', bg: numberBg, fg: numberText),
-                    themedButton('5', bg: numberBg, fg: numberText),
-                    themedButton('6', bg: numberBg, fg: numberText),
-                    themedButton('-', bg: opBg, fg: opText),
-                  ],
-                ),
-                Row(
-                  children: [
-                    themedButton('1', bg: numberBg, fg: numberText),
-                    themedButton('2', bg: numberBg, fg: numberText),
-                    themedButton('3', bg: numberBg, fg: numberText),
-                    themedButton('+', bg: opBg, fg: opText),
-                  ],
-                ),
-                Row(
-                  children: [
-                    themedButton('(', bg: mutedBg, fg: mutedText),
-                    themedButton('0', bg: numberBg, fg: numberText),
-                    themedButton('.', bg: numberBg, fg: numberText),
-                    themedButton(')', bg: mutedBg, fg: mutedText),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Material(
-                          color: equalsBg,
-                          borderRadius: BorderRadius.circular(12),
-                          child: InkWell(
-                            onTap: _calculate,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              height: buttonHeight,
-                              alignment: Alignment.center,
-                              child: Text(
-                                '=',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: equalsText,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            Divider(height: 24, thickness: 1, color: cs.outlineVariant),
+
+            // Keypad Grid Rows
+            _buildRow([
+              _CalcButtonData('C', bg: clearBg, fg: clearFg, onTap: _clear),
+              _CalcButtonData('⌫', bg: backBg, fg: backFg, onTap: _delete),
+              _CalcButtonData(
+                '%',
+                bg: opBg,
+                fg: opFg,
+                onTap: () {
+                  if (_expression.isNotEmpty) {
+                    _append('%');
+                    _calculate();
+                  }
+                },
+              ),
+              _CalcButtonData('÷', bg: opBg, fg: opFg),
+            ], buttonHeight),
+
+            _buildRow([
+              _CalcButtonData('7', bg: numberBg, fg: numberFg),
+              _CalcButtonData('8', bg: numberBg, fg: numberFg),
+              _CalcButtonData('9', bg: numberBg, fg: numberFg),
+              _CalcButtonData('×', bg: opBg, fg: opFg),
+            ], buttonHeight),
+
+            _buildRow([
+              _CalcButtonData('4', bg: numberBg, fg: numberFg),
+              _CalcButtonData('5', bg: numberBg, fg: numberFg),
+              _CalcButtonData('6', bg: numberBg, fg: numberFg),
+              _CalcButtonData('-', bg: opBg, fg: opFg),
+            ], buttonHeight),
+
+            _buildRow([
+              _CalcButtonData('1', bg: numberBg, fg: numberFg),
+              _CalcButtonData('2', bg: numberBg, fg: numberFg),
+              _CalcButtonData('3', bg: numberBg, fg: numberFg),
+              _CalcButtonData('+', bg: opBg, fg: opFg),
+            ], buttonHeight),
+
+            _buildRow([
+              _CalcButtonData('(', bg: mutedBg, fg: mutedFg),
+              _CalcButtonData('0', bg: numberBg, fg: numberFg),
+              _CalcButtonData('.', bg: numberBg, fg: numberFg),
+              _CalcButtonData(')', bg: mutedBg, fg: mutedFg),
+            ], buttonHeight),
+
+            _buildRow([
+              _CalcButtonData(
+                '=',
+                bg: equalsBg,
+                fg: equalsFg,
+                onTap: _calculate,
+                flex: 4,
+              ),
+            ], buttonHeight),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildRow(List<_CalcButtonData> buttons, double height) {
+    return Row(
+      children: buttons
+          .map(
+            (b) => Expanded(
+              flex: b.flex,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Material(
+                  color: b.bg,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: b.onTap ?? () => _append(b.text),
+                    child: Container(
+                      height: height,
+                      alignment: Alignment.center,
+                      child: Text(
+                        b.text,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: b.fg,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _CalcButtonData {
+  final String text;
+  final Color bg;
+  final Color fg;
+  final VoidCallback? onTap;
+  final int flex;
+
+  _CalcButtonData(
+    this.text, {
+    required this.bg,
+    required this.fg,
+    this.onTap,
+    this.flex = 1,
+  });
 }
