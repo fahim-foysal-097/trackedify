@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -103,6 +103,14 @@ class DatabaseHelper {
           ''');
 
           await _insertDefaultCategories(txn);
+
+          // --- Indexes: Performance Optimization ---
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date)',
+          );
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON expenses(category_id)',
+          );
         });
       },
 
@@ -375,6 +383,18 @@ class DatabaseHelper {
 
             await txn.execute('PRAGMA foreign_keys = ON');
           });
+        }
+
+        // ─── Version 10: Add performance indexes for expenses ────────────────
+        if (oldVersion < 10) {
+          try {
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date)',
+            );
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON expenses(category_id)',
+            );
+          } catch (_) {}
         }
       },
     );

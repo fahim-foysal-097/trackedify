@@ -344,6 +344,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
 
                     return GestureDetector(
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         setState(() {
                           selectedCategoryName = cat['name'];
                           selectedCategoryId = cat['id'] as int?;

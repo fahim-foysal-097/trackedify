@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trackedify/database/database_helper.dart';
 import 'package:trackedify/services/currency_controller.dart';
 import 'package:trackedify/services/theme_controller.dart';
+import 'package:trackedify/shared/widgets/animated_counter.dart';
 
 class OverviewWidget extends StatefulWidget {
   const OverviewWidget({super.key});
@@ -108,17 +109,19 @@ class OverviewWidgetState extends State<OverviewWidget> {
       builder: (context, _) => FutureBuilder<Map<String, dynamic>>(
         future: _future,
         builder: (context, snapshot) {
-          double totalExpenses = 0;
-          double averageMonthly = 0;
-          int totalTransactions = 0;
-          double trendPercent = 0;
-
-          if (snapshot.hasData) {
-            totalExpenses = snapshot.data!['totalExpenses'] as double;
-            averageMonthly = snapshot.data!['averageMonthly'] as double;
-            totalTransactions = snapshot.data!['totalTransactions'] as int;
-            trendPercent = snapshot.data!['trendPercent'] as double;
+          if (!snapshot.hasData) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 200, 20, 2),
+                child: CircularProgressIndicator(),
+              ),
+            );
           }
+
+          final totalExpenses = snapshot.data!['totalExpenses'] as double;
+          final averageMonthly = snapshot.data!['averageMonthly'] as double;
+          final totalTransactions = snapshot.data!['totalTransactions'] as int;
+          final trendPercent = snapshot.data!['trendPercent'] as double;
 
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -205,9 +208,9 @@ class OverviewWidgetState extends State<OverviewWidget> {
                                           _StatItem(
                                             icon: Icons.trending_up_rounded,
                                             label: 'Total Spent',
-                                            value: currencyCtrl.formatAmount(
-                                              totalExpenses,
-                                            ),
+                                            numericValue: totalExpenses,
+                                            currencySymbol:
+                                                currencyCtrl.currencySymbol,
                                             isRightAligned: false,
                                             scaleFactor: scaleFactor,
                                           ),
@@ -238,7 +241,9 @@ class OverviewWidgetState extends State<OverviewWidget> {
                                           _StatItem(
                                             icon: Icons.receipt_long,
                                             label: 'Transactions',
-                                            value: totalTransactions.toString(),
+                                            numericValue: totalTransactions
+                                                .toDouble(),
+                                            decimalDigits: 0,
                                             isRightAligned: true,
                                             scaleFactor: scaleFactor,
                                           ),
@@ -246,9 +251,9 @@ class OverviewWidgetState extends State<OverviewWidget> {
                                           _StatItem(
                                             icon: Icons.calendar_month,
                                             label: 'Avg Monthly',
-                                            value: currencyCtrl.formatAmount(
-                                              averageMonthly,
-                                            ),
+                                            numericValue: averageMonthly,
+                                            currencySymbol:
+                                                currencyCtrl.currencySymbol,
                                             isRightAligned: true,
                                             scaleFactor: scaleFactor,
                                           ),
@@ -277,14 +282,18 @@ class OverviewWidgetState extends State<OverviewWidget> {
 class _StatItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
+  final double numericValue;
+  final String currencySymbol;
+  final int decimalDigits;
   final bool isRightAligned;
   final double scaleFactor;
 
   const _StatItem({
     required this.icon,
     required this.label,
-    required this.value,
+    required this.numericValue,
+    this.currencySymbol = '',
+    this.decimalDigits = 2,
     this.isRightAligned = false,
     required this.scaleFactor,
   });
@@ -299,6 +308,8 @@ class _StatItem extends StatelessWidget {
       color: cs.onPrimary,
       fontWeight: FontWeight.bold,
     );
+
+    final prefix = currencySymbol.isNotEmpty ? '$currencySymbol ' : '';
 
     return Column(
       crossAxisAlignment: isRightAligned
@@ -338,9 +349,10 @@ class _StatItem extends StatelessWidget {
           ],
         ),
         SizedBox(height: 4 * scaleFactor),
-        Text(
-          value,
-          overflow: TextOverflow.ellipsis,
+        AnimatedCounter(
+          value: numericValue,
+          prefix: prefix,
+          decimalDigits: decimalDigits,
           style: textStyleValue?.copyWith(fontSize: 20 * scaleFactor),
         ),
       ],

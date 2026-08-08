@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:math_expressions/math_expressions.dart';
 
 class ExpenseCalculator extends StatefulWidget {
@@ -17,6 +18,7 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
   String _result = '0';
 
   void _append(String value) {
+    HapticFeedback.lightImpact();
     // Block negative sign at start
     if (_expression.isEmpty && value == '-') return;
 
@@ -26,6 +28,7 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
   }
 
   void _clear() {
+    HapticFeedback.lightImpact();
     setState(() {
       _expression = '';
       _result = '0';
@@ -33,6 +36,7 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
   }
 
   void _delete() {
+    HapticFeedback.lightImpact();
     if (_expression.isNotEmpty) {
       setState(() {
         _expression = _expression.substring(0, _expression.length - 1);
@@ -41,6 +45,7 @@ class _ExpenseCalculatorState extends State<ExpenseCalculator> {
   }
 
   void _calculate() {
+    HapticFeedback.lightImpact();
     if (_expression.isEmpty) return;
 
     try {

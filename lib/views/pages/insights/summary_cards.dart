@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trackedify/services/currency_controller.dart';
+import 'package:trackedify/shared/widgets/animated_counter.dart';
 
 // -------------------- EXPENSE SUMMARY & INSIGHTS --------------------
 
@@ -9,6 +10,8 @@ class ExpenseSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currencyCtrl = CurrencyController.instance;
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -31,8 +34,9 @@ class ExpenseSummaryCard extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.white70),
               ),
               const SizedBox(height: 8),
-              Text(
-                CurrencyController.instance.formatAmount(totalExpense),
+              AnimatedCounter(
+                value: totalExpense,
+                prefix: '${currencyCtrl.currencySymbol} ',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -131,6 +135,8 @@ class InsightsCards extends StatelessWidget {
     String? valueText,
     required Color color,
   }) {
+    final currencyCtrl = CurrencyController.instance;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [color.withValues(alpha: 0.8), color]),
@@ -148,17 +154,26 @@ class InsightsCards extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(
-            value != null
-                ? CurrencyController.instance.formatAmount(value)
-                : valueText ?? "",
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          if (value != null)
+            AnimatedCounter(
+              value: value,
+              prefix: '${currencyCtrl.currencySymbol} ',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            )
+          else
+            Text(
+              valueText ?? "",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
         ],
       ),
     );

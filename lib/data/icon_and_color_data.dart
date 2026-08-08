@@ -392,3 +392,28 @@ final List<Color> predefinedColors = [
   Colors.brown,
   Colors.grey,
 ];
+
+/// Memoized flattened list of all unique icons across all categories
+final List<IconData> allAvailableIcons = () {
+  final Set<int> seenCodePoints = {};
+  final List<IconData> uniqueIcons = [];
+  for (final list in iconCategories.values) {
+    for (final icon in list) {
+      if (seenCodePoints.add(icon.codePoint)) {
+        uniqueIcons.add(icon);
+      }
+    }
+  }
+  return List<IconData>.unmodifiable(uniqueIcons);
+}();
+
+/// Fast icon lookup map by code point to avoid repeating IconData instantiation
+final Map<int, IconData> _iconCacheByCodePoint = {};
+
+IconData getCachedIconData(int codePoint) {
+  return _iconCacheByCodePoint.putIfAbsent(
+    codePoint,
+    // ignore: non_const_argument_for_const_parameter
+    () => IconData(codePoint, fontFamily: 'MaterialIcons'),
+  );
+}

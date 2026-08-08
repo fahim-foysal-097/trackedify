@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:trackedify/data/category_suggestion_data.dart';
 import 'package:trackedify/data/icon_and_color_data.dart';
@@ -252,6 +253,7 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
 
   // Helper to pick color from chips
   void _onPickColor(Color color) {
+    HapticFeedback.selectionClick();
     setState(() {
       selectedColor = color;
       userPickedColor = true;
@@ -411,11 +413,14 @@ class _CreateCategoryPageState extends State<CreateCategoryPage>
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: () => setState(() {
-        selectedIcon = icon;
-        userPickedIcon = true;
-        aiSuggestedIcon = null; // user override
-      }),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() {
+          selectedIcon = icon;
+          userPickedIcon = true;
+          aiSuggestedIcon = null; // user override
+        });
+      },
       child: AnimatedBuilder(
         animation: _pulseAnim,
         builder: (context, child) {

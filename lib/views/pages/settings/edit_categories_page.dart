@@ -34,7 +34,7 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   @override
   void initState() {
     super.initState();
-    availableIcons = iconCategories.values.expand((l) => l).toList();
+    availableIcons = allAvailableIcons;
     colorOptions = predefinedColors;
     _reload();
   }

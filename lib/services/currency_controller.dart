@@ -51,6 +51,7 @@ class CurrencyController extends ChangeNotifier {
   String get code => _selectedCurrencyCode;
   String get name => _selectedCurrencyName;
   String get symbol => _selectedCurrencySymbol;
+  String get currencySymbol => _selectedCurrencySymbol;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();

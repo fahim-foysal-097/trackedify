@@ -294,6 +294,7 @@ class _AddPageState extends State<AddPage> {
 
                     return GestureDetector(
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         setState(() {
                           selectedCategoryName = cat['name'];
                           selectedCategoryId = cat['id'] as int?;
