@@ -160,9 +160,7 @@ class ReportService {
 
     sb.writeln();
     sb.writeln('# Total Expenses: ${expenses.length} item(s)');
-    sb.writeln(
-      '# Total Amount: ${_fmtAmount(totalAmount, pdfCurrency)}',
-    );
+    sb.writeln('# Total Amount: ${_fmtAmount(totalAmount, pdfCurrency)}');
 
     return sb.toString();
   }
@@ -623,12 +621,7 @@ class ReportService {
                       ? (item['amount'] as num).toDouble()
                       : (double.tryParse(item['amount'].toString()) ?? 0.0);
 
-                  return [
-                    displayDate,
-                    cat,
-                    note,
-                    _fmtAmount(amt, pdfCurrency),
-                  ];
+                  return [displayDate, cat, note, _fmtAmount(amt, pdfCurrency)];
                 }).toList(),
               ),
           ];

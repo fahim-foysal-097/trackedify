@@ -105,17 +105,7 @@ class _ImportPageState extends State<ImportPage> {
   }
 
   Future<void> _syncCurrencyFromDb() async {
-    try {
-      final cur = await DatabaseHelper().getCurrency();
-      if (cur != null && cur['code'] != null && cur['name'] != null) {
-        await CurrencyController.instance.setCurrency(
-          cur['code']!,
-          cur['name']!,
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('Failed to sync currency from DB: \$e');
-    }
+    await CurrencyController.instance.syncFromDatabase();
   }
 
   // Import DB (.db)
@@ -500,12 +490,23 @@ class _ImportPageState extends State<ImportPage> {
             row['currency_symbol'] = u['currency_symbol']?.toString();
           }
 
-          // insert
+          // insert or update user_info
           try {
-            final inserted = await db.insert('user_info', row);
-            if (inserted > 0) insertedUsers++;
+            final existingUsers = await db.query('user_info', limit: 1);
+            if (existingUsers.isNotEmpty) {
+              final id = existingUsers.first['id'];
+              await db.update(
+                'user_info',
+                row,
+                where: 'id = ?',
+                whereArgs: [id],
+              );
+            } else {
+              await db.insert('user_info', row);
+            }
+            insertedUsers++;
           } catch (e) {
-            if (kDebugMode) debugPrint('Insert user_info failed: $e');
+            if (kDebugMode) debugPrint('Upsert user_info failed: $e');
           }
         }
       }

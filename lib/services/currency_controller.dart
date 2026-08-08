@@ -54,25 +54,78 @@ class CurrencyController extends ChangeNotifier {
   String get currencySymbol => _selectedCurrencySymbol;
 
   Future<void> load() async {
+    // 1. Try loading from Database first (primary source of truth for user data)
+    try {
+      final cur = await DatabaseHelper().getCurrency();
+      if (cur != null && cur['code'] != null && cur['code']!.isNotEmpty) {
+        final code = cur['code']!;
+        final name = cur['name'] ?? code.toUpperCase();
+        final sym =
+            cur['symbol'] ??
+            kCurrencySymbols[code.toLowerCase()] ??
+            code.toUpperCase();
+
+        _selectedCurrencyCode = code;
+        _selectedCurrencyName = name;
+        _selectedCurrencySymbol = sym;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('currency_code', code);
+        await prefs.setString('currency_name', name);
+        await prefs.setString('currency_symbol', sym);
+
+        notifyListeners();
+        return;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('CurrencyController.load from DB failed: $e');
+    }
+
+    // 2. Fallback to SharedPreferences if DB has no currency info
     final prefs = await SharedPreferences.getInstance();
     _selectedCurrencyCode = prefs.getString('currency_code') ?? 'usd';
     _selectedCurrencyName = prefs.getString('currency_name') ?? 'US Dollar';
-    _selectedCurrencySymbol = prefs.getString('currency_symbol') ?? '\$';
+    _selectedCurrencySymbol =
+        prefs.getString('currency_symbol') ??
+        kCurrencySymbols[_selectedCurrencyCode.toLowerCase()] ??
+        '\$';
     notifyListeners();
   }
 
-  Future<void> setCurrency(String code, String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    final sym = kCurrencySymbols[code.toLowerCase()] ?? code.toUpperCase();
+  /// Force reload and sync currency settings directly from the current database
+  Future<void> syncFromDatabase() async {
+    try {
+      final cur = await DatabaseHelper().getCurrency();
+      if (cur != null && cur['code'] != null && cur['code']!.isNotEmpty) {
+        await setCurrency(
+          cur['code']!,
+          cur['name'] ?? cur['code']!,
+          cur['symbol'],
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to sync currency from DB: $e');
+    }
+  }
 
-    await prefs.setString('currency_code', code);
-    await prefs.setString('currency_name', name);
+  Future<void> setCurrency(String code, String name, [String? symbol]) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cleanCode = code.trim().toLowerCase();
+    final cleanName = name.trim().isNotEmpty && name != 'null'
+        ? name.trim()
+        : cleanCode.toUpperCase();
+    final sym = (symbol != null && symbol.trim().isNotEmpty && symbol != 'null')
+        ? symbol.trim()
+        : (kCurrencySymbols[cleanCode] ?? cleanCode.toUpperCase());
+
+    await prefs.setString('currency_code', cleanCode);
+    await prefs.setString('currency_name', cleanName);
     await prefs.setString('currency_symbol', sym);
 
-    await DatabaseHelper().updateCurrency(code, name, sym);
+    await DatabaseHelper().updateCurrency(cleanCode, cleanName, sym);
 
-    _selectedCurrencyCode = code;
-    _selectedCurrencyName = name;
+    _selectedCurrencyCode = cleanCode;
+    _selectedCurrencyName = cleanName;
     _selectedCurrencySymbol = sym;
     notifyListeners();
   }

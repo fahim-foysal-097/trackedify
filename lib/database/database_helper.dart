@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:trackedify/services/currency_controller.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -727,12 +728,22 @@ class DatabaseHelper {
     final rows = await db.query('user_info', limit: 1);
     if (rows.isEmpty) return null;
     final first = rows.first;
-    if (first['currency_code'] != null) {
-      return {
-        'code': first['currency_code'].toString(),
-        'name': first['currency_name'].toString(),
-        'symbol': first['currency_symbol'].toString(),
-      };
+    final code = first['currency_code']?.toString();
+    if (code != null && code.trim().isNotEmpty && code != 'null') {
+      final validCode = code.trim().toLowerCase();
+      final name = first['currency_name']?.toString();
+      final symbol = first['currency_symbol']?.toString();
+
+      final validName =
+          (name != null && name.trim().isNotEmpty && name != 'null')
+          ? name.trim()
+          : validCode.toUpperCase();
+      final validSymbol =
+          (symbol != null && symbol.trim().isNotEmpty && symbol != 'null')
+          ? symbol.trim()
+          : (kCurrencySymbols[validCode] ?? validCode.toUpperCase());
+
+      return {'code': validCode, 'name': validName, 'symbol': validSymbol};
     }
     return null;
   }
