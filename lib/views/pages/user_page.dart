@@ -16,6 +16,7 @@ import 'package:trackedify/views/pages/about_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
 import 'package:trackedify/views/pages/settings/notification_settings.dart';
+import 'package:trackedify/views/pages/settings/reports_page.dart';
 import 'package:trackedify/views/pages/settings_page.dart';
 import 'package:trackedify/views/widget_tree.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -575,12 +576,21 @@ class UserPageState extends State<UserPage> {
                   ),
 
                   _buildActionTile(
-                    icon: Icons.new_releases_rounded,
-                    label: 'Release Notes',
-                    accent: Colors.green,
-                    onTap: () => _launchURL(
-                      "https://fahim-foysal-097.github.io/trackedify-web/releases.html",
-                    ),
+                    icon: Icons.assessment_rounded,
+                    label: 'Reports',
+                    accent: Colors.teal,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              const ReportsPage(),
+                        ),
+                      ).then((_) {
+                        loadUserInfo();
+                        NavBarController.apply();
+                      });
+                    },
                   ),
 
                   _buildActionTile(

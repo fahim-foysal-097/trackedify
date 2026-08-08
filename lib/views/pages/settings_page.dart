@@ -12,6 +12,7 @@ import 'package:trackedify/views/pages/settings/edit_categories_page.dart';
 import 'package:trackedify/views/pages/settings/export_page.dart';
 import 'package:trackedify/views/pages/settings/import_page.dart';
 import 'package:trackedify/views/pages/settings/notification_settings.dart';
+import 'package:trackedify/views/pages/settings/reports_page.dart';
 import 'package:trackedify/views/pages/settings/security_settings.dart';
 import 'package:trackedify/views/pages/settings/theme_settings.dart';
 import 'package:trackedify/views/pages/settings/voice_commands_settings.dart';
@@ -223,6 +224,19 @@ class SettingsPage extends StatelessWidget {
               // --- Data Management ---
               sectionTitle("Data Management"),
               sectionCard([
+                SettingsButton(
+                  icon: Icons.picture_as_pdf_outlined,
+                  title: 'PDF & CSV Reports',
+                  iconColor: iconColor,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ReportsPage()),
+                    ).then((_) {
+                      NavBarController.apply();
+                    });
+                  },
+                ),
                 SettingsButton(
                   icon: Icons.file_upload_outlined,
                   title: 'Export / Backup Data',
