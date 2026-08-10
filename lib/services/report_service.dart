@@ -192,12 +192,12 @@ class ReportService {
     pw.Font? fallbackFont;
 
     try {
-      mainFont = await PdfGoogleFonts.interRegular();
-      fallbackFont = await PdfGoogleFonts.notoSansRegular();
+      final fontData = await rootBundle.load('assets/fonts/Inter.ttf');
+      mainFont = pw.Font.ttf(fontData);
     } catch (_) {
       try {
-        final fontData = await rootBundle.load('assets/fonts/Inter.ttf');
-        mainFont = pw.Font.ttf(fontData);
+        mainFont = await PdfGoogleFonts.interRegular();
+        fallbackFont = await PdfGoogleFonts.notoSansRegular();
       } catch (_) {}
     }
 
@@ -510,13 +510,9 @@ class ReportService {
                                       ),
                                     ),
                                     pw.SizedBox(width: 5),
-                                    pw.Expanded(
-                                      child: pw.Text(
-                                        entry.key,
-                                        style: const pw.TextStyle(
-                                          fontSize: 8.5,
-                                        ),
-                                      ),
+                                    pw.Text(
+                                      entry.key,
+                                      style: const pw.TextStyle(fontSize: 8.5),
                                     ),
                                   ],
                                 ),
